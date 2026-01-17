@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 env:
-  PROJECT_NAME: CS-Quiz-BE
+  PROJECT_NAME: COTATO-HOMEPAGE-BE
   BUCKET_NAME: cotato-ci-cd-bucket
   CODE_DEPLOY_APP_NAME: cotato-deploy
   DEPLOYMENT_GROUP_NAME: cotato-deploy-group
@@ -35,9 +35,6 @@ jobs:
           spring.datasource.username: ${{ secrets.DB_USERNAME }}
           spring.datasource.password: ${{ secrets.DB_PWD }}
           spring.jpa.hibernate.ddl-auto: ${{ secrets.DDL_AUTO }}
-          discord.bot.token: ${{ secrets.DISCORD_TOKEN }}
-          discord.guild.id: ${{ secrets.GUILD_ID }}
-          discord.channel.id: ${{ secrets.CHANNEL_ID }}
 
       # application-yml을 세팅한다.
       - name: Set up Base Yaml File
@@ -71,7 +68,7 @@ jobs:
 
       # [3] - 1 생성된 jar 파일 이름 변경
       - name: Rename JAR file
-        run: mv build/libs/*.jar build/libs/csquiz-prod-0.0.1-SNAPSHOT.jar
+        run: mv build/libs/*.jar build/libs/homepage-prod-0.0.1-SNAPSHOT.jar
         shell: bash
 
       # [4] Zip 파일 만들기

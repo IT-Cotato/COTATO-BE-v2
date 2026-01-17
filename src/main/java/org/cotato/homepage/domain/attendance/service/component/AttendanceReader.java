@@ -1,0 +1,42 @@
+package org.cotato.homepage.domain.attendance.service.component;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
+import org.cotato.homepage.domain.attendance.entity.Attendance;
+import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
+import org.cotato.homepage.domain.generation.entity.Session;
+import org.springframework.stereotype.Component;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class AttendanceReader {
+
+	private final AttendanceRepository attendanceRepository;
+
+	public Attendance findById(final Long id) {
+		return attendanceRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("해당 출석 정보를 찾을 수 없습니다."));
+	}
+
+	public Optional<Attendance> findBySessionIdWithPessimisticXLock(Long sessionId) {
+		return attendanceRepository.findBySessionIdWithPessimisticXLock(sessionId);
+	}
+
+	public List<Attendance> getAllBySessions(final Collection<Session> sessions) {
+		List<Long> sessionIds = sessions.stream().map(Session::getId).toList();
+		return attendanceRepository.findAllBySessionIdsInQuery(sessionIds);
+	}
+
+	public List<Attendance> getAllByIds(List<Long> attendanceIds) {
+		return attendanceRepository.findAllByIdIn(attendanceIds);
+	}
+
+	public Attendance findBySession(final Session session) {
+		return attendanceRepository.findBySessionId(session.getId())
+			.orElseThrow(() -> new EntityNotFoundException("해당 세션의 출석 정보를 찾을 수 없습니다."));
+	}
+}

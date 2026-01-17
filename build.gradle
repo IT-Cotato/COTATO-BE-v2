@@ -55,11 +55,7 @@ dependencies {
     implementation 'com.amazonaws:aws-java-sdk-ses:1.12.3'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.3'
-
-    // discord 봇 관련 레포
-    implementation group: 'net.dv8tion', name: 'JDA', version: '5.1.1'
 
     // Apache POI 관련
     implementation 'org.apache.poi:poi:5.2.3'

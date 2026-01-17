@@ -1,0 +1,20 @@
+package org.cotato.homepage.api.policy.dto;
+
+import java.util.List;
+
+import org.cotato.homepage.domain.auth.entity.Member;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record FindMemberPolicyResponse(
+	Long memberId,
+	@Schema(description = "회원이 체크하지 않은 필수 정책 목록")
+	List<PolicyInfoResponse> essentialPolicies,
+	@Schema(description = "회원이 체크하지 않은 선택 정책 목록")
+	List<PolicyInfoResponse> optionalPolicies
+) {
+	public static FindMemberPolicyResponse of(Member member, List<PolicyInfoResponse> essentialPolicies,
+		List<PolicyInfoResponse> optionalPolicies) {
+		return new FindMemberPolicyResponse(member.getId(), essentialPolicies, optionalPolicies);
+	}
+}

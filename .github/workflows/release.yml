@@ -53,9 +53,6 @@ jobs:
           spring.mail.username: ${{ secrets.SENDER_EMAIL }}
           spring.mail.password: ${{ secrets.SENDER_PASSWORD }}
           location.distance: ${{ secrets.STANDARD_DISTANCE }}
-          discord.bot.token: ${{ secrets.TEST_DISCORD_TOKEN }}
-          discord.guild.id: ${{ secrets.TEST_GUILD_ID }}
-          discord.channel.id: ${{ secrets.TEST_CHANNEL_ID }}
           profile-image.default-folder: ${{ secrets.DEFAULT_PROFILE_IMAGE_FOLDER }}
           profile-image.default-file: ${{ secrets.DEFAULT_PROFILE_IMAGE_FILE }}
           profile-image.default-url: ${{ secrets.DEFAULT_PROFILE_IMAGE_URL }}
@@ -73,7 +70,7 @@ jobs:
 
       # [3] - 1 생성된 jar 파일 이름 변경
       - name: Rename JAR file
-        run: mv build/libs/*.jar build/libs/csquiz-stage-0.0.1-SNAPSHOT.jar
+        run: mv build/libs/*.jar build/libs/homepage-stage-0.0.1-SNAPSHOT.jar
         shell: bash
 
       # [4] Zip 파일 만들기

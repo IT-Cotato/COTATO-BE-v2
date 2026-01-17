@@ -1,0 +1,23 @@
+package org.cotato.homepage.domain.auth.service.component;
+
+import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.auth.entity.MemberLeavingRequest;
+import org.cotato.homepage.domain.auth.repository.MemberLeavingRequestRepository;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+public class MemberLeavingRequestReader {
+
+	private final MemberLeavingRequestRepository memberLeavingRequestRepository;
+
+	public MemberLeavingRequest getLeavingRequestByMember(final Member member) {
+		return memberLeavingRequestRepository.findByMemberAndIsReactivatedFalse(member)
+			.orElseThrow(() -> new EntityNotFoundException("해당 부원의 요청이 존재하지 않습니다."));
+	}
+}

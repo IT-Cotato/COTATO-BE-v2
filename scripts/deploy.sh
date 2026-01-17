@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # Git이 디렉토리를 안전한 디렉토리로 인식하도록 설정
-git config --global --add safe.directory /home/ubuntu/backend/CS-Quiz-BE
+git config --global --add safe.directory /home/ubuntu/backend/COTATO-HOMEPAGE-BE
 
 # .git repo가 존재하는 곳으로 이동
-cd /home/ubuntu/backend/CS-Quiz-BE || { echo "Failed to change directory to git root"; exit 1; }
+cd /home/ubuntu/backend/COTATO-HOMEPAGE-BE || { echo "Failed to change directory to git root"; exit 1; }
 
 # 현재 브랜치 이름 가져오기
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 # 기본 환경 변수 세팅
-PROJECT_NAME="CS-Quiz-BE"
+PROJECT_NAME="COTATO-HOMEPAGE-BE"
 
 # 브랜치에 따른 설정 값 분리
 if [ "$CURRENT_BRANCH" == "main" ]; then
