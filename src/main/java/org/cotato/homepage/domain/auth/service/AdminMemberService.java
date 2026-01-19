@@ -8,7 +8,6 @@ import org.cotato.homepage.common.event.CotatoEventPublisher;
 import org.cotato.homepage.common.event.EventType;
 import org.cotato.homepage.domain.auth.entity.Member;
 import org.cotato.homepage.domain.auth.entity.RefusedMember;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.enums.MemberRole;
 import org.cotato.homepage.domain.auth.enums.MemberRoleGroup;
 import org.cotato.homepage.domain.auth.enums.MemberStatus;
@@ -17,8 +16,6 @@ import org.cotato.homepage.domain.auth.event.EmailSendEventDto;
 import org.cotato.homepage.domain.auth.repository.MemberRepository;
 import org.cotato.homepage.domain.auth.repository.RefusedMemberRepository;
 import org.cotato.homepage.domain.auth.service.component.MemberReader;
-import org.cotato.homepage.domain.generation.entity.Generation;
-import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,20 +29,16 @@ public class AdminMemberService {
 	private final CotatoEventPublisher eventPublisher;
 	private final MemberRepository memberRepository;
 	private final RefusedMemberRepository refusedMemberRepository;
-	private final GenerationReader generationReader;
 	private final MemberReader memberReader;
 
 	@Transactional
-	public void approveApplicant(final Long memberId, final MemberPosition position, final Long generationId) {
+	public void approveApplicant(final Long memberId) {
 		Member member = memberReader.findById(memberId);
 		if (member.getStatus() != MemberStatus.REJECTED && member.getStatus() != MemberStatus.REQUESTED) {
 			throw new AppException(ErrorCode.CANNOT_ACTIVE);
 		}
 
-		Generation generation = generationReader.findById(generationId);
 		member.approveMember();
-		member.updatePassedGenerationNumber(generation.getNumber());
-		member.updatePosition(position);
 		memberRepository.save(member);
 
 		EmailSendEventDto dto = EmailSendEventDto.builder().member(member).build();
