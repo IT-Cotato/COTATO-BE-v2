@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 public class EmailRedisRepository {
 
 	private static final int EXPIRATION_TIME = 15;
+	private static final int VERIFIED_EXPIRATION_TIME = 30;
+	private static final String VERIFIED_PREFIX = "verified:";
 	private final RedisTemplate<String, String> redisTemplate;
 
 	public Boolean saveEmail(EmailType type, final String email) {
@@ -28,5 +30,25 @@ public class EmailRedisRepository {
 	public Boolean isEmailPresent(EmailType type, final String email) {
 		String key = type.getKeyPrefix() + email;
 		return redisTemplate.hasKey(key);
+	}
+
+	public void saveVerifiedEmail(EmailType type, final String email) {
+		String key = VERIFIED_PREFIX + type.getKeyPrefix() + email;
+		redisTemplate.opsForValue().set(
+			key,
+			"true",
+			VERIFIED_EXPIRATION_TIME,
+			TimeUnit.MINUTES
+		);
+	}
+
+	public Boolean isEmailVerified(EmailType type, final String email) {
+		String key = VERIFIED_PREFIX + type.getKeyPrefix() + email;
+		return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+	}
+
+	public void deleteVerifiedEmail(EmailType type, final String email) {
+		String key = VERIFIED_PREFIX + type.getKeyPrefix() + email;
+		redisTemplate.delete(key);
 	}
 }

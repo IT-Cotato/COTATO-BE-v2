@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 
 import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
@@ -31,9 +32,11 @@ class MemberReaderTest {
 			.number(9)
 			.build();
 
-		Member member1 = Member.defaultMember("youth@email.com", "password", "신유승", null);
+		Member member1 = Member.of("youth@email.com", "password", "신유승", null,
+			MemberPosition.NONE, null, null, null, true, true);
 
-		Member member2 = Member.defaultMember("gikhoon@email.com", "password", "남기훈", null);
+		Member member2 = Member.of("gikhoon@email.com", "password", "남기훈", null,
+			MemberPosition.NONE, null, null, null, true, true);
 
 		List<GenerationMember> generationMembers = List.of(
 			GenerationMember.of(generation, member1),

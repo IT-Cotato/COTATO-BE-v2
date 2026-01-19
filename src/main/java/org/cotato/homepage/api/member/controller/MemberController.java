@@ -5,7 +5,6 @@ import java.io.IOException;
 import javax.naming.NoPermissionException;
 
 import org.cotato.homepage.api.member.dto.DeactivateRequest;
-import org.cotato.homepage.api.member.dto.MemberApproveRequest;
 import org.cotato.homepage.api.member.dto.MemberInfoResponse;
 import org.cotato.homepage.api.member.dto.MemberMyPageInfoResponse;
 import org.cotato.homepage.api.member.dto.MemberResponse;
@@ -92,6 +91,7 @@ public class MemberController {
 					pageable)));
 	}
 
+	@Operation(summary = "비밀번호 변경 API", description = "로그인한 회원의 비밀번호를 변경합니다. 비밀번호 찾기 후 발급받은 토큰으로도 변경 가능합니다.")
 	@PatchMapping("/update/password")
 	public ResponseEntity<Void> updatePassword(@AuthenticationPrincipal Member member,
 		@RequestBody @Valid UpdatePasswordRequest request) {
@@ -134,7 +134,7 @@ public class MemberController {
 		return ResponseEntity.ok().body(memberService.findMyPageInfo(memberId));
 	}
 
-	@Operation(summary = "회원 비활성화 요청 API")
+	@Operation(summary = "회원 탈퇴 API", description = "회원 탈퇴를 요청합니다. 탈퇴 정책에 동의해야 합니다.")
 	@PostMapping("/{memberId}/deactivate")
 	public ResponseEntity<Void> deactivateMember(@PathVariable("memberId") Long memberId,
 		@Valid @RequestBody DeactivateRequest request,
@@ -142,7 +142,7 @@ public class MemberController {
 		if (!member.getId().equals(memberId)) {
 			throw new NoPermissionException("본인 외의 회원을 비활성화할 수 없습니다.");
 		}
-		memberService.deactivateMember(member, request.email(), request.password(), request.checkedPolicies());
+		memberService.deactivateMember(member, request.email(), request.password(), request.leavingPolicyAgreed());
 		return ResponseEntity.noContent().build();
 	}
 
@@ -158,9 +158,8 @@ public class MemberController {
 	@Operation(summary = "부원 가입 승인")
 	@RoleAuthority(MemberRole.ADMIN)
 	@PatchMapping("/{memberId}/approve")
-	public ResponseEntity<Void> approveApplicant(@PathVariable("memberId") final Long memberId,
-		@RequestBody @Valid MemberApproveRequest request) {
-		adminMemberService.approveApplicant(memberId, request.position(), request.generationId());
+	public ResponseEntity<Void> approveApplicant(@PathVariable("memberId") final Long memberId) {
+		adminMemberService.approveApplicant(memberId);
 		return ResponseEntity.noContent().build();
 	}
 

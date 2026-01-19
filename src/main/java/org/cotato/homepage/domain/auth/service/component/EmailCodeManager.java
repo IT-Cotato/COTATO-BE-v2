@@ -43,6 +43,7 @@ public class EmailCodeManager {
 		String savedVerificationCode = verificationCodeRedisRepository.getByEmail(type, email);
 		if (savedVerificationCode != null) {
 			validateEmailCodeMatching(savedVerificationCode, code);
+			emailRedisRepository.saveVerifiedEmail(type, email);
 			log.info("[이메일 인증 완료]: 성공한 이메일 == {}", email);
 			return;
 		}
@@ -52,6 +53,14 @@ public class EmailCodeManager {
 		} else {
 			throw new AppException(ErrorCode.REQUEST_AGAIN);
 		}
+	}
+
+	public boolean isEmailVerified(EmailType type, String email) {
+		return emailRedisRepository.isEmailVerified(type, email);
+	}
+
+	public void deleteVerifiedEmail(EmailType type, String email) {
+		emailRedisRepository.deleteVerifiedEmail(type, email);
 	}
 
 	private void validateEmailCodeMatching(String savedVerificationCode, String code) {

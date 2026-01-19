@@ -4,10 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.SetUtils;
 import org.cotato.homepage.api.member.dto.MemberInfo;
 import org.cotato.homepage.api.member.dto.MemberInfoResponse;
 import org.cotato.homepage.api.member.dto.MemberMyPageInfoResponse;
@@ -15,7 +12,6 @@ import org.cotato.homepage.api.member.dto.MemberResponse;
 import org.cotato.homepage.api.member.dto.ProfileInfoResponse;
 import org.cotato.homepage.api.member.dto.ProfileLinkRequest;
 import org.cotato.homepage.api.member.dto.SearchedMembersResponse;
-import org.cotato.homepage.api.policy.dto.CheckPolicyRequest;
 import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
@@ -23,20 +19,15 @@ import org.cotato.homepage.common.error.exception.ImageException;
 import org.cotato.homepage.common.s3.S3Uploader;
 import org.cotato.homepage.domain.auth.entity.Member;
 import org.cotato.homepage.domain.auth.entity.MemberLeavingRequest;
-import org.cotato.homepage.domain.auth.entity.MemberPolicy;
-import org.cotato.homepage.domain.auth.entity.Policy;
 import org.cotato.homepage.domain.auth.entity.ProfileLink;
 import org.cotato.homepage.domain.auth.enums.ImageUpdateStatus;
 import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.enums.MemberStatus;
-import org.cotato.homepage.domain.auth.enums.PolicyCategory;
 import org.cotato.homepage.domain.auth.repository.MemberLeavingRequestRepository;
-import org.cotato.homepage.domain.auth.repository.MemberPolicyRepository;
 import org.cotato.homepage.domain.auth.repository.MemberRepository;
 import org.cotato.homepage.domain.auth.repository.ProfileLinkRepository;
 import org.cotato.homepage.domain.auth.service.component.MemberLeavingRequestReader;
 import org.cotato.homepage.domain.auth.service.component.MemberReader;
-import org.cotato.homepage.domain.auth.service.component.PolicyReader;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
@@ -70,7 +61,6 @@ public class MemberService {
 	private static final String PROFILE_BUCKET_DIRECTORY = "profile";
 	private final MemberReader memberReader;
 	private final GenerationReader generationReader;
-	private final PolicyReader policyReader;
 	private final MemberRepository memberRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final EncryptService encryptService;
@@ -79,7 +69,6 @@ public class MemberService {
 	private final GenerationMemberRepository generationMemberRepository;
 	private final MemberLeavingRequestRepository memberLeavingRequestRepository;
 	private final MemberLeavingRequestReader memberLeavingRequestReader;
-	private final MemberPolicyRepository memberPolicyRepository;
 
 	public MemberInfoResponse findMemberInfo(final Member member) {
 		String rawBackFourNumber = findBackFourNumber(member);
@@ -241,33 +230,14 @@ public class MemberService {
 
 	@Transactional
 	public void deactivateMember(final Member member, final String email, final String password,
-		final List<CheckPolicyRequest> checkPolicyRequests) {
+		final Boolean leavingPolicyAgreed) {
 		validateMember(member, email, password);
 
-		List<Policy> leavingPolicies = policyReader.getPoliciesByCategory(PolicyCategory.LEAVING);
-		if (!isCheckedAllLeavingPolicies(checkPolicyRequests, leavingPolicies)) {
-			throw new AppException(ErrorCode.NOT_CHECKED_ALL_LEAVING_POLICIES);
-		}
-
-		List<MemberPolicy> memberPolicies = leavingPolicies.stream()
-			.map(policy -> MemberPolicy.of(true, member, policy.getId()))
-			.toList();
-
-		memberPolicyRepository.saveAll(memberPolicies);
-
-		MemberLeavingRequest leavingRequest = MemberLeavingRequest.of(member, LocalDateTime.now());
+		MemberLeavingRequest leavingRequest = MemberLeavingRequest.of(member, LocalDateTime.now(), leavingPolicyAgreed);
 		memberLeavingRequestRepository.save(leavingRequest);
 
 		member.deactivate();
 		memberRepository.save(member);
-	}
-
-	private boolean isCheckedAllLeavingPolicies(List<CheckPolicyRequest> policyIds, List<Policy> leavingPolicies) {
-		Set<Long> leavingPolicyIds = leavingPolicies.stream().map(Policy::getId)
-			.collect(Collectors.toUnmodifiableSet());
-		Set<Long> checkedPolicyIds = policyIds.stream().map(CheckPolicyRequest::policyId)
-			.collect(Collectors.toUnmodifiableSet());
-		return SetUtils.isEqualSet(leavingPolicyIds, checkedPolicyIds);
 	}
 
 	private void validateMember(Member member, String email, String password) {

@@ -18,6 +18,7 @@ public enum ErrorCode {
 	REFRESH_TOKEN_NOT_EXIST(HttpStatus.UNAUTHORIZED, "T-004", "해당 리프레시 토큰이 DB에 존재하지 않습니다."),
 	REISSUE_FAIL(HttpStatus.UNAUTHORIZED, "T-005", "액세스 토큰 재발급 요청 실패"),
 	LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "T-006", "로그인에 실패했습니다."),
+	MEMBER_NOT_APPROVED(HttpStatus.FORBIDDEN, "T-007", "승인되지 않은 회원입니다. 관리자 승인 후 로그인이 가능합니다."),
 
 	// DTO 에서 발생하는 에러
 	INVALID_INPUT(HttpStatus.BAD_REQUEST, "I-001", "입력 값이 잘못되었습니다."),
@@ -31,15 +32,11 @@ public enum ErrorCode {
 	INVALID_PHONE_NUMBER_FORMAT(HttpStatus.BAD_REQUEST, "A-004", "문자열이 포함되어있습니다."),
 	CODE_NOT_MATCH(HttpStatus.BAD_REQUEST, "A-101", "요청하신 코드가 일치하지 않습니다."),
 	CODE_EXPIRED(HttpStatus.BAD_REQUEST, "A-102", "코드 유효 시간이 만료되었습니다."),
+	EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "A-103", "이메일 인증이 완료되지 않았습니다."),
 	EMAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "A-201", "해당 이메일이 존재하지 않습니다."),
 	REQUEST_AGAIN(HttpStatus.NOT_FOUND, "A-202", "해당 이메일에 대한 코드가 존재하지 않습니다. 다시 요청 해주세요"),
 	EMAIL_DUPLICATED(HttpStatus.CONFLICT, "A-301", "존재하는 이메일 입니다."),
 	PHONE_NUMBER_DUPLICATED(HttpStatus.CONFLICT, "A-302", "존재하는 전화번호입니다."),
-
-	// 정책 관련
-	SHOULD_AGREE_POLICY(HttpStatus.BAD_REQUEST, "P-001", "필수 정책에는 반드시 동의해야합니다."),
-	NOT_CHECKED_ALL_LEAVING_POLICIES(HttpStatus.BAD_REQUEST, "P-002", "모든 탈퇴 정책에 동의해야합니다."),
-	ALREADY_POLICY_CHECK(HttpStatus.CONFLICT, "P-301", "이미 동의한 정책입니다."),
 
 	//회원 관련
 	ROLE_IS_NOT_MATCH(HttpStatus.BAD_REQUEST, "M-101", "해당 ROLE은 변경할 수 없습니다."),
@@ -58,38 +55,12 @@ public enum ErrorCode {
 	//기수별 활동 부원 도메인
 	GENERATION_MEMBER_EXIST(HttpStatus.CONFLICT, "GM-301", "일부 부원이 해당 기수에 활동부원입니다"),
 
-	// 교육 도메인
-	REGRADE_FAIL(HttpStatus.BAD_REQUEST, "E-201", "재채점 할 기록이 없습니다."),
-	EDUCATION_DUPLICATED(HttpStatus.CONFLICT, "E-301", "이미 교육이 존재합니다"),
-	EDUCATION_CLOSED(HttpStatus.BAD_REQUEST, "E-401", "CS 퀴즈가 닫혀 있습니다 먼저 교육 시작 버튼을 눌러주세요"),
-	EDUCATION_STATUS_NOT_BEFORE(HttpStatus.BAD_REQUEST, "E-402", "이미 시작한 적이 있는 교육입니다."),
-	MEMBER_CANT_ACCESS(HttpStatus.BAD_REQUEST, "E-403", "해당 멤버의 ROLE로 접근할 수 없습니다"),
-
 	FILE_EXTENSION_FAULT(HttpStatus.BAD_REQUEST, "F-001", "해당 파일 확장자 명이 존재하지 않습니다."),
 	FILE_IS_EMPTY(HttpStatus.BAD_REQUEST, "F-002", "파일이 비어있습니다"),
 
 	//세션 사진
 	SESSION_IMAGE_COUNT_MISMATCH(HttpStatus.BAD_REQUEST, "IM-101", "저장된 사진 수와 요청 사진 수가 다릅니다."),
 	SESSION_ORDER_INVALID(HttpStatus.BAD_REQUEST, "IM-102", "입력한 순서는 유효하지 않습니다."),
-
-	INVALID_ANSWER(HttpStatus.BAD_REQUEST, "Q-101", "객관식 문제는 숫자 형식의 값만 정답으로 추가할 수 있습니다."),
-	CONTENT_IS_NOT_ANSWER(HttpStatus.BAD_REQUEST, "Q-201", "추가되지 않은 정답을 추가할 수 없습니다."),
-	QUIZ_NUMBER_DUPLICATED(HttpStatus.CONFLICT, "Q-301", "퀴즈 번호는 중복될 수 없습니다."),
-	CHOICE_NUMBER_DUPLICATED(HttpStatus.CONFLICT, "Q-302", "선지 번호는 중복될 수 없습니다"),
-	CONTENT_IS_ALREADY_ANSWER(HttpStatus.BAD_REQUEST, "Q-303", "이미 정답인 답을 추가했습니다"),
-	QUIZ_ACCESS_DENIED(HttpStatus.BAD_REQUEST, "Q-401", "해당 퀴즈는 아직 접근할 수 없습니다."),
-	QUIZ_TYPE_NOT_MATCH(HttpStatus.BAD_REQUEST, "Q-402", "주관식 정답만 추가 가능합니다."),
-
-	KING_MEMBER_EXIST(HttpStatus.CONFLICT, "K-301", "이미 킹킹 멤버가 존재합니다"),
-
-	SUBJECT_INVALID(HttpStatus.BAD_REQUEST, "E-000", "교육 주제는 NULL이거나 비어있을 수 없습니다."),
-
-	PROCESSING(HttpStatus.CONFLICT, "D-999", "해당 키의 요청은 아직 처리 중 입니다."),
-
-	ALREADY_REPLY_CORRECT(HttpStatus.BAD_REQUEST, "R-301", "해당 사용자는 이미 정답 처리되었습니다."),
-
-	LAST_QUIZ_SCORER_NOT_EXIST(HttpStatus.CONFLICT, "W-201", "아직 마지막 문제 득점자가 없습니다"),
-	WINNER_EXIST(HttpStatus.CONFLICT, "W-301", "이미 우승자가 존재합니다"),
 
 	//출석 관련 AT
 	OFFLINE_ATTEND_FAIL(HttpStatus.BAD_REQUEST, "AT-101", "거리 부적합으로 인한 대면 출석 실패"),
@@ -111,25 +82,15 @@ public enum ErrorCode {
 	//프로필 이미지 관련
 	PROFILE_IMAGE_NOT_EXIST(HttpStatus.BAD_REQUEST, "PI-401", "요청에 프로필 이미지가 존재하지 않습니다."),
 
-	//모집 알림 관련
-	INVALID_RECRUITMENT_INFO(HttpStatus.BAD_REQUEST, "RE-101", "모집 수정 정보를 작성하세요."),
-	ALREADY_REQUEST_NOTIFICATION(HttpStatus.CONFLICT, "RE-301", "이미 모집 신청을 완료했습니다"),
-	RECRUITMENT_INFO_COUNT_INVALID(HttpStatus.CONFLICT, "RE-302", "모집 정보 갯수가 없거나 2개 이상힙니디."),
-
 	// 500 오류 -> 서버측에서 처리가 실패한 부분들
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-000", "예상치 못한 서버 내부 에러 발생"),
-	WEBSOCKET_SEND_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "S-001", "소캣 메세지 전송 실패"),
 	IMAGE_PROCESSING_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-002", "이미지 처리에 실패했습니다."),
 	IMAGE_DELETE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-003", "s3 이미지 삭제처리를 실패했습니다"),
 	INTERNAL_SQL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-004", "SQL 관련 에러 발생"),
 	ENUM_NOT_RESOLVED(HttpStatus.BAD_REQUEST, "S-005", "입력한 Enum이 존재하지 않습니다."),
-	SCORER_LOCK_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-006", "득점자 락 획득 과정에서 에러 발생"),
 	IMAGE_CONVERT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-007", "로컬 이미지 변환에 실패했습니다"),
-	SSE_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-008", "서버 이벤트 전송간 오류 발생"),
 	WEBP_CONVERT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-009", "webp 변환에 실패했습니다"),
-	GUILD_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "S-010", "디스코드 서버를 찾지 못했습니다."),
-	CHANNEL_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "S-011", "디스코드 채널을 찾지 못했습니다."),
-	DISCORD_BUTTON_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-012", "디스코드 버튼 이벤트 ID를 찾지 못했습니다."),
+	SSE_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-008", "서버 이벤트 전송간 오류 발생"),
 	EMAIL_SEND_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-013", "이메일 전송에 실패했습니다."),
 	FILE_GENERATION_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-014", "엑셀 파일 생성에 실패했습니다."),
 	EVENT_TYPE_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "S-015", "이벤트 처리 중 에러 발생");
