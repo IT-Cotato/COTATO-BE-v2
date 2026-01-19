@@ -12,6 +12,7 @@ import org.cotato.homepage.common.config.jwt.RefreshTokenRepository;
 import org.cotato.homepage.common.config.jwt.Token;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +45,8 @@ class AuthServiceTest {
 		final Long memberId = 1L;
 		final String oldRefreshToken = "oldRefreshToken";
 
-		Member member = Member.defaultMember("email", "pwd", "name", "010");
+		Member member = Member.of("email", "pwd", "name", "010",
+			MemberPosition.NONE, null, null, null, true, true);
 		ReflectionTestUtils.setField(member, "id", memberId);
 
 		Token newToken = new Token("newAccessToken", "newRefreshToken");
@@ -96,7 +98,8 @@ class AuthServiceTest {
 		// given
 		Long memberId = 1L;
 		String refreshToken = "validToken";
-		Member member = Member.defaultMember("email", "pwd", "name", "010");
+		Member member = Member.of("email", "pwd", "name", "010",
+			MemberPosition.NONE, null, null, null, true, true);
 		ReflectionTestUtils.setField(member, "id", memberId);
 
 		when(jwtTokenProvider.isExpired(refreshToken)).thenReturn(false);
@@ -115,7 +118,8 @@ class AuthServiceTest {
 		Long memberId = 1L;
 		String refreshToken = "mismatchedToken";
 		String dbToken = "storedToken";
-		Member member = Member.defaultMember("email", "pwd", "name", "010");
+		Member member = Member.of("email", "pwd", "name", "010",
+			MemberPosition.NONE, null, null, null, true, true);
 		ReflectionTestUtils.setField(member, "id", memberId);
 		RefreshToken refreshTokenEntity = new RefreshToken(memberId, dbToken);
 

@@ -14,6 +14,7 @@ import org.cotato.homepage.domain.attendance.repository.AttendanceRecordReposito
 import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceRecordReader;
 import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.service.component.MemberReader;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.enums.SessionType;
@@ -52,7 +53,8 @@ class AttendanceRecordServiceTest {
 		Session session = Session.builder().sessionType(SessionType.OFFLINE).build();
 		Attendance attendance = Attendance.builder().session(session).build();
 		AttendanceRecord attendanceRecord = AttendanceRecord.absentRecord(attendance, 1L);
-		Member member = Member.defaultMember("test", "test", "test", "test");
+		Member member = Member.of("test", "test", "test", "test",
+			MemberPosition.NONE, null, null, null, true, true);
 
 		when(attendanceReader.findById(any())).thenReturn(attendance);
 		when(attendanceRecordReader.getByAttendanceAndMember(any(), any())).thenReturn(Optional.of(attendanceRecord));
@@ -72,7 +74,8 @@ class AttendanceRecordServiceTest {
 		Session session = Session.builder().sessionType(SessionType.ONLINE).build();
 		Attendance attendance = Attendance.builder().session(session).build();
 		AttendanceRecord attendanceRecord = AttendanceRecord.absentRecord(attendance, 1L);
-		Member member = Member.defaultMember("test", "test", "test", "test");
+		Member member = Member.of("test", "test", "test", "test",
+			MemberPosition.NONE, null, null, null, true, true);
 
 		when(attendanceReader.findById(any())).thenReturn(attendance);
 		when(attendanceRecordReader.getByAttendanceAndMember(any(), any())).thenReturn(Optional.of(attendanceRecord));
@@ -91,7 +94,8 @@ class AttendanceRecordServiceTest {
 		Session session = Session.builder().sessionType(SessionType.OFFLINE).build();
 		Attendance attendance = Attendance.builder().session(session).build();
 		AttendanceRecord attendanceRecord = AttendanceRecord.absentRecord(attendance, 1L);
-		Member member = Member.defaultMember("test", "test", "test", "test");
+		Member member = Member.of("test", "test", "test", "test",
+			MemberPosition.NONE, null, null, null, true, true);
 
 		when(attendanceReader.findById(any())).thenReturn(attendance);
 		when(attendanceRecordReader.getByAttendanceAndMember(any(), any())).thenReturn(Optional.of(attendanceRecord));

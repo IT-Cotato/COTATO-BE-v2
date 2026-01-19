@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.cotato.homepage.domain.auth.constant.TokenConstants;
 import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,7 +50,8 @@ class JwtTokenProviderTest {
 	@DisplayName("JWT 토큰 생성 검증")
 	void createToken_ShouldGenerateValidAccessAndRefreshTokens() {
 		// given
-		Member member = Member.defaultMember("email", "pwd", "name", "010");
+		Member member = Member.of("email", "pwd", "name", "010",
+			MemberPosition.NONE, null, null, null, true, true);
 		ReflectionTestUtils.setField(member, "id", 42L);
 
 		// when
@@ -80,7 +82,8 @@ class JwtTokenProviderTest {
 	void getMember_ShouldReturnMemberFromAccessToken() {
 		// given
 		final Long memberId = 42L;
-		Member member = Member.defaultMember("email", "pwd", "name", "010");
+		Member member = Member.of("email", "pwd", "name", "010",
+			MemberPosition.NONE, null, null, null, true, true);
 		ReflectionTestUtils.setField(member, "id", memberId);
 		Token token = jwtTokenProvider.createToken(member);
 

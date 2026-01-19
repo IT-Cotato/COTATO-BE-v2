@@ -15,8 +15,6 @@ import org.cotato.homepage.domain.auth.enums.MemberRole;
 import org.cotato.homepage.domain.auth.enums.MemberStatus;
 import org.cotato.homepage.domain.auth.repository.MemberRepository;
 import org.cotato.homepage.domain.auth.service.component.MemberReader;
-import org.cotato.homepage.domain.generation.entity.Generation;
-import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,9 +28,6 @@ class AdminMemberServiceTest {
 	private AdminMemberService adminMemberService;
 
 	@Mock
-	private GenerationReader generationReader;
-
-	@Mock
 	private MemberReader memberReader;
 
 	@Mock
@@ -44,43 +39,38 @@ class AdminMemberServiceTest {
 	@Test
 	void whenApproveApplicant_thenStatusChangedToApproved() {
 		// given
-		Member member = Member.defaultMember("boysoeng@naver.com", "password", "name", "phoneNumber");
+		Member member = Member.of("boysoeng@naver.com", "password", "name", "phoneNumber",
+			MemberPosition.BE, "university", null, 1, true, true);
 		member.updateStatus(MemberStatus.REQUESTED);
 
-		Generation generation = Generation.builder().number(1).build();
-
-		when(generationReader.findById(any())).thenReturn(generation);
 		when(memberReader.findById(any())).thenReturn(member);
 
 		// when
-		adminMemberService.approveApplicant(member.getId(), MemberPosition.BE, 1L);
+		adminMemberService.approveApplicant(member.getId());
 
 		// then
 		assertEquals(MemberStatus.APPROVED, member.getStatus());
-		assertEquals(1, member.getPassedGenerationNumber());
-		assertEquals(MemberPosition.BE, member.getPosition());
 	}
 
 	@Test
 	void whenApproveApplicantWithInvalidStatus_thenThrowException() {
 		// given
-		Member member = Member.defaultMember("boysoeng@naver.com", "password", "name", "phoneNumber");
+		Member member = Member.of("boysoeng@naver.com", "password", "name", "phoneNumber",
+			MemberPosition.BE, "university", null, 1, true, true);
 		member.updateStatus(MemberStatus.INACTIVE);
 
-		Generation generation = Generation.builder().number(1).build();
-
-		when(generationReader.findById(any())).thenReturn(generation);
 		when(memberReader.findById(any())).thenReturn(member);
 
 		// when, then
 		assertThrows(AppException.class,
-			() -> adminMemberService.approveApplicant(member.getId(), MemberPosition.BE, 1L));
+			() -> adminMemberService.approveApplicant(member.getId()));
 	}
 
 	@Test
 	void whenUpdateMemberRole_thenRoleChanged() {
 		// given
-		Member member = Member.defaultMember("email", "pwd", "dd", "");
+		Member member = Member.of("email", "pwd", "dd", "phoneNumber",
+			MemberPosition.NONE, null, null, null, true, true);
 		member.updateRole(MemberRole.MEMBER);
 		when(memberReader.findById(any())).thenReturn(member);
 
@@ -94,8 +84,10 @@ class AdminMemberServiceTest {
 	@Test
 	void whenUpdateToRetireMembers_thenStatusChangedToRetired() {
 		// given
-		Member member1 = Member.defaultMember("email", "pwd", "dd", "1");
-		Member member2 = Member.defaultMember("email2", "pwd", "dd2", "2");
+		Member member1 = Member.of("email", "pwd", "dd", "1",
+			MemberPosition.NONE, null, null, null, true, true);
+		Member member2 = Member.of("email2", "pwd", "dd2", "2",
+			MemberPosition.NONE, null, null, null, true, true);
 		member1.updateStatus(MemberStatus.APPROVED);
 		member2.updateStatus(MemberStatus.APPROVED);
 
@@ -112,7 +104,8 @@ class AdminMemberServiceTest {
 	@Test
 	void whenUpdateDevTeamToRetired_thenThrowException() {
 		// given
-		Member devTeam = Member.defaultMember("email", "pwd", "dd", "1");
+		Member devTeam = Member.of("email", "pwd", "dd", "1",
+			MemberPosition.NONE, null, null, null, true, true);
 		devTeam.updateRole(MemberRole.DEV);
 		devTeam.updateStatus(MemberStatus.APPROVED);
 
@@ -128,8 +121,10 @@ class AdminMemberServiceTest {
 	@Test
 	void whenUpdateNonActiveMemberToRetired_thenThrowException() {
 		// given
-		Member member1 = Member.defaultMember("email", "pwd", "dd", "1");
-		Member member2 = Member.defaultMember("email2", "pwd", "dd2", "2");
+		Member member1 = Member.of("email", "pwd", "dd", "1",
+			MemberPosition.NONE, null, null, null, true, true);
+		Member member2 = Member.of("email2", "pwd", "dd2", "2",
+			MemberPosition.NONE, null, null, null, true, true);
 		member1.updateStatus(MemberStatus.INACTIVE);
 		member1.updateStatus(MemberStatus.REJECTED);
 
@@ -142,7 +137,8 @@ class AdminMemberServiceTest {
 	@Test
 	void whenUpdateToApprovedMember_thenStatusChangedToApproved() {
 		// given
-		Member member = Member.defaultMember("email", "pwd", "dd", "1");
+		Member member = Member.of("email", "pwd", "dd", "1",
+			MemberPosition.NONE, null, null, null, true, true);
 		member.updateStatus(MemberStatus.RETIRED);
 
 		when(memberReader.findById(any())).thenReturn(member);

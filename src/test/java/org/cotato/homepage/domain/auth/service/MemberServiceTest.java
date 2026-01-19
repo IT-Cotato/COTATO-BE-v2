@@ -64,9 +64,10 @@ class MemberServiceTest {
 	@Test
 	void whenActivateMember_thenStatusChangedToApproved() {
 		// given
-		Member member = Member.defaultMember("email", "password", "name", null);
+		Member member = Member.of("email", "password", "name", null,
+			MemberPosition.NONE, null, null, null, true, true);
 		member.updateStatus(MemberStatus.INACTIVE);
-		MemberLeavingRequest leavingRequest = MemberLeavingRequest.of(member, LocalDateTime.now());
+		MemberLeavingRequest leavingRequest = MemberLeavingRequest.of(member, LocalDateTime.now(), true);
 
 		when(memberLeavingRequestReader.getLeavingRequestByMember(member))
 			.thenReturn(leavingRequest);
@@ -84,9 +85,10 @@ class MemberServiceTest {
 	@Test
 	void whenMemberIsNotInactive_thenActivationFails() {
 		// given
-		Member member = Member.defaultMember("email", "password", "name", null);
+		Member member = Member.of("email", "password", "name", null,
+			MemberPosition.NONE, null, null, null, true, true);
 		member.updateStatus(MemberStatus.APPROVED);
-		MemberLeavingRequest leavingRequest = MemberLeavingRequest.of(member, LocalDateTime.now());
+		MemberLeavingRequest leavingRequest = MemberLeavingRequest.of(member, LocalDateTime.now(), true);
 
 		when(memberLeavingRequestReader.getLeavingRequestByMember(member))
 			.thenReturn(leavingRequest);
@@ -100,8 +102,10 @@ class MemberServiceTest {
 	@Test
 	void whenGetMembersByStatus_thenReturnApprovedMembers() {
 		// given
-		Member member1 = Member.defaultMember("email1", "password1", "name1", "1");
-		Member member2 = Member.defaultMember("email2", "password2", "name2", "2");
+		Member member1 = Member.of("email1", "password1", "name1", "1",
+			MemberPosition.NONE, null, null, null, true, true);
+		Member member2 = Member.of("email2", "password2", "name2", "2",
+			MemberPosition.NONE, null, null, null, true, true);
 		member1.updateStatus(MemberStatus.APPROVED);
 		member2.updateStatus(MemberStatus.APPROVED);
 
@@ -182,10 +186,10 @@ class MemberServiceTest {
 	}
 
 	private Member getDefaultMember() {
-		Member member = Member.defaultMember("email", "password", "name", null);
+		Member member = Member.of("email", "password", "name", null,
+			MemberPosition.NONE, "before", null, null, true, true);
 		member.updateStatus(MemberStatus.APPROVED);
 		member.updateIntroduction("before");
-		member.updateUniversity("before");
 		member.updateProfileImage(new S3Info("url", "file", "folder"));
 		return member;
 	}
@@ -194,14 +198,12 @@ class MemberServiceTest {
 	void whenSearchOM_thenReturnPagedResults() {
 		// given
 		Pageable pageable = PageRequest.of(0, 1);
-		Member member1 = Member.defaultMember("email1", "password1", "name1", "1");
-		Member member2 = Member.defaultMember("email2", "password2", "name2", "2");
+		Member member1 = Member.of("email1", "password1", "name1", "1",
+			MemberPosition.BE, null, null, 1, true, true);
+		Member member2 = Member.of("email2", "password2", "name2", "2",
+			MemberPosition.BE, null, null, 1, true, true);
 		member1.updateStatus(MemberStatus.RETIRED);
 		member2.updateStatus(MemberStatus.RETIRED);
-		member1.updatePassedGenerationNumber(1);
-		member1.updatePosition(MemberPosition.BE);
-		member2.updatePassedGenerationNumber(1);
-		member2.updatePosition(MemberPosition.BE);
 
 		Page<Member> memberPage = new PageImpl<>(List.of(member1, member2), pageable, 1);
 
