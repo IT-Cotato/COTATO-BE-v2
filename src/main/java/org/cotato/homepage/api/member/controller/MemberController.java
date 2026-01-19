@@ -91,6 +91,7 @@ public class MemberController {
 					pageable)));
 	}
 
+	@Operation(summary = "비밀번호 변경 API", description = "로그인한 회원의 비밀번호를 변경합니다. 비밀번호 찾기 후 발급받은 토큰으로도 변경 가능합니다.")
 	@PatchMapping("/update/password")
 	public ResponseEntity<Void> updatePassword(@AuthenticationPrincipal Member member,
 		@RequestBody @Valid UpdatePasswordRequest request) {
