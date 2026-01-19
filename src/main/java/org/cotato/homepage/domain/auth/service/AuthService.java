@@ -18,9 +18,15 @@ import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.auth.constant.EmailConstants;
 import org.cotato.homepage.domain.auth.entity.Member;
 import org.cotato.homepage.domain.auth.enums.EmailType;
+import org.cotato.homepage.domain.auth.enums.MemberStatus;
 import org.cotato.homepage.domain.auth.repository.MemberRepository;
 import org.cotato.homepage.domain.auth.service.component.EmailCodeManager;
 import org.cotato.homepage.domain.auth.service.component.MemberReader;
+import org.cotato.homepage.domain.generation.entity.Generation;
+import org.cotato.homepage.domain.generation.service.component.GenerationReader;
+
+import java.time.LocalDate;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,9 +43,9 @@ public class AuthService {
 	private static final String EMAIL_DELIMITER = "@";
 	private static final int EXPOSED_LENGTH = 4;
 
-	private final PolicyService policyService;
 	private final MemberReader memberReader;
 	private final MemberRepository memberRepository;
+	private final GenerationReader generationReader;
 	private final ValidateService validateService;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
@@ -51,17 +57,33 @@ public class AuthService {
 
 	@Transactional
 	public JoinResponse createMember(final JoinRequest request) {
+		if (!emailCodeManager.isEmailVerified(EmailType.SIGNUP, request.email())) {
+			throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
+		}
+
 		validateService.checkDuplicateEmail(request.email());
 
 		String encryptedPhoneNumber = encryptService.encryptPhoneNumber(request.phoneNumber());
 		validateService.checkDuplicatePhoneNumber(encryptedPhoneNumber);
 		log.info("[회원 가입 서비스]: {}, {}", request.email(), request.name());
 
-		Member newMember = Member.defaultMember(request.email(), bCryptPasswordEncoder.encode(request.password()),
-			request.name(), encryptedPhoneNumber);
+		Generation currentGeneration = generationReader.findByDate(LocalDate.now());
+
+		Member newMember = Member.of(
+			request.email(),
+			bCryptPasswordEncoder.encode(request.password()),
+			request.name(),
+			encryptedPhoneNumber,
+			request.position(),
+			request.university(),
+			request.gender(),
+			currentGeneration.getNumber(),
+			request.termsOfServiceAgreed(),
+			request.privacyPolicyAgreed()
+		);
 		memberRepository.save(newMember);
 
-		policyService.checkPolicies(newMember, request.policies());
+		emailCodeManager.deleteVerifiedEmail(EmailType.SIGNUP, request.email());
 
 		return JoinResponse.from(newMember);
 	}
@@ -154,5 +176,25 @@ public class AuthService {
 		if (!originName.equals(requestName)) {
 			throw new EntityNotFoundException("해당 이름을 가진 회원을 찾을 수 없습니다.");
 		}
+	}
+
+	public Token login(final String email, final String password) {
+		Member member = memberReader.getByEmail(email);
+
+		if (!bCryptPasswordEncoder.matches(password, member.getPassword())) {
+			throw new AppException(ErrorCode.INVALID_PASSWORD);
+		}
+
+		if (member.getStatus() != MemberStatus.APPROVED && member.getStatus() != MemberStatus.RETIRED) {
+			throw new AppException(ErrorCode.MEMBER_NOT_APPROVED);
+		}
+
+		Token token = jwtTokenProvider.createToken(member);
+
+		RefreshToken refreshToken = new RefreshToken(member.getId(), token.getRefreshToken());
+		refreshToken.updateRefreshToken(token.getRefreshToken());
+		refreshTokenRepository.save(refreshToken);
+
+		return token;
 	}
 }

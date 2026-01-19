@@ -2,6 +2,7 @@ package org.cotato.homepage.domain.auth.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
 import org.cotato.homepage.common.entity.S3Info;
+import org.cotato.homepage.domain.auth.enums.Gender;
 import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.enums.MemberRole;
 import org.cotato.homepage.domain.auth.enums.MemberStatus;
@@ -51,7 +52,7 @@ public class Member extends BaseTimeEntity {
 
 	@Column(name = "member_role")
 	@Enumerated(EnumType.STRING)
-	@ColumnDefault(value = "'GENERAL'")
+	@ColumnDefault(value = "'MEMBER'")
 	private MemberRole role;
 
 	@Column(name = "status")
@@ -71,16 +72,37 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "university")
 	private String university;
 
-	private Member(String email, String password, String name, String phoneNumber, MemberStatus status) {
+	@Column(name = "gender")
+	@Enumerated(EnumType.STRING)
+	private Gender gender;
+
+	@Column(name = "terms_of_service_agreed", nullable = false)
+	private Boolean termsOfServiceAgreed;
+
+	@Column(name = "privacy_policy_agreed", nullable = false)
+	private Boolean privacyPolicyAgreed;
+
+	private Member(String email, String password, String name, String phoneNumber, MemberPosition position,
+		String university, Gender gender, Integer passedGenerationNumber,
+		Boolean termsOfServiceAgreed, Boolean privacyPolicyAgreed, MemberStatus status) {
 		this.email = email;
 		this.password = password;
 		this.name = name;
 		this.phoneNumber = phoneNumber;
+		this.position = position;
+		this.university = university;
+		this.gender = gender;
+		this.passedGenerationNumber = passedGenerationNumber;
+		this.termsOfServiceAgreed = termsOfServiceAgreed;
+		this.privacyPolicyAgreed = privacyPolicyAgreed;
 		this.status = status;
 	}
 
-	public static Member defaultMember(String email, String password, String name, String phoneNumber) {
-		return new Member(email, password, name, phoneNumber, MemberStatus.REQUESTED);
+	public static Member of(String email, String password, String name, String phoneNumber,
+		MemberPosition position, String university, Gender gender, Integer passedGenerationNumber,
+		Boolean termsOfServiceAgreed, Boolean privacyPolicyAgreed) {
+		return new Member(email, password, name, phoneNumber, position, university, gender,
+			passedGenerationNumber, termsOfServiceAgreed, privacyPolicyAgreed, MemberStatus.REQUESTED);
 	}
 
 	public String getProfileImageUrl() {

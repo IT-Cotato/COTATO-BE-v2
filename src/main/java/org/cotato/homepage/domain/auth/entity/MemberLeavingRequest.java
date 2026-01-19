@@ -37,14 +37,19 @@ public class MemberLeavingRequest extends BaseTimeEntity {
 
 	private boolean isReactivated;
 
-	private MemberLeavingRequest(Member member, LocalDateTime requestedAt, boolean isReactivated) {
+	@Column(name = "leaving_policy_agreed", nullable = false)
+	private Boolean leavingPolicyAgreed;
+
+	private MemberLeavingRequest(Member member, LocalDateTime requestedAt, boolean isReactivated,
+		Boolean leavingPolicyAgreed) {
 		this.member = member;
 		this.requestedAt = requestedAt;
 		this.isReactivated = isReactivated;
+		this.leavingPolicyAgreed = leavingPolicyAgreed;
 	}
 
-	public static MemberLeavingRequest of(Member member, LocalDateTime requestedAt) {
-		return new MemberLeavingRequest(member, requestedAt, false);
+	public static MemberLeavingRequest of(Member member, LocalDateTime requestedAt, Boolean leavingPolicyAgreed) {
+		return new MemberLeavingRequest(member, requestedAt, false, leavingPolicyAgreed);
 	}
 
 	public void updateIsReactivated(boolean isReactivated) {
