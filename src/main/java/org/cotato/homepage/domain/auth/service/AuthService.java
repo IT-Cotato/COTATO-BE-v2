@@ -2,6 +2,8 @@ package org.cotato.homepage.domain.auth.service;
 
 import static org.cotato.homepage.common.util.EmailUtil.*;
 
+import java.time.LocalDate;
+
 import org.cotato.homepage.api.auth.dto.FindPasswordResponse;
 import org.cotato.homepage.api.auth.dto.JoinRequest;
 import org.cotato.homepage.api.auth.dto.JoinResponse;
@@ -24,9 +26,6 @@ import org.cotato.homepage.domain.auth.service.component.EmailCodeManager;
 import org.cotato.homepage.domain.auth.service.component.MemberReader;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
-
-import java.time.LocalDate;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -46,7 +46,8 @@ public class AuthController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(authService.createMember(request));
 	}
 
-	@Operation(summary = "로그인 API", description = "이메일과 비밀번호로 로그인합니다. 성공 시 Access Token은 응답 Body에, Refresh Token은 Cookie에 담겨 반환됩니다.")
+	@Operation(summary = "로그인 API",
+		description = "이메일과 비밀번호로 로그인합니다. 성공 시 Access Token은 응답 Body에, Refresh Token은 Cookie에 담겨 반환됩니다.")
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request,
 		HttpServletResponse response) {
@@ -107,7 +108,8 @@ public class AuthController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@Operation(summary = "비밀번호 찾기 인증 코드 확인 API", description = "비밀번호 찾기 시 발송된 인증 코드를 검증하고 비밀번호 변경을 위한 Access Token을 발급합니다.")
+	@Operation(summary = "비밀번호 찾기 인증 코드 확인 API",
+		description = "비밀번호 찾기 시 발송된 인증 코드를 검증하고 비밀번호 변경을 위한 Access Token을 발급합니다.")
 	@GetMapping("/verification/password")
 	public ResponseEntity<FindPasswordResponse> verifyPasswordCode(@RequestParam(name = "email") String email,
 		@RequestParam(name = "code") String code) {
