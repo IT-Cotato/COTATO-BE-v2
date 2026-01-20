@@ -24,12 +24,12 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public List<Member> findAllWithFilters(Integer passedGenerationNumber, MemberPosition memberPosition, String name) {
+	public List<Member> findAllWithFilters(Long passedGenerationId, MemberPosition memberPosition, String name) {
 		QMember qMember = QMember.member;
 		BooleanBuilder builder = new BooleanBuilder();
 
-		if (passedGenerationNumber != null) {
-			builder.and(qMember.passedGenerationNumber.eq(passedGenerationNumber));
+		if (passedGenerationId != null) {
+			builder.and(qMember.passedGenerationNumber.eq(passedGenerationId));
 		}
 
 		if (memberPosition != null) {
@@ -46,14 +46,14 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 	}
 
 	@Override
-	public Page<Member> findAllWithFiltersPageable(Integer passedGenerationNumber, MemberPosition memberPosition,
+	public Page<Member> findAllWithFiltersPageable(Long passedGenerationId, MemberPosition memberPosition,
 		MemberStatus memberStatus, String name,
 		Pageable pageable) {
 		QMember qMember = QMember.member;
 		BooleanBuilder builder = new BooleanBuilder();
 
-		if (passedGenerationNumber != null) {
-			builder.and(qMember.passedGenerationNumber.eq(passedGenerationNumber));
+		if (passedGenerationId != null) {
+			builder.and(qMember.passedGenerationNumber.eq(passedGenerationId));
 		}
 		if (memberPosition != null) {
 			builder.and(qMember.position.eq(memberPosition));

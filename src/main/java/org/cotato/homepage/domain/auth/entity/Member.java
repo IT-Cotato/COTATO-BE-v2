@@ -61,7 +61,7 @@ public class Member extends BaseTimeEntity {
 	private MemberStatus status = MemberStatus.REQUESTED;
 
 	@Column(name = "passed_generation_number")
-	private Integer passedGenerationNumber;
+	private Long passedGenerationNumber;
 
 	@Column(name = "member_profile_image")
 	private S3Info profileImage;
@@ -83,7 +83,7 @@ public class Member extends BaseTimeEntity {
 	private Boolean privacyPolicyAgreed;
 
 	private Member(String email, String password, String name, String phoneNumber, MemberPosition position,
-		String university, Gender gender, Integer passedGenerationNumber,
+		String university, Gender gender, Long passedGenerationNumber,
 		Boolean termsOfServiceAgreed, Boolean privacyPolicyAgreed, MemberStatus status) {
 		this.email = email;
 		this.password = password;
@@ -99,7 +99,7 @@ public class Member extends BaseTimeEntity {
 	}
 
 	public static Member of(String email, String password, String name, String phoneNumber,
-		MemberPosition position, String university, Gender gender, Integer passedGenerationNumber,
+		MemberPosition position, String university, Gender gender, Long passedGenerationNumber,
 		Boolean termsOfServiceAgreed, Boolean privacyPolicyAgreed) {
 		return new Member(email, password, name, phoneNumber, position, university, gender,
 			passedGenerationNumber, termsOfServiceAgreed, privacyPolicyAgreed, MemberStatus.REQUESTED);
@@ -129,7 +129,7 @@ public class Member extends BaseTimeEntity {
 		this.password = password;
 	}
 
-	public void updatePassedGenerationNumber(Integer passedGenerationNumber) {
+	public void updatePassedGenerationNumber(Long passedGenerationNumber) {
 		this.passedGenerationNumber = passedGenerationNumber;
 	}
 

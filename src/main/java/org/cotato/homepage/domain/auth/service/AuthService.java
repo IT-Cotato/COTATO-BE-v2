@@ -76,7 +76,7 @@ public class AuthService {
 			request.position(),
 			request.university(),
 			request.gender(),
-			currentGeneration.getNumber(),
+			currentGeneration.getId(),
 			request.termsOfServiceAgreed(),
 			request.privacyPolicyAgreed()
 		);

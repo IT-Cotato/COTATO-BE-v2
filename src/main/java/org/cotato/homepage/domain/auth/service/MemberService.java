@@ -207,7 +207,7 @@ public class MemberService {
 		return memberReader.findAllGenerationMember(currentGeneration);
 	}
 
-	public SearchedMembersResponse findAddableMembers(final Long generationId, Integer generationNumber,
+	public SearchedMembersResponse findAddableMembers(final Long generationId, Long passedGenerationId,
 		MemberPosition memberPosition, String name) {
 		Generation generation = generationReader.findById(generationId);
 		List<Long> existMemberIds = generationMemberRepository.findAllByGenerationIdWithMember(generation.getId())
@@ -215,7 +215,8 @@ public class MemberService {
 			.map(gm -> gm.getMember().getId())
 			.toList();
 
-		List<Member> filteredAddableMember = memberRepository.findAllWithFilters(generationNumber, memberPosition, name)
+		List<Member> filteredAddableMember = memberRepository.findAllWithFilters(
+				passedGenerationId, memberPosition, name)
 			.stream()
 			.filter(member -> member.isApproved() || member.isRetired())
 			.filter(member -> !existMemberIds.contains(member.getId()))
@@ -282,9 +283,9 @@ public class MemberService {
 		// Todo: event를 통한 이메일 발송
 	}
 
-	public Page<MemberResponse> getMembersByName(Integer passedGenerationNumber, MemberPosition position, String name,
+	public Page<MemberResponse> getMembersByName(Long passedGenerationId, MemberPosition position, String name,
 		MemberStatus memberStatus, Pageable pageable) {
-		return memberRepository.findAllWithFiltersPageable(passedGenerationNumber, position, memberStatus, name,
+		return memberRepository.findAllWithFiltersPageable(passedGenerationId, position, memberStatus, name,
 			pageable).map(member -> MemberResponse.of(member, findBackFourNumber(member)));
 	}
 }

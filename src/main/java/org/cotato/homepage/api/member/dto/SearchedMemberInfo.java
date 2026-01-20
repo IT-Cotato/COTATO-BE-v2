@@ -11,8 +11,8 @@ public record SearchedMemberInfo(
 	Long memberId,
 	@Schema(description = "이름", requiredMode = RequiredMode.REQUIRED)
 	String name,
-	@Schema(description = "합격 기수", requiredMode = RequiredMode.REQUIRED)
-	Integer generationNumber,
+	@Schema(description = "합격 기수 ID", requiredMode = RequiredMode.REQUIRED)
+	Long generationId,
 	@Schema(description = "포지션", requiredMode = RequiredMode.REQUIRED)
 	MemberPosition position
 ) {

@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "기수별 활동 멤버 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/api/generation-members")
+@RequestMapping("/v1/api/admin/generation-members")
 public class GenerationMemberController {
 
 	private final GenerationMemberService generationMemberService;
