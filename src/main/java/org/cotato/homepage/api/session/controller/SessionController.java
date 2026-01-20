@@ -60,7 +60,7 @@ public class SessionController {
 
 	@Operation(summary = "Session 추가 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<AddSessionResponse> addSession(@ModelAttribute @Valid AddSessionRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(sessionService.addSession(request.generationId(),
 			request.images(), request.toSession(), request.attendanceDeadLine(), request.lateDeadLine(),
@@ -69,7 +69,7 @@ public class SessionController {
 
 	@Operation(summary = "세션 수정 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping
+	@PatchMapping("/admin")
 	public ResponseEntity<Void> updateSession(@RequestBody @Valid UpdateSessionRequest request) {
 		sessionService.updateSession(request);
 		return ResponseEntity.noContent().build();
@@ -77,7 +77,7 @@ public class SessionController {
 
 	@Operation(summary = "세션 사진 순서 변경 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping("/image/order")
+	@PatchMapping("/admin/image/order")
 	public ResponseEntity<Void> updateSessionImageOrder(@RequestBody UpdateSessionImageOrderRequest request) {
 		sessionImageService.updateSessionImageOrder(request);
 		return ResponseEntity.noContent().build();
@@ -85,7 +85,7 @@ public class SessionController {
 
 	@Operation(summary = "세션 사진 추가 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PostMapping(value = "/image", consumes = "multipart/form-data")
+	@PostMapping(value = "/admin/image", consumes = "multipart/form-data")
 	public ResponseEntity<AddSessionImageResponse> additionalSessionImage(
 		@ModelAttribute @Valid AddSessionImageRequest request)
 		throws ImageException {
@@ -94,7 +94,7 @@ public class SessionController {
 
 	@Operation(summary = "세션 사진 삭제 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@DeleteMapping(value = "/image")
+	@DeleteMapping(value = "/admin/image")
 	public ResponseEntity<Void> deleteSessionImage(@RequestBody DeleteSessionImageRequest request) {
 		sessionImageService.deleteSessionImage(request);
 		return ResponseEntity.noContent().build();

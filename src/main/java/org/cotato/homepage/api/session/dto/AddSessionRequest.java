@@ -4,11 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.cotato.homepage.domain.attendance.embedded.Location;
-import org.cotato.homepage.domain.generation.embedded.SessionContents;
-import org.cotato.homepage.domain.generation.enums.CSEducation;
-import org.cotato.homepage.domain.generation.enums.DevTalk;
-import org.cotato.homepage.domain.generation.enums.ItIssue;
-import org.cotato.homepage.domain.generation.enums.Networking;
 import org.cotato.homepage.domain.generation.enums.SessionType;
 import org.cotato.homepage.domain.generation.service.dto.SessionDto;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,19 +47,11 @@ public record AddSessionRequest(
 	@JsonFormat(shape = Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
 	LocalDateTime lateDeadLine,
 
-	ItIssue itIssue,
-	Networking networking,
-	CSEducation csEducation,
-	DevTalk devTalk
+	@Schema(description = "세션 내용")
+	String content
 ) {
 
 	public SessionDto toSession() {
-		SessionContents sessionContents = SessionContents.builder()
-			.networking(networking)
-			.itIssue(itIssue)
-			.csEducation(csEducation)
-			.devTalk(devTalk)
-			.build();
 		return SessionDto.builder()
 			.title(title)
 			.type(SessionType.getSessionType(isOffline, isOnline))
@@ -72,7 +59,7 @@ public record AddSessionRequest(
 			.sessionDateTime(sessionDateTime)
 			.roadNameAddress(roadNameAddress)
 			.placeName(placeName)
-			.sessionContents(sessionContents)
+			.content(content)
 			.build();
 	}
 

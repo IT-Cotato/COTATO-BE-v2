@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.cotato.homepage.api.attendance.dto.AttendanceTimeResponse;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
-import org.cotato.homepage.domain.generation.embedded.SessionContents;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.entity.SessionImage;
 
@@ -24,7 +23,7 @@ public record SessionWithAttendanceResponse(
 	String placeName,
 	String roadNameAddress,
 	LocalDateTime sessionDateTime,
-	SessionContents sessionContents,
+	String content,
 	boolean isOffline,
 	boolean isOnline,
 	AttendanceTimeResponse attendance
@@ -41,7 +40,7 @@ public record SessionWithAttendanceResponse(
 			session.getPlaceName(),
 			session.getRoadNameAddress(),
 			session.getSessionDateTime(),
-			session.getSessionContents(),
+			session.getContent(),
 			session.getSessionType().hasOffline(),
 			session.getSessionType().hasOnline(),
 			AttendanceTimeResponse.from(attendance)
@@ -59,7 +58,7 @@ public record SessionWithAttendanceResponse(
 			session.getPlaceName(),
 			session.getRoadNameAddress(),
 			session.getSessionDateTime(),
-			session.getSessionContents(),
+			session.getContent(),
 			session.getSessionType().hasOffline(),
 			session.getSessionType().hasOnline(),
 			null

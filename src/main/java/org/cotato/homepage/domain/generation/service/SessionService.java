@@ -22,7 +22,6 @@ import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceRecordReader;
 import org.cotato.homepage.domain.attendance.util.AttendanceUtil;
-import org.cotato.homepage.domain.generation.embedded.SessionContents;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.entity.SessionImage;
@@ -77,7 +76,7 @@ public class SessionService {
 			.placeName(sessionDto.placeName())
 			.sessionDateTime(sessionDto.sessionDateTime())
 			.roadNameAddress(sessionDto.roadNameAddress())
-			.sessionContents(sessionDto.sessionContents())
+			.content(sessionDto.content())
 			.sessionType(sessionDto.type())
 			.build();
 
@@ -109,8 +108,6 @@ public class SessionService {
 	public void updateSession(UpdateSessionRequest request) {
 		Session session = sessionReader.findByIdWithPessimisticXLock(request.sessionId());
 		SessionType sessionType = SessionType.getSessionType(request.isOffline(), request.isOnline());
-		SessionContents sessionContents = SessionContents.of(request.itIssue(), request.networking(),
-			request.csEducation(), request.devTalk());
 
 		if (sessionType.isCreateAttendance()) {
 			AttendanceDeadLineDto deadLineDto = request.attendTime();
@@ -129,7 +126,7 @@ public class SessionService {
 		session.updateSessionTitle(request.title());
 		session.updateSessionPlace(request.placeName());
 		session.updateRoadNameAddress(request.roadNameAddress());
-		session.updateSessionContents(sessionContents);
+		session.updateContent(request.content());
 		session.updateSessionDateTime(request.sessionDateTime());
 		session.updateSessionType(sessionType);
 		sessionRepository.save(session);

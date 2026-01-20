@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
-import org.cotato.homepage.domain.generation.enums.CSEducation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -19,8 +18,6 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 	List<Session> findAllByGeneration(Generation generation);
 
 	List<Session> findAllByGenerationId(Long generationId);
-
-	List<Session> findAllByGenerationAndSessionContentsCsEducation(Generation generation, CSEducation csEducation);
 
 	@Transactional(readOnly = true)
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
