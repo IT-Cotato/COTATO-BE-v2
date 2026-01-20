@@ -14,11 +14,10 @@ public record ProjectDetailResponse(
 	String behanceUrl,
 	String projectUrl,
 	Long generationId,
-	Integer generationNumber,
 	List<ProjectImageInfoResponse> imageInfos,
 	List<ProjectMemberInfoResponse> memberInfos
 ) {
-	public static ProjectDetailResponse of(Project project, Integer generationNumber, List<ProjectImage> projectImages,
+	public static ProjectDetailResponse of(Project project, List<ProjectImage> projectImages,
 		List<ProjectMember> projectMembers) {
 		return new ProjectDetailResponse(
 			project.getId(),
@@ -28,7 +27,6 @@ public record ProjectDetailResponse(
 			project.getBehanceUrl(),
 			project.getProjectUrl(),
 			project.getGenerationId(),
-			generationNumber,
 			projectImages.stream()
 				.map(ProjectImageInfoResponse::from)
 				.toList(),

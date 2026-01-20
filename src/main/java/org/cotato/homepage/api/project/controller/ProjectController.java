@@ -50,14 +50,14 @@ public class ProjectController {
 
 	@Operation(summary = "프로젝트 등록 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PostMapping
+	@PostMapping("/admin")
 	public ResponseEntity<CreateProjectResponse> createProject(@RequestBody @Valid CreateProjectRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createProject(request));
 	}
 
 	@Operation(summary = "프로젝트 사진 등록 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PostMapping(value = "/images", consumes = "multipart/form-data")
+	@PostMapping(value = "/admin/images", consumes = "multipart/form-data")
 	public ResponseEntity<Void> createProjectImage(@ModelAttribute CreateProjectImageRequest request)
 		throws ImageException {
 		projectImageService.createProjectImage(request.projectId(), request.logoImage(), request.thumbNailImage(),
