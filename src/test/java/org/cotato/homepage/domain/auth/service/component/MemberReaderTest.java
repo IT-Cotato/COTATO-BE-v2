@@ -29,7 +29,7 @@ class MemberReaderTest {
 	void whenFindAllGenerationMember_thenReturnMembers() {
 		//
 		Generation generation = Generation.builder()
-			.number(9)
+			.id(9L)
 			.build();
 
 		Member member1 = Member.of("youth@email.com", "password", "신유승", null,

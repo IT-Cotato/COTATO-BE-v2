@@ -25,7 +25,7 @@ public record MemberResponse(
 	@Schema(requiredMode = RequiredMode.REQUIRED)
 	MemberStatus status,
 	@Schema(requiredMode = RequiredMode.NOT_REQUIRED)
-	Integer passedGenerationNumber
+	Long passedGenerationNumber
 ) {
 	public static MemberResponse of(Member member, String backFourNumber) {
 		return MemberResponse.builder()
