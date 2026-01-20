@@ -62,16 +62,16 @@ class AttendanceRecordServiceTest {
 		when(memberReader.findById(any())).thenReturn(member);
 
 		// when
-		attendanceRecordService.updateAttendanceRecord(1L, 1L, AttendanceResult.OFFLINE);
+		attendanceRecordService.updateAttendanceRecord(1L, 1L, AttendanceResult.PRESENT);
 
 		// then
-		Assertions.assertEquals(AttendanceResult.OFFLINE, attendanceRecord.getAttendanceResult());
+		Assertions.assertEquals(AttendanceResult.PRESENT, attendanceRecord.getAttendanceResult());
 	}
 
 	@Test
-	void whenUpdateAttendanceRecordWithNonMatchingSessionType_thenThrowException() {
+	void whenUpdateAttendanceRecordWithNoAttendSessionType_thenThrowException() {
 		// given
-		Session session = Session.builder().sessionType(SessionType.ONLINE).build();
+		Session session = Session.builder().sessionType(SessionType.NO_ATTEND).build();
 		Attendance attendance = Attendance.builder().session(session).build();
 		AttendanceRecord attendanceRecord = AttendanceRecord.absentRecord(attendance, 1L);
 		Member member = Member.of("test", "test", "test", "test",
@@ -84,7 +84,7 @@ class AttendanceRecordServiceTest {
 
 		// when, then
 		AppException appException = Assertions.assertThrows(AppException.class,
-			() -> attendanceRecordService.updateAttendanceRecord(1L, 1L, AttendanceResult.OFFLINE));
+			() -> attendanceRecordService.updateAttendanceRecord(1L, 1L, AttendanceResult.PRESENT));
 		Assertions.assertEquals(ErrorCode.INVALID_RECORD_UPDATE, appException.getErrorCode());
 	}
 

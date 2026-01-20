@@ -8,10 +8,8 @@ import lombok.Builder;
 
 @Builder
 public record AttendancesResponse(
-	@Schema(requiredMode = RequiredMode.REQUIRED)
+	@Schema(description = "기수 ID (기수 번호와 동일)", requiredMode = RequiredMode.REQUIRED)
 	Long generationId,
-	@Schema(requiredMode = RequiredMode.REQUIRED)
-	Long generationNumber,
 	List<AttendanceWithSessionResponse> attendances
 ) {
 }

@@ -2,6 +2,7 @@ package org.cotato.homepage.domain.attendance.service;
 
 import static org.cotato.homepage.domain.attendance.util.AttendanceUtil.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -10,15 +11,16 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.cotato.homepage.api.attendance.dto.AttendResponse;
-import org.cotato.homepage.api.attendance.dto.AttendanceParams;
 import org.cotato.homepage.api.attendance.dto.AttendanceRecordResponse;
+import org.cotato.homepage.api.attendance.dto.AttendanceRequest;
 import org.cotato.homepage.api.attendance.dto.AttendanceStatistic;
+import org.cotato.homepage.api.attendance.dto.AttendanceSubmitResponse;
 import org.cotato.homepage.api.attendance.dto.GenerationMemberAttendanceRecordResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendanceRecordsResponse;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
+import org.cotato.homepage.domain.attendance.embedded.Location;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
 import org.cotato.homepage.domain.attendance.entity.AttendanceRecord;
 import org.cotato.homepage.domain.attendance.enums.AttendanceOpenStatus;
@@ -27,16 +29,18 @@ import org.cotato.homepage.domain.attendance.repository.AttendanceRecordReposito
 import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceRecordReader;
-import org.cotato.homepage.domain.auth.component.GenerationMemberAuthValidator;
 import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.service.component.MemberReader;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.enums.SessionType;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.cotato.homepage.domain.generation.service.component.SessionReader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -48,17 +52,75 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class AttendanceRecordService {
 
+	private static final Double DEFAULT_LOCATION_ACCURACY = 0.0001;
+
 	private final AttendanceRecordRepository attendanceRecordRepository;
 	private final AttendanceRepository attendanceRepository;
-	private final RequestAttendanceService requestAttendanceService;
 	private final MemberReader memberReader;
 	private final GenerationReader generationReader;
 	private final SessionReader sessionReader;
-	private final GenerationMemberAuthValidator authValidator;
 	private final AttendanceReader attendanceReader;
 	private final AttendanceRecordReader attendanceRecordReader;
 
-	public List<GenerationMemberAttendanceRecordResponse> findAttendanceRecords(Long generationId) {
+	@Value("${attendance.location.accuracy:0.0001}")
+	private Double locationAccuracy;
+
+	@Transactional
+	public AttendanceSubmitResponse submitRecord(AttendanceRequest request, Member member) {
+		Attendance attendance = attendanceRepository.findById(request.attendanceId())
+			.orElseThrow(() -> new EntityNotFoundException("해당 출석이 존재하지 않습니다."));
+
+		Session session = sessionReader.findById(attendance.getSessionId());
+
+		// 출결 입력 가능 시간인지 확인
+		AttendanceOpenStatus openStatus = getAttendanceOpenStatus(
+			session.getSessionDateTime(), attendance, request.requestTime());
+		if (openStatus == AttendanceOpenStatus.CLOSED || openStatus == AttendanceOpenStatus.BEFORE) {
+			throw new AppException(ErrorCode.ATTENDANCE_NOT_OPEN);
+		}
+
+		// 이미 출석했는지 확인
+		if (attendanceRecordRepository.existsByAttendanceIdAndMemberId(request.attendanceId(), member.getId())) {
+			throw new AppException(ErrorCode.ALREADY_ATTEND);
+		}
+
+		// 세션 타입에 따른 위치 검증
+		SessionType sessionType = session.getSessionType();
+		Double accuracy = null;
+
+		if (sessionType.hasOffline()) {
+			// 대면 세션인 경우 위치 검증 필요
+			Location requestLocation = request.toLocation();
+			if (requestLocation == null) {
+				throw new AppException(ErrorCode.INVALID_LOCATION);
+			}
+
+			Location attendanceLocation = attendance.getLocation();
+			if (attendanceLocation == null) {
+				throw new AppException(ErrorCode.INVALID_LOCATION);
+			}
+
+			accuracy = attendanceLocation.calculateAccuracy(requestLocation);
+			if (accuracy > locationAccuracy) {
+				throw new AppException(ErrorCode.INVALID_LOCATION);
+			}
+		}
+
+		// 출석 결과 계산
+		AttendanceResult result = calculateAttendanceStatus(
+			attendance, request.requestTime(), session.getSessionDateTime());
+
+		// 출석 기록 저장
+		AttendanceRecord record = AttendanceRecord.createRecord(
+			attendance, member.getId(), result, accuracy, request.requestTime());
+
+		attendanceRecordRepository.save(record);
+
+		return AttendanceSubmitResponse.of(result);
+	}
+
+	public List<GenerationMemberAttendanceRecordResponse> findAttendanceRecords(Long generationId,
+		MemberPosition position, String search) {
 		Generation generation = generationReader.findById(generationId);
 		List<Long> sessionIds = sessionReader.findAllByGeneration(generation).stream().map(Session::getId).toList();
 		List<Attendance> attendances = attendanceRepository.findAllBySessionIdsInQuery(sessionIds);
@@ -70,6 +132,8 @@ public class AttendanceRecordService {
 			.collect(Collectors.groupingBy(AttendanceRecord::getMemberId));
 
 		return memberReader.findAllGenerationMember(generation).stream()
+			.filter(member -> position == null || member.getPosition() == position)
+			.filter(member -> !StringUtils.hasText(search) || member.getName().contains(search))
 			.sorted(Comparator.comparing(Member::getName))
 			.map(member -> GenerationMemberAttendanceRecordResponse.of(
 				member,
@@ -79,7 +143,8 @@ public class AttendanceRecordService {
 			.toList();
 	}
 
-	public List<AttendanceRecordResponse> findAttendanceRecordsByAttendance(Long attendanceId) {
+	public List<AttendanceRecordResponse> findAttendanceRecordsByAttendance(Long attendanceId,
+		MemberPosition position, List<AttendanceResult> attendanceResults, String search) {
 		Attendance attendance = attendanceRepository.findById(attendanceId)
 			.orElseThrow(() -> new EntityNotFoundException("해당 출석이 존재하지 않습니다"));
 		Session session = sessionReader.findById(attendance.getSessionId());
@@ -93,38 +158,27 @@ public class AttendanceRecordService {
 			.collect(Collectors.toMap(AttendanceRecord::getMemberId, AttendanceRecord::getAttendanceResult));
 
 		return memberById.keySet().stream()
+			.filter(memberId -> position == null || memberById.get(memberId).getPosition() == position)
+			.filter(memberId -> !StringUtils.hasText(search) || memberById.get(memberId).getName().contains(search))
+			.filter(memberId -> {
+				if (attendanceResults == null || attendanceResults.isEmpty()) {
+					return true;
+				}
+				AttendanceResult result = attendanceResultByMemberId.get(memberId);
+				// null은 "출석전" 상태로 간주 - 필터에 null이 포함되어 있으면 출석전 회원도 포함
+				if (result == null) {
+					return attendanceResults.stream().anyMatch(r -> r == null);
+				}
+				return attendanceResults.contains(result);
+			})
 			.sorted(Comparator.comparing(memberId -> memberById.get(memberId).getName()))
 			.map(memberId -> AttendanceRecordResponse.of(memberById.get(memberId),
-				attendanceResultByMemberId.getOrDefault(memberId, null)))
+				attendanceResultByMemberId.get(memberId)))
 			.toList();
 	}
 
-	@Transactional
-	public AttendResponse submitRecord(AttendanceParams request, final Member member) {
-		Attendance attendance = attendanceRepository.findById(request.attendanceId())
-			.orElseThrow(() -> new EntityNotFoundException("해당 출석이 존재하지 않습니다."));
-
-		Session session = sessionReader.findById(attendance.getSessionId());
-
-		authValidator.checkGenerationPermission(member, session.getGeneration());
-
-		// 해당 출석에 출결 입력이 가능한지 확인하는 과정
-		if (getAttendanceOpenStatus(session.getSessionDateTime(), attendance, request.requestTime())
-			== AttendanceOpenStatus.CLOSED) {
-			throw new AppException(ErrorCode.ATTENDANCE_NOT_OPEN);
-		}
-
-		// 기존 출결 데이터가 존재하는지 확인
-		if (attendanceRecordRepository.existsByAttendanceIdAndMemberIdAndAttendanceType(request.attendanceId(),
-			member.getId(), request.attendanceType())) {
-			throw new AppException(ErrorCode.ALREADY_ATTEND);
-		}
-
-		return requestAttendanceService.attend(request, session, member.getId(), attendance);
-	}
-
-	public MemberAttendanceRecordsResponse findAllRecordsBy(final Long generationId, final Member member) {
-		Generation generation = generationReader.findById(generationId);
+	public MemberAttendanceRecordsResponse findMyAttendanceRecords(final Member member, final Integer month) {
+		Generation generation = generationReader.findByDate(LocalDate.now());
 		List<Session> sessions = sessionReader.findAllByGeneration(generation);
 
 		Map<Long, Session> sessionMap = sessions.stream()
@@ -134,9 +188,13 @@ public class AttendanceRecordService {
 			.map(Session::getId)
 			.toList();
 
-		List<Attendance> attendances = attendanceRepository.findAllBySessionIdsInQuery(sessionIds);
+		// 종료된 출석만 필터링 (lateDeadLine이 지난 출석)
+		LocalDateTime now = LocalDateTime.now();
+		List<Attendance> closedAttendances = attendanceRepository.findAllBySessionIdsInQuery(sessionIds).stream()
+			.filter(at -> at.getLateDeadLine().isBefore(now))
+			.toList();
 
-		List<Long> attendanceIds = attendances.stream()
+		List<Long> attendanceIds = closedAttendances.stream()
 			.map(Attendance::getId)
 			.toList();
 
@@ -145,20 +203,41 @@ public class AttendanceRecordService {
 				attendanceIds, member.getId()).stream()
 			.collect(Collectors.toUnmodifiableMap(AttendanceRecord::getAttendanceId, Function.identity()));
 
-		Map<Boolean, List<Attendance>> recordedAttendance = attendances.stream()
+		// 전체 통계 계산 (월 필터 적용 전)
+		List<AttendanceRecord> allRecords = attendanceRecordMap.values().stream().toList();
+		AttendanceStatistic statistic = AttendanceStatistic.of(allRecords, closedAttendances.size());
+
+		// 월 필터 적용
+		List<Attendance> filteredAttendances = closedAttendances;
+		if (month != null) {
+			filteredAttendances = closedAttendances.stream()
+				.filter(at -> {
+					Session session = sessionMap.get(at.getSessionId());
+					return session != null && session.getSessionDateTime() != null
+						&& session.getSessionDateTime().getMonthValue() == month;
+				})
+				.toList();
+		}
+
+		Map<Boolean, List<Attendance>> recordedAttendance = filteredAttendances.stream()
 			.collect(Collectors.partitioningBy(at -> attendanceRecordMap.containsKey(at.getId())));
 
 		List<MemberAttendResponse> responses = recordedAttendance.get(true).stream()
 			.map(at -> MemberAttendResponse.recordedAttendance(sessionMap.get(at.getSessionId()), at,
 				attendanceRecordMap.get(at.getId())))
+			.sorted(Comparator.comparing(MemberAttendResponse::sessionDateTime).reversed())
 			.collect(Collectors.toList());
 
 		responses.addAll(recordedAttendance.get(false).stream()
 			.map(at -> MemberAttendResponse.unrecordedAttendance(sessionMap.get(at.getSessionId()), at,
 				member.getId()))
+			.sorted(Comparator.comparing(MemberAttendResponse::sessionDateTime).reversed())
 			.toList());
 
-		return MemberAttendanceRecordsResponse.of(generationId, responses);
+		// 전체 정렬 (최신순)
+		responses.sort(Comparator.comparing(MemberAttendResponse::sessionDateTime).reversed());
+
+		return MemberAttendanceRecordsResponse.of(generation.getId(), statistic, responses);
 	}
 
 	@Transactional
