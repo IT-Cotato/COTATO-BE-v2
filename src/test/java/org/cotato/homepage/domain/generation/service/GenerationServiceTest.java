@@ -44,7 +44,7 @@ class GenerationServiceTest {
 	void whenGenerationExistsForCurrentDate_thenReturnCurrentGeneration() {
 		// given: 기수 데이터 설정
 		Generation currentGeneration = Generation.builder()
-			.number(2)
+			.id(2L)
 			.period(Period.of(LocalDate.of(2024, 7, 1), LocalDate.of(2024, 10, 1)))
 			.build();
 
@@ -55,14 +55,14 @@ class GenerationServiceTest {
 		GenerationInfoResponse generationInfo = generationService.findCurrentGeneration(currentDate);
 
 		// then: 2기 반환
-		assertThat(generationInfo.generationNumber()).isEqualTo(2);
+		assertThat(generationInfo.generationId()).isEqualTo(2L);
 	}
 
 	@Test
 	void whenGenerationDoesNotExistForCurrentDate_thenReturnPreviousGeneration() {
 		// given
 		Generation previousGeneration = Generation.builder()
-			.number(2)
+			.id(2L)
 			.period(Period.of(LocalDate.of(2024, 7, 1), LocalDate.of(2024, 10, 1)))
 			.build();
 
@@ -75,7 +75,7 @@ class GenerationServiceTest {
 		GenerationInfoResponse generationInfo = generationService.findCurrentGeneration(currentDate);
 
 		// then: 2기가 반환되어야 함
-		assertThat(generationInfo.generationNumber()).isEqualTo(2);
+		assertThat(generationInfo.generationId()).isEqualTo(2L);
 	}
 
 	@Test
@@ -98,7 +98,7 @@ class GenerationServiceTest {
 		// given
 		LocalDate startDate = LocalDate.of(2025, 6, 1);
 		LocalDate endDate = LocalDate.of(2025, 5, 1);
-		Integer generationNumber = 3;
+		Long generationNumber = 3L;
 
 		// then: 예외 발생 확인
 		assertThrows(AppException.class, () -> {
@@ -111,7 +111,7 @@ class GenerationServiceTest {
 		// given
 		LocalDate startDate = LocalDate.of(2025, 6, 1);
 		LocalDate endDate = LocalDate.of(2025, 9, 1);
-		Integer generationNumber = 3;
+		Long generationNumber = 3L;
 
 		when(generationRepository.existsByPeriod_EndDateGreaterThanEqualAndPeriod_StartDateLessThanEqual(startDate,
 			endDate))
@@ -128,9 +128,9 @@ class GenerationServiceTest {
 		// given
 		LocalDate startDate = LocalDate.of(2025, 6, 1);
 		LocalDate endDate = LocalDate.of(2025, 9, 1);
-		Integer generationNumber = 3;
+		Long generationNumber = 3L;
 		Generation newGeneration = Generation.builder()
-			.number(generationNumber)
+			.id(generationNumber)
 			.period(Period.of(startDate, endDate))
 			.build();
 
@@ -148,7 +148,7 @@ class GenerationServiceTest {
 		verify(generationRepository).save(generationCaptor.capture());
 
 		Generation savedGeneration = generationCaptor.getValue();
-		assertThat(savedGeneration.getNumber()).isEqualTo(generationNumber);
+		assertThat(savedGeneration.getId()).isEqualTo(generationNumber);
 		assertThat(savedGeneration.getPeriod().getStartDate()).isEqualTo(startDate);
 		assertThat(savedGeneration.getPeriod().getEndDate()).isEqualTo(endDate);
 		assertThat(savedGeneration.isVisible()).isEqualTo(true);
@@ -161,7 +161,7 @@ class GenerationServiceTest {
 		LocalDate startDate = LocalDate.of(2025, 6, 1);
 		LocalDate endDate = LocalDate.of(2025, 9, 1);
 		Generation generation = Generation.builder()
-			.number(3)
+			.id(3L)
 			.period(Period.of(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 5, 1)))
 			.build();
 
@@ -183,7 +183,7 @@ class GenerationServiceTest {
 		LocalDate startDate = LocalDate.of(2025, 6, 1);
 		LocalDate endDate = LocalDate.of(2025, 9, 1);
 		Generation generation = Generation.builder()
-			.number(3)
+			.id(3L)
 			.period(Period.of(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 5, 1)))
 			.build();
 
@@ -203,11 +203,11 @@ class GenerationServiceTest {
 	@Test
 	void whenFindGenerations_thenReturnGenerations() {
 		// given
-		Generation generation1 = Generation.builder().number(3)
+		Generation generation1 = Generation.builder().id(3L)
 			.period(Period.of(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 5, 1)))
 			.build();
 
-		Generation generation2 = Generation.builder().number(3)
+		Generation generation2 = Generation.builder().id(3L)
 			.period(Period.of(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 5, 1)))
 			.build();
 		generation2.updateVisible(false);

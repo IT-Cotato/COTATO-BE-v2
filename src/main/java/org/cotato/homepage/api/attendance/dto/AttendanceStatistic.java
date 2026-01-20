@@ -8,10 +8,10 @@ import org.cotato.homepage.domain.attendance.entity.AttendanceRecord;
 import org.cotato.homepage.domain.attendance.enums.AttendanceResult;
 
 public record AttendanceStatistic(
-	long online,
-	long offline,
+	long present,
 	long late,
-	long absent
+	long absent,
+	long unauthorizedAbsent
 ) {
 	private static final Long ZERO_VALUE = 0L;
 
@@ -20,16 +20,10 @@ public record AttendanceStatistic(
 			.collect(Collectors.groupingBy(AttendanceRecord::getAttendanceResult, Collectors.counting()));
 
 		return new AttendanceStatistic(
-			attendanceRecordsByResult.getOrDefault(AttendanceResult.ONLINE, ZERO_VALUE),
-			attendanceRecordsByResult.getOrDefault(AttendanceResult.OFFLINE, ZERO_VALUE),
+			attendanceRecordsByResult.getOrDefault(AttendanceResult.PRESENT, ZERO_VALUE),
 			attendanceRecordsByResult.getOrDefault(AttendanceResult.LATE, ZERO_VALUE),
-			totalAttendanceCount - getPresentCount(attendanceRecords)
+			attendanceRecordsByResult.getOrDefault(AttendanceResult.ABSENT, ZERO_VALUE),
+			attendanceRecordsByResult.getOrDefault(AttendanceResult.UNAUTHORIZED_ABSENT, ZERO_VALUE)
 		);
-	}
-
-	private static long getPresentCount(List<AttendanceRecord> attendanceRecords) {
-		return attendanceRecords.stream()
-			.filter(AttendanceRecord::isPresent)
-			.count();
 	}
 }

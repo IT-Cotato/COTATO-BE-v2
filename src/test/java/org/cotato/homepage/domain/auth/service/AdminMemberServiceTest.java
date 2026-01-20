@@ -40,7 +40,7 @@ class AdminMemberServiceTest {
 	void whenApproveApplicant_thenStatusChangedToApproved() {
 		// given
 		Member member = Member.of("boysoeng@naver.com", "password", "name", "phoneNumber",
-			MemberPosition.BE, "university", null, 1, true, true);
+			MemberPosition.BE, "university", null, 1L, true, true);
 		member.updateStatus(MemberStatus.REQUESTED);
 
 		when(memberReader.findById(any())).thenReturn(member);
@@ -56,7 +56,7 @@ class AdminMemberServiceTest {
 	void whenApproveApplicantWithInvalidStatus_thenThrowException() {
 		// given
 		Member member = Member.of("boysoeng@naver.com", "password", "name", "phoneNumber",
-			MemberPosition.BE, "university", null, 1, true, true);
+			MemberPosition.BE, "university", null, 1L, true, true);
 		member.updateStatus(MemberStatus.INACTIVE);
 
 		when(memberReader.findById(any())).thenReturn(member);

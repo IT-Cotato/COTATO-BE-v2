@@ -63,31 +63,31 @@ public class MemberController {
 
 	@Operation(summary = "기수별 멤버에 추가 가능한 멤버 반환 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@GetMapping("/addable")
+	@GetMapping("/admin/addable")
 	public ResponseEntity<SearchedMembersResponse> findAddableMembersForGenerationMember(
 		@RequestParam(name = "generationId") @Parameter(description = "추가하고 싶은 기수의 Id")
 		Long generationId,
-		@RequestParam(name = "passedGenerationNumber", required = false)
-		@Parameter(description = "멤버 합격 기수") Integer generationNumber,
+		@RequestParam(name = "passedGenerationId", required = false)
+		@Parameter(description = "멤버 합격 기수 ID") Long passedGenerationId,
 		@RequestParam(name = "position", required = false) @Parameter(description = "멤버 포지션")
 		MemberPosition position,
 		@RequestParam(name = "name", required = false) @Parameter(description = "멤버 이름") String name
 	) {
 		return ResponseEntity.ok()
-			.body(memberService.findAddableMembers(generationId, generationNumber, position, name));
+			.body(memberService.findAddableMembers(generationId, passedGenerationId, position, name));
 	}
 
 	@Operation(summary = "OM 검색 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@GetMapping(value = "/search", params = "status=RETIRED")
+	@GetMapping(value = "/admin/search", params = "status=RETIRED")
 	public ResponseEntity<PageResponse<MemberResponse>> findRetiredMembers(
-		@RequestParam(value = "passedGenerationNumber", required = false) Integer passedGenerationNumber,
+		@RequestParam(value = "passedGenerationId", required = false) Long passedGenerationId,
 		@RequestParam(value = "position", required = false) MemberPosition position,
 		@RequestParam(value = "name", required = false) String name,
 		Pageable pageable) {
 		return ResponseEntity.ok()
 			.body(PageResponse.of(
-				memberService.getMembersByName(passedGenerationNumber, position, name, MemberStatus.RETIRED,
+				memberService.getMembersByName(passedGenerationId, position, name, MemberStatus.RETIRED,
 					pageable)));
 	}
 
@@ -148,7 +148,7 @@ public class MemberController {
 
 	@Operation(summary = "회원 상태에 따른 조회 요청 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@GetMapping(params = "status")
+	@GetMapping(value = "/admin", params = "status")
 	public ResponseEntity<PageResponse<MemberResponse>> findMembersByStatus(
 		@RequestParam("status") MemberStatus status,
 		@PageableDefault(sort = {"name"}, direction = Sort.Direction.ASC) Pageable pageable) {
@@ -157,7 +157,7 @@ public class MemberController {
 
 	@Operation(summary = "부원 가입 승인")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping("/{memberId}/approve")
+	@PatchMapping("/admin/{memberId}/approve")
 	public ResponseEntity<Void> approveApplicant(@PathVariable("memberId") final Long memberId) {
 		adminMemberService.approveApplicant(memberId);
 		return ResponseEntity.noContent().build();
@@ -165,7 +165,7 @@ public class MemberController {
 
 	@Operation(summary = "부원 가입 거절")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping("/{memberId}/reject")
+	@PatchMapping("/admin/{memberId}/reject")
 	public ResponseEntity<Void> rejectApplicant(@PathVariable("memberId") final Long memberId) {
 		adminMemberService.rejectApplicant(memberId);
 		return ResponseEntity.noContent().build();
@@ -173,7 +173,7 @@ public class MemberController {
 
 	@Operation(summary = "부원 역할 변경")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping("/{memberId}/role")
+	@PatchMapping("/admin/{memberId}/role")
 	public ResponseEntity<Void> updateMemberRole(@PathVariable("memberId") final Long memberId,
 		@RequestBody @Valid UpdateMemberRoleRequest request) {
 		adminMemberService.updateMemberRole(memberId, request.role());
@@ -189,7 +189,7 @@ public class MemberController {
 
 	@Operation(summary = "부원 OM 전환")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping(value = "/status", params = "target=RETIRE")
+	@PatchMapping(value = "/admin/status", params = "target=RETIRE")
 	public ResponseEntity<Void> updateMembersToOldMembers(@RequestBody UpdateActiveMemberToOldMemberRequest request) {
 		adminMemberService.updateToRetireMembers(request.memberIds());
 		return ResponseEntity.noContent().build();
@@ -197,7 +197,7 @@ public class MemberController {
 
 	@Operation(summary = "OM을 일반 부원으로 전환")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping(value = "/{memberId}/status", params = "target=APPROVED")
+	@PatchMapping(value = "/admin/{memberId}/status", params = "target=APPROVED")
 	public ResponseEntity<Void> updateToApprovedMember(@PathVariable("memberId") Long memberId) {
 		adminMemberService.updateToApprovedMember(memberId);
 		return ResponseEntity.noContent().build();

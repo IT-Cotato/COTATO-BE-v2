@@ -9,7 +9,7 @@ public record GenerationMemberInfo(
 	Long generationMemberId,
 	String name,
 	MemberPosition position,
-	Integer generationNumber,
+	Long generationId,
 	GenerationMemberRole role
 ) {
 	public static GenerationMemberInfo from(GenerationMember generationMember) {

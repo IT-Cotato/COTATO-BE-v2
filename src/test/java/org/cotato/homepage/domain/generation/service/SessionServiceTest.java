@@ -24,10 +24,6 @@ import org.cotato.homepage.domain.attendance.service.component.AttendanceRecordR
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.entity.SessionImage;
-import org.cotato.homepage.domain.generation.enums.CSEducation;
-import org.cotato.homepage.domain.generation.enums.DevTalk;
-import org.cotato.homepage.domain.generation.enums.ItIssue;
-import org.cotato.homepage.domain.generation.enums.Networking;
 import org.cotato.homepage.domain.generation.enums.SessionType;
 import org.cotato.homepage.domain.generation.event.AttendanceEvent;
 import org.cotato.homepage.domain.generation.event.SessionImageEvent;
@@ -318,14 +314,14 @@ class SessionServiceTest {
 			sessionDateTime, "New Place", "도로 명 주소",
 			Location.location(0.0, 0.0),
 			attendanceDeadLineDto(sessionDateTime.plusMinutes(1), sessionDateTime.plusMinutes(2)),
-			true, false, ItIssue.IT_ON, Networking.NW_ON, CSEducation.CS_ON, DevTalk.DEVTALK_ON);
+			true, false, "세션 내용");
 	}
 
 	private UpdateSessionRequest mockNoAttendUpdateSessionRequest(Long sessionId, LocalDateTime sessionDateTime) {
 		return new UpdateSessionRequest(sessionId, "New Title", "New Description",
 			sessionDateTime, "New Place", "도로 명 주소",
 			Location.location(0.0, 0.0),
-			null, false, false, ItIssue.IT_ON, Networking.NW_ON, CSEducation.CS_ON, DevTalk.DEVTALK_ON);
+			null, false, false, "세션 내용");
 	}
 
 	private AttendanceDeadLineDto attendanceDeadLineDto(LocalDateTime attendanceDeadLine, LocalDateTime lateDeadLine) {

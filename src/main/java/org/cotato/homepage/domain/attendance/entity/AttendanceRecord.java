@@ -99,6 +99,19 @@ public class AttendanceRecord extends BaseTimeEntity {
 		);
 	}
 
+	public static AttendanceRecord createRecord(Attendance attendance, Long memberId,
+		AttendanceResult attendanceResult, Double locationAccuracy, LocalDateTime attendTime) {
+		AttendanceType type = locationAccuracy != null ? AttendanceType.OFFLINE : AttendanceType.ONLINE;
+		return new AttendanceRecord(
+			type,
+			attendanceResult,
+			locationAccuracy,
+			memberId,
+			attendance,
+			attendTime
+		);
+	}
+
 	public void updateAttendanceType(AttendanceType attendanceType) {
 		this.attendanceType = attendanceType;
 	}

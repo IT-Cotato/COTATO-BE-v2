@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record CreateProjectRequest(
 	@NotNull
-	Integer generationNumber,
+	Long generationId,
 	@NotNull
 	String projectName,
 	String projectIntroduction,

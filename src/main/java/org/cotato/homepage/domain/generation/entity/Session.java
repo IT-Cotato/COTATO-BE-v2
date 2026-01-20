@@ -5,12 +5,9 @@ import static jakarta.persistence.FetchType.*;
 import java.time.LocalDateTime;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
-import org.cotato.homepage.domain.generation.embedded.SessionContents;
 import org.cotato.homepage.domain.generation.enums.SessionType;
 import org.hibernate.annotations.DynamicInsert;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -53,17 +50,8 @@ public class Session extends BaseTimeEntity {
 	@JoinColumn(name = "generation_id")
 	private Generation generation;
 
-	@AttributeOverrides({
-		@AttributeOverride(name = "itIssue",
-			column = @Column(name = "session_it_issue")),
-		@AttributeOverride(name = "networking",
-			column = @Column(name = "session_networking")),
-		@AttributeOverride(name = "csEducation",
-			column = @Column(name = "session_cs_education")),
-		@AttributeOverride(name = "devTalk",
-			column = @Column(name = "session_dev_talk"))
-	})
-	private SessionContents sessionContents;
+	@Column(name = "session_content", columnDefinition = "TEXT")
+	private String content;
 
 	@Column(name = "session_start_time")
 	private LocalDateTime sessionDateTime;
@@ -77,7 +65,7 @@ public class Session extends BaseTimeEntity {
 	@Builder
 	public Session(Integer number, String title, String description, String placeName, String roadNameAddress,
 		LocalDateTime sessionDateTime,
-		SessionType sessionType, Generation generation, SessionContents sessionContents) {
+		SessionType sessionType, Generation generation, String content) {
 		this.number = number;
 		this.title = title;
 		this.description = description;
@@ -86,15 +74,15 @@ public class Session extends BaseTimeEntity {
 		this.sessionDateTime = sessionDateTime;
 		this.sessionType = sessionType;
 		this.generation = generation;
-		this.sessionContents = sessionContents;
+		this.content = content;
 	}
 
 	public void updateDescription(String description) {
 		this.description = description;
 	}
 
-	public void updateSessionContents(SessionContents sessionContents) {
-		this.sessionContents = sessionContents;
+	public void updateContent(String content) {
+		this.content = content;
 	}
 
 	public void updateSessionTitle(String title) {

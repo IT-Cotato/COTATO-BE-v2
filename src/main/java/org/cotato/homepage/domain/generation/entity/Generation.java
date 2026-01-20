@@ -8,8 +8,6 @@ import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,12 +20,8 @@ import lombok.NoArgsConstructor;
 public class Generation extends BaseTimeEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "generation_id")
 	private Long id;
-
-	@Column(name = "generation_number", unique = true, nullable = false)
-	private Integer number;
 
 	@Embedded
 	@AttributeOverrides({
@@ -43,8 +37,8 @@ public class Generation extends BaseTimeEntity {
 	private boolean visible;
 
 	@Builder
-	public Generation(Integer number, Period period) {
-		this.number = number;
+	public Generation(Long id, Period period) {
+		this.id = id;
 		this.period = period;
 		this.isRecruit = false;
 		this.visible = true;

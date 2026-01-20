@@ -29,16 +29,16 @@ public class GenerationService {
 	private final GenerationReader generationReader;
 
 	@Transactional
-	public AddGenerationResponse addGeneration(final Integer generationNumber, final LocalDate startDate,
+	public AddGenerationResponse addGeneration(final Long generationId, final LocalDate startDate,
 		final LocalDate endDate) {
 		checkPeriodValid(startDate, endDate);
 		if (generationRepository.existsByPeriod_EndDateGreaterThanEqualAndPeriod_StartDateLessThanEqual(startDate,
 			endDate)) {
 			throw new AppException(ErrorCode.OVERLAPPING_DATE);
 		}
-		checkNumberValid(generationNumber);
+		checkIdValid(generationId);
 		Generation generation = Generation.builder()
-			.number(generationNumber)
+			.id(generationId)
 			.period(Period.of(startDate, endDate))
 			.build();
 		Generation savedGeneration = generationRepository.save(generation);
@@ -64,7 +64,7 @@ public class GenerationService {
 
 	public List<GenerationInfoResponse> findGenerations() {
 		return generationReader.getGenerations().stream()
-			.sorted(Comparator.comparing(Generation::getNumber))
+			.sorted(Comparator.comparing(Generation::getId))
 			.map(GenerationInfoResponse::from)
 			.toList();
 	}
@@ -75,8 +75,8 @@ public class GenerationService {
 		}
 	}
 
-	private void checkNumberValid(int generationNumber) {
-		if (generationRepository.findByNumber(generationNumber).isPresent()) {
+	private void checkIdValid(Long generationId) {
+		if (generationRepository.existsById(generationId)) {
 			throw new AppException(ErrorCode.GENERATION_NUMBER_DUPLICATED);
 		}
 	}

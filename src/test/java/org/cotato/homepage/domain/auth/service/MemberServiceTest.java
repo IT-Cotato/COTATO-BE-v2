@@ -199,20 +199,20 @@ class MemberServiceTest {
 		// given
 		Pageable pageable = PageRequest.of(0, 1);
 		Member member1 = Member.of("email1", "password1", "name1", "1",
-			MemberPosition.BE, null, null, 1, true, true);
+			MemberPosition.BE, null, null, 1L, true, true);
 		Member member2 = Member.of("email2", "password2", "name2", "2",
-			MemberPosition.BE, null, null, 1, true, true);
+			MemberPosition.BE, null, null, 1L, true, true);
 		member1.updateStatus(MemberStatus.RETIRED);
 		member2.updateStatus(MemberStatus.RETIRED);
 
 		Page<Member> memberPage = new PageImpl<>(List.of(member1, member2), pageable, 1);
 
 		// When: Repository의 메서드를 stub 처리함
-		when(memberRepository.findAllWithFiltersPageable(1, MemberPosition.BE, MemberStatus.RETIRED, null, pageable))
+		when(memberRepository.findAllWithFiltersPageable(1L, MemberPosition.BE, MemberStatus.RETIRED, null, pageable))
 			.thenReturn(memberPage);
 		when(encryptService.decryptPhoneNumber(any())).thenReturn("01012345678");
 
-		Page<MemberResponse> result = memberService.getMembersByName(1, MemberPosition.BE, null, MemberStatus.RETIRED,
+		Page<MemberResponse> result = memberService.getMembersByName(1L, MemberPosition.BE, null, MemberStatus.RETIRED,
 			pageable);
 
 		// Then: 결과 검증

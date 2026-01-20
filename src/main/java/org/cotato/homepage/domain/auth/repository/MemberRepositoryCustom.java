@@ -9,8 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface MemberRepositoryCustom {
-	List<Member> findAllWithFilters(Integer passedGenerationNumber, MemberPosition memberPosition, String name);
+	List<Member> findAllWithFilters(Long passedGenerationId, MemberPosition memberPosition, String name);
 
-	Page<Member> findAllWithFiltersPageable(Integer passedGenerationNumber, MemberPosition memberPosition,
+	Page<Member> findAllWithFiltersPageable(Long passedGenerationId, MemberPosition memberPosition,
 		MemberStatus memberStatus, String name, Pageable pageable);
 }

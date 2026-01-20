@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CurrentGenerationMemberMigration implements MigrationJob {
 
-	private static final int CURRENT_GENERATION = 10;
+	private static final long CURRENT_GENERATION = 10L;
 
 	private final MemberService memberService;
 	private final GenerationMemberRepository generationMemberRepository;
@@ -26,7 +26,7 @@ public class CurrentGenerationMemberMigration implements MigrationJob {
 	@Override
 	@Transactional
 	public void migrate() {
-		Generation generation = generationRepository.findByNumber(CURRENT_GENERATION)
+		Generation generation = generationRepository.findById(CURRENT_GENERATION)
 			.orElseThrow(() -> new IllegalStateException("해당 기수가 존재하지 않습니다."));
 
 		List<GenerationMember> currentGenerationMembers = memberService.findActiveMember().stream()

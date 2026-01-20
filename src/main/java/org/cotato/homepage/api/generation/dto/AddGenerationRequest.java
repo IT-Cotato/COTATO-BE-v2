@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record AddGenerationRequest(
 	@NotNull
-	Integer generationNumber,
+	Long generationId,
 	@NotNull
 	LocalDate startDate,
 	@NotNull

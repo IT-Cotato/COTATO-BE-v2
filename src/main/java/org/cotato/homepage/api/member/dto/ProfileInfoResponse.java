@@ -14,8 +14,8 @@ public record ProfileInfoResponse(
 	Long memberId,
 	@Schema(description = "멤버 이름", requiredMode = RequiredMode.REQUIRED)
 	String name,
-	@Schema(description = "합격 기수", requiredMode = RequiredMode.REQUIRED)
-	Integer generationNumber,
+	@Schema(description = "합격 기수 ID", requiredMode = RequiredMode.REQUIRED)
+	Long generationId,
 	@Schema(description = "멤버 포지션", requiredMode = RequiredMode.REQUIRED)
 	MemberPosition position,
 	@Schema(description = "프로필 사진", requiredMode = RequiredMode.REQUIRED, nullable = true)

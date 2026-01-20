@@ -4,11 +4,8 @@ import java.time.LocalDateTime;
 
 import org.cotato.homepage.api.attendance.dto.AttendanceDeadLineDto;
 import org.cotato.homepage.domain.attendance.embedded.Location;
-import org.cotato.homepage.domain.generation.enums.CSEducation;
-import org.cotato.homepage.domain.generation.enums.DevTalk;
-import org.cotato.homepage.domain.generation.enums.ItIssue;
-import org.cotato.homepage.domain.generation.enums.Networking;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 public record UpdateSessionRequest(
@@ -24,13 +21,7 @@ public record UpdateSessionRequest(
 	AttendanceDeadLineDto attendTime,
 	boolean isOffline,
 	boolean isOnline,
-	@NotNull
-	ItIssue itIssue,
-	@NotNull
-	Networking networking,
-	@NotNull
-	CSEducation csEducation,
-	@NotNull
-	DevTalk devTalk
+	@Schema(description = "세션 내용")
+	String content
 ) {
 }

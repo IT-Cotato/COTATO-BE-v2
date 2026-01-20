@@ -41,8 +41,8 @@ class ProjectServiceTest {
 	@Test
 	public void whenGetAllProjectSummaries_thenReturnSortedByLatest() {
 		// given
-		Generation generation1 = spy(Generation.builder().number(100).build());
-		Generation generation2 = spy(Generation.builder().number(200).build());
+		Generation generation1 = spy(Generation.builder().id(100L).build());
+		Generation generation2 = spy(Generation.builder().id(200L).build());
 		when(generation1.getId()).thenReturn(1L);
 		when(generation2.getId()).thenReturn(2L);
 

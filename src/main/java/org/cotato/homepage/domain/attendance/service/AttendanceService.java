@@ -123,7 +123,6 @@ public class AttendanceService {
 
 		return AttendancesResponse.builder()
 			.generationId(generationId)
-			.generationNumber(findGeneration.getId())
 			.attendances(attendances)
 			.build();
 	}

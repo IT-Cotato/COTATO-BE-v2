@@ -4,11 +4,9 @@ import java.time.LocalDateTime;
 
 import org.cotato.homepage.domain.attendance.entity.Attendance;
 import org.cotato.homepage.domain.attendance.entity.AttendanceRecord;
-import org.cotato.homepage.domain.attendance.enums.AttendanceOpenStatus;
 import org.cotato.homepage.domain.attendance.enums.AttendanceResult;
-import org.cotato.homepage.domain.attendance.enums.AttendanceType;
-import org.cotato.homepage.domain.attendance.util.AttendanceUtil;
 import org.cotato.homepage.domain.generation.entity.Session;
+import org.cotato.homepage.domain.generation.enums.SessionType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -20,17 +18,17 @@ public record MemberAttendResponse(
 	Long attendanceId,
 	@Schema(description = "멤버 PK", requiredMode = RequiredMode.REQUIRED)
 	Long memberId,
+	@Schema(description = "세션 주차 (n주차)", example = "3")
+	Integer sessionNumber,
 	@Schema(description = "세션 타이틀", example = "3주차 세션")
 	String sessionTitle,
 	@Schema(description = "세션 날짜")
 	LocalDateTime sessionDateTime,
-	@Schema(description = "출결 진행 여부", examples = {
-		"CLOSED", "OPEN"
-	})
-	AttendanceOpenStatus openStatus,
-	@Schema(description = "출결 형식", nullable = true, requiredMode = RequiredMode.NOT_REQUIRED)
-	AttendanceType attendanceType,
-	@Schema(description = "마감된 출석에 대한 출결 결과", nullable = true, requiredMode = RequiredMode.NOT_REQUIRED)
+	@Schema(description = "세션 장소", example = "신촌 스터디카페")
+	String placeName,
+	@Schema(description = "세션 타입 (대면/비대면 여부)", examples = {"ONLINE", "OFFLINE", "ALL", "NO_ATTEND"})
+	SessionType sessionType,
+	@Schema(description = "출결 결과", nullable = true, examples = {"PRESENT", "LATE", "ABSENT", "UNAUTHORIZED_ABSENT"})
 	AttendanceResult result
 ) {
 	public static MemberAttendResponse unrecordedAttendance(Session session, Attendance attendance, Long memberId) {
@@ -38,10 +36,11 @@ public record MemberAttendResponse(
 			session.getId(),
 			attendance.getId(),
 			memberId,
+			session.getNumber(),
 			session.getTitle(),
 			session.getSessionDateTime(),
-			AttendanceUtil.getAttendanceOpenStatus(session.getSessionDateTime(), attendance, LocalDateTime.now()),
-			null,
+			session.getPlaceName(),
+			session.getSessionType(),
 			null
 		);
 	}
@@ -52,10 +51,11 @@ public record MemberAttendResponse(
 			session.getId(),
 			attendanceRecord.getAttendanceId(),
 			attendanceRecord.getMemberId(),
+			session.getNumber(),
 			session.getTitle(),
 			session.getSessionDateTime(),
-			AttendanceUtil.getAttendanceOpenStatus(session.getSessionDateTime(), attendance, LocalDateTime.now()),
-			attendanceRecord.getAttendanceType(),
+			session.getPlaceName(),
+			session.getSessionType(),
 			attendanceRecord.getAttendanceResult()
 		);
 	}
