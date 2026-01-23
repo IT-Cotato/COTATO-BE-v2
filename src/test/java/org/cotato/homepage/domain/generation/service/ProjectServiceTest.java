@@ -13,9 +13,9 @@ import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Project;
 import org.cotato.homepage.domain.generation.entity.ProjectImage;
-import org.cotato.homepage.domain.generation.enums.ProjectImageType;
 import org.cotato.homepage.domain.generation.repository.GenerationRepository;
 import org.cotato.homepage.domain.generation.repository.ProjectImageRepository;
+import org.cotato.homepage.domain.generation.repository.ProjectMemberRepository;
 import org.cotato.homepage.domain.generation.repository.ProjectRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +37,15 @@ class ProjectServiceTest {
 
 	@Mock
 	private ProjectImageRepository projectImageRepository;
+
+	@Mock
+	private ProjectMemberRepository projectMemberRepository;
+
+	@Mock
+	private ProjectMemberService projectMemberService;
+
+	@Mock
+	private ProjectImageService projectImageService;
 
 	@Test
 	public void whenGetAllProjectSummaries_thenReturnSortedByLatest() {
@@ -61,13 +70,12 @@ class ProjectServiceTest {
 		when(projectRepository.findAll()).thenReturn(projects);
 		when(generationRepository.findAllByIdsInQuery(anyList())).thenReturn(generations);
 
-		ProjectImage logo1 = ProjectImage.logoImage(S3Info.builder().url("logo").build(), project1.getId());
+		ProjectImage thumbnail1 = ProjectImage.of(S3Info.builder().url("thumbnail1").build(), project1.getId(), 0);
+		ProjectImage thumbnail2 = ProjectImage.of(S3Info.builder().url("thumbnail2").build(), project2.getId(), 0);
 
-		ProjectImage logo2 = ProjectImage.logoImage(S3Info.builder().url("logo").build(), project2.getId());
-
-		List<ProjectImage> images = List.of(logo1, logo2);
-		when(projectImageRepository.findAllByProjectIdInAndProjectImageType(anyList(), eq(ProjectImageType.LOGO)))
-			.thenReturn(images);
+		List<ProjectImage> thumbnails = List.of(thumbnail1, thumbnail2);
+		when(projectImageRepository.findThumbnailsByProjectIds(anyList()))
+			.thenReturn(thumbnails);
 
 		// when
 		List<ProjectSummaryResponse> summaries = projectService.getAllProjectSummaries();

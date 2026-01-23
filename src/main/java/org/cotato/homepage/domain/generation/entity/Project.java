@@ -1,9 +1,14 @@
 package org.cotato.homepage.domain.generation.entity;
 
+import java.time.LocalDate;
+
 import org.cotato.homepage.common.entity.BaseTimeEntity;
+import org.cotato.homepage.domain.generation.enums.ProjectType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,29 +30,50 @@ public class Project extends BaseTimeEntity {
 	@Column(name = "project_name")
 	private String name;
 
-	@Column(name = "project_introduction")
+	@Column(name = "short_description")
+	private String shortDescription;
+
+	@Column(name = "project_introduction", columnDefinition = "TEXT")
 	private String introduction;
 
-	@Column(name = "github_url")
-	private String githubUrl;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "project_type")
+	private ProjectType projectType;
 
-	@Column(name = "behance_url")
-	private String behanceUrl;
+	@Column(name = "project_link")
+	private String projectLink;
 
-	@Column(name = "project_url")
-	private String projectUrl;
+	@Column(name = "start_date")
+	private LocalDate startDate;
+
+	@Column(name = "end_date")
+	private LocalDate endDate;
 
 	@Column(name = "generation_id", nullable = false)
 	private Long generationId;
 
 	@Builder
-	public Project(String name, String introduction, String githubUrl, String behanceUrl, String projectUrl,
-		Long generationId) {
+	public Project(String name, String shortDescription, String introduction, ProjectType projectType,
+		String projectLink, LocalDate startDate, LocalDate endDate, Long generationId) {
 		this.name = name;
+		this.shortDescription = shortDescription;
 		this.introduction = introduction;
-		this.githubUrl = githubUrl;
-		this.behanceUrl = behanceUrl;
-		this.projectUrl = projectUrl;
+		this.projectType = projectType;
+		this.projectLink = projectLink;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.generationId = generationId;
+	}
+
+	public void update(String name, String shortDescription, String introduction, ProjectType projectType,
+		String projectLink, LocalDate startDate, LocalDate endDate, Long generationId) {
+		this.name = name;
+		this.shortDescription = shortDescription;
+		this.introduction = introduction;
+		this.projectType = projectType;
+		this.projectLink = projectLink;
+		this.startDate = startDate;
+		this.endDate = endDate;
 		this.generationId = generationId;
 	}
 }

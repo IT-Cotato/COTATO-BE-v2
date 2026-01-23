@@ -1,12 +1,13 @@
 package org.cotato.homepage.domain.generation.enums;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
-public enum ProjectImageType {
-	LOGO("로고"),
-	THUMBNAIL("썸네일"),
-	DETAIL("상세");
+@Getter
+public enum ProjectType {
+	HACKATHON("코커톤"),
+	DEMODAY("데모데이");
 
 	private final String description;
 }

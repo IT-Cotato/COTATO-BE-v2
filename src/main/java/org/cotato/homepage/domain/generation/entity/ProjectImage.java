@@ -2,13 +2,10 @@ package org.cotato.homepage.domain.generation.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
 import org.cotato.homepage.common.entity.S3Info;
-import org.cotato.homepage.domain.generation.enums.ProjectImageType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,10 +23,6 @@ public class ProjectImage extends BaseTimeEntity {
 	@Column(name = "project_image_id")
 	private Long id;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "project_image_type")
-	private ProjectImageType projectImageType;
-
 	@Embedded
 	private S3Info s3Info;
 
@@ -39,35 +32,17 @@ public class ProjectImage extends BaseTimeEntity {
 	@Column(name = "project_image_order", nullable = false)
 	private int imageOrder;
 
-	private ProjectImage(ProjectImageType projectImageType, S3Info s3Info, Long projectId, int imageOrder) {
-		this.projectImageType = projectImageType;
+	private ProjectImage(S3Info s3Info, Long projectId, int imageOrder) {
 		this.s3Info = s3Info;
 		this.projectId = projectId;
 		this.imageOrder = imageOrder;
 	}
 
-	public static ProjectImage logoImage(S3Info s3Info, Long projectId) {
-		return new ProjectImage(
-			ProjectImageType.LOGO,
-			s3Info,
-			projectId,
-			0);
+	public static ProjectImage of(S3Info s3Info, Long projectId, int imageOrder) {
+		return new ProjectImage(s3Info, projectId, imageOrder);
 	}
 
-	public static ProjectImage thumbnailImage(S3Info s3Info, Long projectId) {
-		return new ProjectImage(
-			ProjectImageType.THUMBNAIL,
-			s3Info,
-			projectId,
-			0);
-	}
-
-	public static ProjectImage detailImage(S3Info imageInfo, Long projectId, int imageOrder) {
-		return new ProjectImage(
-			ProjectImageType.DETAIL,
-			imageInfo,
-			projectId,
-			imageOrder
-		);
+	public void updateOrder(int newOrder) {
+		this.imageOrder = newOrder;
 	}
 }
