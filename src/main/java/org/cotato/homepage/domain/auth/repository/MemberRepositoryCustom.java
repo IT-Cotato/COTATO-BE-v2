@@ -13,4 +13,6 @@ public interface MemberRepositoryCustom {
 
 	Page<Member> findAllWithFiltersPageable(Long passedGenerationId, MemberPosition memberPosition,
 		MemberStatus memberStatus, String name, Pageable pageable);
+
+	Page<Member> findApplicantsByStatusAndName(MemberStatus status, String name, Pageable pageable);
 }

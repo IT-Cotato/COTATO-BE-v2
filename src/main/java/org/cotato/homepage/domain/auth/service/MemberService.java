@@ -4,10 +4,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import org.cotato.homepage.api.member.dto.MemberInfo;
+import org.cotato.homepage.api.member.dto.ApplicantMemberResponse;
 import org.cotato.homepage.api.member.dto.MemberInfoResponse;
-import org.cotato.homepage.api.member.dto.MemberMyPageInfoResponse;
 import org.cotato.homepage.api.member.dto.MemberResponse;
 import org.cotato.homepage.api.member.dto.ProfileInfoResponse;
 import org.cotato.homepage.api.member.dto.ProfileLinkRequest;
@@ -17,25 +19,24 @@ import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.auth.entity.Member;
 import org.cotato.homepage.domain.auth.entity.MemberLeavingRequest;
 import org.cotato.homepage.domain.auth.entity.ProfileLink;
+import org.cotato.homepage.domain.auth.entity.RefusedMember;
 import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.enums.MemberStatus;
 import org.cotato.homepage.domain.auth.repository.MemberLeavingRequestRepository;
 import org.cotato.homepage.domain.auth.repository.MemberRepository;
 import org.cotato.homepage.domain.auth.repository.ProfileLinkRepository;
+import org.cotato.homepage.domain.auth.repository.RefusedMemberRepository;
 import org.cotato.homepage.domain.auth.service.component.MemberLeavingRequestReader;
 import org.cotato.homepage.domain.auth.service.component.MemberReader;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,6 +55,7 @@ public class MemberService {
 	private final GenerationMemberRepository generationMemberRepository;
 	private final MemberLeavingRequestRepository memberLeavingRequestRepository;
 	private final MemberLeavingRequestReader memberLeavingRequestReader;
+	private final RefusedMemberRepository refusedMemberRepository;
 
 	public MemberInfoResponse findMemberInfo(final Member member) {
 		String rawBackFourNumber = findBackFourNumber(member);
@@ -117,24 +119,6 @@ public class MemberService {
 		memberRepository.save(member);
 	}
 
-	public MemberMyPageInfoResponse findMyPageInfo(Long memberId) {
-		Member findMember = memberRepository.findById(memberId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 회원을 찾을 수 없습니다."));
-		String originPhoneNumber = encryptService.decryptPhoneNumber(findMember.getPhoneNumber());
-		return MemberMyPageInfoResponse.of(findMember, originPhoneNumber);
-	}
-
-	public Member findById(Long memberId) {
-		return memberRepository.findById(memberId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 회원을 찾을 수 없습니다."));
-	}
-
-	public MemberInfo getMemberInfo(Long memberId) {
-		Member findMember = memberRepository.findById(memberId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 멤버를 찾을 수 없습니다."));
-		return MemberInfo.of(findMember, findBackFourNumber(findMember));
-	}
-
 	public List<Member> findActiveMember() {
 		Generation currentGeneration = generationReader.findByDate(LocalDate.now());
 		return memberReader.findAllGenerationMember(currentGeneration);
@@ -183,24 +167,6 @@ public class MemberService {
 		}
 	}
 
-	public Page<MemberResponse> getMembersByStatus(final MemberStatus status, Pageable pageable) {
-		switch (status) {
-			case APPROVED, RETIRED -> {
-				Sort sort = Sort.by(
-					Sort.Order.desc("passedGenerationNumber"),
-					Sort.Order.asc("name")
-				);
-				Pageable pageRequest = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-				return memberRepository.findAllByStatus(status, pageRequest)
-					.map(member -> MemberResponse.of(member, findBackFourNumber(member)));
-			}
-			default -> {
-				return memberRepository.findAllByStatus(status, pageable)
-					.map(member -> MemberResponse.of(member, findBackFourNumber(member)));
-			}
-		}
-	}
-
 	@Transactional
 	public void activateMember(final Long memberId) {
 		Member member = memberReader.findById(memberId);
@@ -220,5 +186,21 @@ public class MemberService {
 		MemberStatus memberStatus, Pageable pageable) {
 		return memberRepository.findAllWithFiltersPageable(passedGenerationId, position, memberStatus, name,
 			pageable).map(member -> MemberResponse.of(member, findBackFourNumber(member)));
+	}
+
+	public Page<ApplicantMemberResponse> searchApplicants(MemberStatus status, String name, Pageable pageable) {
+		Page<Member> members = memberRepository.findApplicantsByStatusAndName(status, name, pageable);
+
+		List<Member> memberList = members.getContent();
+		Map<Long, RefusedMember> refusedMemberMap = refusedMemberRepository.findAllByMemberIn(memberList)
+			.stream()
+			.collect(Collectors.toMap(rm -> rm.getMember().getId(), Function.identity()));
+
+		return members.map(member -> {
+			String phoneNumber = encryptService.decryptPhoneNumber(member.getPhoneNumber());
+			RefusedMember refusedMember = refusedMemberMap.get(member.getId());
+			LocalDateTime rejectedAt = refusedMember != null ? refusedMember.getCreatedAt() : null;
+			return ApplicantMemberResponse.of(member, phoneNumber, rejectedAt);
+		});
 	}
 }

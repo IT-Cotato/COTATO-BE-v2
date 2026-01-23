@@ -32,39 +32,65 @@ public class AdminMemberService {
 	private final MemberReader memberReader;
 
 	@Transactional
-	public void approveApplicant(final Long memberId) {
-		Member member = memberReader.findById(memberId);
-		if (member.getStatus() != MemberStatus.REJECTED && member.getStatus() != MemberStatus.REQUESTED) {
-			throw new AppException(ErrorCode.CANNOT_ACTIVE);
-		}
+	public void approveApplicants(final List<Long> memberIds) {
+		List<Member> members = memberReader.findAllByIdsInWithValidation(memberIds);
+		validateAllMembersStatus(members, MemberStatus.REQUESTED);
 
-		member.approveMember();
-		memberRepository.save(member);
-
-		EmailSendEventDto dto = EmailSendEventDto.builder().member(member).build();
-		eventPublisher.publishEvent(EmailSendEvent.builder()
-			.type(EventType.APPROVE_MEMBER)
-			.data(dto)
-			.build());
+		members.forEach(member -> {
+			member.approveMember();
+			EmailSendEventDto dto = EmailSendEventDto.builder().member(member).build();
+			eventPublisher.publishEvent(EmailSendEvent.builder()
+				.type(EventType.APPROVE_MEMBER)
+				.data(dto)
+				.build());
+		});
+		memberRepository.saveAll(members);
 	}
 
 	@Transactional
-	public void rejectApplicant(final Long memberId) {
-		Member member = memberReader.findById(memberId);
-		checkMemberStatus(member, MemberStatus.REQUESTED);
-		member.updateStatus(MemberStatus.REJECTED);
-		memberRepository.save(member);
-		addRefusedMember(member);
+	public void rejectApplicants(final List<Long> memberIds) {
+		List<Member> members = memberReader.findAllByIdsInWithValidation(memberIds);
+		validateAllMembersStatus(members, MemberStatus.REQUESTED);
 
-		EmailSendEventDto dto = EmailSendEventDto.builder().member(member).build();
-		eventPublisher.publishEvent(EmailSendEvent.builder()
-			.type(EventType.REJECT_MEMBER)
-			.data(dto)
-			.build());
+		members.forEach(member -> {
+			member.updateStatus(MemberStatus.REJECTED);
+			addRefusedMember(member);
+			EmailSendEventDto dto = EmailSendEventDto.builder().member(member).build();
+			eventPublisher.publishEvent(EmailSendEvent.builder()
+				.type(EventType.REJECT_MEMBER)
+				.data(dto)
+				.build());
+		});
+		memberRepository.saveAll(members);
+	}
+
+	@Transactional
+	public void restoreRejectedMembers(final List<Long> memberIds) {
+		List<Member> members = memberReader.findAllByIdsInWithValidation(memberIds);
+		validateAllMembersStatus(members, MemberStatus.REJECTED);
+
+		members.forEach(member -> member.updateStatus(MemberStatus.REQUESTED));
+		memberRepository.saveAll(members);
+		refusedMemberRepository.deleteAllByMemberIn(members);
+	}
+
+	@Transactional
+	public void deleteRejectedMembers(final List<Long> memberIds) {
+		List<Member> members = memberReader.findAllByIdsInWithValidation(memberIds);
+		validateAllMembersStatus(members, MemberStatus.REJECTED);
+
+		refusedMemberRepository.deleteAllByMemberIn(members);
+		memberRepository.deleteAll(members);
 	}
 
 	private void checkMemberStatus(final Member member, final MemberStatus status) {
 		if (member.getStatus() != status) {
+			throw new AppException(ErrorCode.ROLE_IS_NOT_MATCH);
+		}
+	}
+
+	private void validateAllMembersStatus(final List<Member> members, final MemberStatus expectedStatus) {
+		if (members.stream().anyMatch(member -> member.getStatus() != expectedStatus)) {
 			throw new AppException(ErrorCode.ROLE_IS_NOT_MATCH);
 		}
 	}
