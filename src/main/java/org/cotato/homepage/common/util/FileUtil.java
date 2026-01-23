@@ -10,12 +10,9 @@ import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.ImageException;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.sksamuel.scrimage.ImmutableImage;
-import com.sksamuel.scrimage.webp.WebpWriter;
-
 public class FileUtil {
 
-	private static final List<String> IMAGE_FILE_EXTENSIONS = List.of("png", "jpg", "jpeg", "heif");
+	private static final List<String> IMAGE_FILE_EXTENSIONS = List.of("png", "jpg", "jpeg", "heif", "webp", "gif");
 
 	public static String extractFileExtension(MultipartFile file) throws ImageException {
 		String originalFilename = file.getOriginalFilename();
@@ -42,21 +39,6 @@ public class FileUtil {
 			return convertFile;
 		} catch (IOException e) {
 			throw new ImageException(ErrorCode.IMAGE_CONVERT_FAIL);
-		}
-	}
-
-	public static File convertToWebp(File originalFile) throws ImageException {
-		try {
-			String fileNameWithoutExtension = originalFile.getName().replaceFirst("[.][^.]+$", "");
-
-			File webpFile = ImmutableImage.loader()
-				.fromFile(originalFile)
-				.output(WebpWriter.DEFAULT, new File(fileNameWithoutExtension + ".webp"));
-
-			originalFile.delete();
-			return webpFile;
-		} catch (IOException e) {
-			throw new ImageException(ErrorCode.WEBP_CONVERT_FAIL);
 		}
 	}
 }
