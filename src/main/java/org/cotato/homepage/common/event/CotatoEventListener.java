@@ -2,7 +2,6 @@ package org.cotato.homepage.common.event;
 
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.common.error.exception.ImageException;
 import org.cotato.homepage.domain.attendance.service.AttendanceService;
 import org.cotato.homepage.domain.auth.event.EmailSendEvent;
 import org.cotato.homepage.domain.auth.service.EmailNotificationService;
@@ -40,11 +39,11 @@ public class CotatoEventListener {
 	}
 
 	@EventListener
-	public void handleSessionImageUpdateEvent(SessionImageEvent event) throws ImageException {
+	public void handleSessionImageUpdateEvent(SessionImageEvent event) {
 		log.info("Handling session image update event: {}", event.getType());
 		switch (event.getType()) {
-			case SESSION_IMAGE_UPDATE ->
-				sessionImageService.addSessionImages(event.getData().getImages(), event.getData().getSession());
+			case SESSION_IMAGE_UPDATE -> sessionImageService.createSessionImagesFromInfos(
+				event.getData().getImageInfos(), event.getData().getSession());
 			default -> throw new AppException(ErrorCode.EVENT_TYPE_EXCEPTION);
 		}
 	}

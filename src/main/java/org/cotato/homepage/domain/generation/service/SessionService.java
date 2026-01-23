@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.cotato.homepage.api.attendance.dto.AttendanceDeadLineDto;
 import org.cotato.homepage.api.session.dto.AddSessionResponse;
+import org.cotato.homepage.api.session.dto.SessionImageInfo;
 import org.cotato.homepage.api.session.dto.SessionListResponse;
 import org.cotato.homepage.api.session.dto.SessionWithAttendanceResponse;
 import org.cotato.homepage.api.session.dto.UpdateSessionRequest;
@@ -38,7 +39,6 @@ import org.cotato.homepage.domain.generation.service.component.SessionReader;
 import org.cotato.homepage.domain.generation.service.dto.SessionDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,10 +60,10 @@ public class SessionService {
 
 	@Transactional
 	public AddSessionResponse addSession(final Long generationId,
-		final List<MultipartFile> images,
+		final List<SessionImageInfo> imageInfos,
 		final SessionDto sessionDto,
-		final LocalDateTime attendanceDeadLine,
-		final LocalDateTime lateDeadLine,
+		final LocalDateTime attendanceEndTime,
+		final LocalDateTime lateEndTime,
 		final Location location) {
 		Generation generation = generationReader.findById(generationId);
 
@@ -82,14 +82,16 @@ public class SessionService {
 
 		sessionRepository.save(session);
 
-		SessionImageEventDto sessionImageEventDto = SessionImageEventDto.builder().images(images).session(session)
+		SessionImageEventDto sessionImageEventDto = SessionImageEventDto.builder()
+			.imageInfos(imageInfos)
+			.session(session)
 			.build();
 		SessionImageEvent sessionImageEvent = SessionImageEvent.builder().type(EventType.SESSION_IMAGE_UPDATE)
 			.data(sessionImageEventDto).build();
 		cotatoEventPublisher.publishEvent(sessionImageEvent);
 
 		AttendanceEventDto attendanceEventDto = AttendanceEventDto.builder().session(session).location(location)
-			.attendanceDeadLine(attendanceDeadLine).lateDeadLine(lateDeadLine).build();
+			.attendanceDeadLine(attendanceEndTime).lateDeadLine(lateEndTime).build();
 		AttendanceEvent attendanceEvent = AttendanceEvent.builder().type(EventType.ATTENDANCE_CREATE)
 			.data(attendanceEventDto)
 			.build();
@@ -111,15 +113,15 @@ public class SessionService {
 
 		if (sessionType.isCreateAttendance()) {
 			AttendanceDeadLineDto deadLineDto = request.attendTime();
-			if (deadLineDto == null || isAttendanceDeadLineNotExist(deadLineDto.attendanceDeadLine(),
-				deadLineDto.lateDeadLine())) {
+			if (deadLineDto == null || isAttendanceDeadLineNotExist(deadLineDto.attendanceEndTime(),
+				deadLineDto.lateEndTime())) {
 				throw new AppException(ErrorCode.INVALID_ATTEND_DEADLINE);
 			}
 		}
 
 		Optional<Attendance> maybeAttendance = attendanceReader.findBySessionIdWithPessimisticXLock(session.getId());
 		if (maybeAttendance.isPresent() && attendanceRecordReader.isAttendanceRecordExist(maybeAttendance.get())) {
-			validateAttendanceUpdatable(session, sessionType, request.sessionDateTime());
+			validateAttendanceUpdatable(session, sessionType, request.attendanceStartTime());
 		}
 
 		session.updateDescription(request.description());
@@ -127,7 +129,7 @@ public class SessionService {
 		session.updateSessionPlace(request.placeName());
 		session.updateRoadNameAddress(request.roadNameAddress());
 		session.updateContent(request.content());
-		session.updateSessionDateTime(request.sessionDateTime());
+		session.updateSessionDateTime(request.attendanceStartTime());
 		session.updateSessionType(sessionType);
 		sessionRepository.save(session);
 
@@ -138,16 +140,15 @@ public class SessionService {
 			return;
 		}
 
-		// Todo https://www.notion.so/youthhing/ApplicationEventPublisher-15887d592b6e803eb7c7c1ce2da22b8c?pvs=4
-		AttendanceUtil.validateAttendanceTime(request.sessionDateTime(), request.attendTime().attendanceDeadLine(),
-			request.attendTime().lateDeadLine());
+		AttendanceUtil.validateAttendanceTime(request.attendanceStartTime(), request.attendTime().attendanceEndTime(),
+			request.attendTime().lateEndTime());
 		Attendance attendance = maybeAttendance.orElseGet(() ->
 			Attendance.builder()
 				.session(session)
-				.attendanceDeadLine(request.attendTime().attendanceDeadLine())
-				.lateDeadLine(request.attendTime().lateDeadLine())
+				.attendanceDeadLine(request.attendTime().attendanceEndTime())
+				.lateDeadLine(request.attendTime().lateEndTime())
 				.build());
-		attendance.updateDeadLine(request.attendTime().attendanceDeadLine(), request.attendTime().lateDeadLine());
+		attendance.updateDeadLine(request.attendTime().attendanceEndTime(), request.attendTime().lateEndTime());
 		if (sessionType.hasOffline()) {
 			attendance.updateLocation(request.location());
 		}

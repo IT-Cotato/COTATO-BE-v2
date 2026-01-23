@@ -4,7 +4,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 
-import org.cotato.homepage.common.error.exception.ImageException;
+import org.cotato.homepage.api.session.dto.SessionImageInfo;
 import org.cotato.homepage.domain.auth.entity.Member;
 import org.cotato.homepage.domain.auth.event.EmailSendEvent;
 import org.cotato.homepage.domain.auth.event.EmailSendEventDto;
@@ -19,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class CotatoEventListenerTest {
@@ -72,13 +71,16 @@ class CotatoEventListenerTest {
 
 	@Test
 	@DisplayName("세션 이미지 수정 이벤트 발행")
-	void whenSessionImageUpdate_then_addSessionImages() throws ImageException {
+	void whenSessionImageUpdate_then_createSessionImagesFromInfos() {
 		// given
 		SessionImageEventDto dto = mock(SessionImageEventDto.class);
 		Session session = mock(Session.class);
-		List<MultipartFile> images = List.of(mock(MultipartFile.class), mock(MultipartFile.class));
+		List<SessionImageInfo> imageInfos = List.of(
+			new SessionImageInfo("session/uuid1.jpg", "https://example.com/session/uuid1.jpg", 0),
+			new SessionImageInfo("session/uuid2.jpg", "https://example.com/session/uuid2.jpg", 1)
+		);
 		when(dto.getSession()).thenReturn(session);
-		when(dto.getImages()).thenReturn(images);
+		when(dto.getImageInfos()).thenReturn(imageInfos);
 
 		SessionImageEvent event = new SessionImageEvent(EventType.SESSION_IMAGE_UPDATE, dto);
 
@@ -86,8 +88,8 @@ class CotatoEventListenerTest {
 		cotatoEventListener.handleSessionImageUpdateEvent(event);
 
 		// then
-		verify(sessionImageService).addSessionImages(images, session);
-		verify(dto, times(1)).getImages();
+		verify(sessionImageService).createSessionImagesFromInfos(imageInfos, session);
+		verify(dto, times(1)).getImageInfos();
 		verify(dto, times(1)).getSession();
 	}
 }

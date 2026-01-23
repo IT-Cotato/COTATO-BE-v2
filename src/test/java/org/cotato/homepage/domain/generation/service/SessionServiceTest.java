@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.cotato.homepage.api.attendance.dto.AttendanceDeadLineDto;
+import org.cotato.homepage.api.session.dto.SessionImageInfo;
 import org.cotato.homepage.api.session.dto.SessionListImageInfoResponse;
 import org.cotato.homepage.api.session.dto.SessionListResponse;
 import org.cotato.homepage.api.session.dto.UpdateSessionRequest;
@@ -40,7 +41,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class SessionServiceTest {
@@ -82,10 +82,12 @@ class SessionServiceTest {
 	void createSessionSuccess() {
 		// given
 		final Long generationId = 1L;
-		final List<MultipartFile> images = List.of(mock(MultipartFile.class));
+		final List<SessionImageInfo> imageInfos = List.of(
+			new SessionImageInfo("session/uuid.jpg", "https://example.com/session/uuid.jpg", 0)
+		);
 		final SessionDto sessionDto = SessionDto.builder().type(SessionType.ALL).build();
-		final LocalDateTime attendanceDeadLine = LocalDateTime.now().plusDays(1);
-		final LocalDateTime lateDeadline = LocalDateTime.now().plusDays(2);
+		final LocalDateTime attendanceEndTime = LocalDateTime.now().plusDays(1);
+		final LocalDateTime lateEndTime = LocalDateTime.now().plusDays(2);
 		final Location location = Location.location(0.0, 0.0);
 
 		Generation generation = mock(Generation.class);
@@ -93,7 +95,7 @@ class SessionServiceTest {
 		when(generationReader.findById(generationId)).thenReturn(generation);
 
 		// when
-		sessionService.addSession(generationId, images, sessionDto, attendanceDeadLine, lateDeadline, location);
+		sessionService.addSession(generationId, imageInfos, sessionDto, attendanceEndTime, lateEndTime, location);
 
 		// then
 		verify(sessionRepository).save(any());
@@ -309,23 +311,23 @@ class SessionServiceTest {
 		verify(attendanceRepository).save(any(Attendance.class));
 	}
 
-	private UpdateSessionRequest mockOnlineUpdateSessionRequest(Long sessionId, LocalDateTime sessionDateTime) {
+	private UpdateSessionRequest mockOnlineUpdateSessionRequest(Long sessionId, LocalDateTime attendanceStartTime) {
 		return new UpdateSessionRequest(sessionId, "New Title", "New Description",
-			sessionDateTime, "New Place", "도로 명 주소",
+			attendanceStartTime, "New Place", "도로 명 주소",
 			Location.location(0.0, 0.0),
-			attendanceDeadLineDto(sessionDateTime.plusMinutes(1), sessionDateTime.plusMinutes(2)),
+			attendanceDeadLineDto(attendanceStartTime.plusMinutes(1), attendanceStartTime.plusMinutes(2)),
 			true, false, "세션 내용");
 	}
 
-	private UpdateSessionRequest mockNoAttendUpdateSessionRequest(Long sessionId, LocalDateTime sessionDateTime) {
+	private UpdateSessionRequest mockNoAttendUpdateSessionRequest(Long sessionId, LocalDateTime attendanceStartTime) {
 		return new UpdateSessionRequest(sessionId, "New Title", "New Description",
-			sessionDateTime, "New Place", "도로 명 주소",
+			attendanceStartTime, "New Place", "도로 명 주소",
 			Location.location(0.0, 0.0),
 			null, false, false, "세션 내용");
 	}
 
-	private AttendanceDeadLineDto attendanceDeadLineDto(LocalDateTime attendanceDeadLine, LocalDateTime lateDeadLine) {
-		return new AttendanceDeadLineDto(attendanceDeadLine, lateDeadLine);
+	private AttendanceDeadLineDto attendanceDeadLineDto(LocalDateTime attendanceEndTime, LocalDateTime lateEndTime) {
+		return new AttendanceDeadLineDto(attendanceEndTime, lateEndTime);
 	}
 
 	private Session mockSession(Long sessionId, LocalDateTime sessionDateTime) {
