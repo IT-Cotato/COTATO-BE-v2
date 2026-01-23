@@ -81,4 +81,36 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 			return count != null ? count : 0;
 		});
 	}
+
+	@Override
+	public Page<Member> findApplicantsByStatusAndName(MemberStatus status, String name, Pageable pageable) {
+		QMember qMember = QMember.member;
+		BooleanBuilder builder = new BooleanBuilder();
+
+		if (status != null) {
+			builder.and(qMember.status.eq(status));
+		} else {
+			builder.and(qMember.status.in(MemberStatus.REQUESTED, MemberStatus.REJECTED));
+		}
+
+		if (name != null && !name.isEmpty()) {
+			builder.and(qMember.name.containsIgnoreCase(name));
+		}
+
+		List<Member> results = queryFactory.selectFrom(qMember)
+			.where(builder)
+			.orderBy(qMember.createdAt.desc())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory.select(qMember.count())
+			.from(qMember)
+			.where(builder);
+
+		return PageableExecutionUtils.getPage(results, pageable, () -> {
+			Long count = countQuery.fetchOne();
+			return count != null ? count : 0;
+		});
+	}
 }

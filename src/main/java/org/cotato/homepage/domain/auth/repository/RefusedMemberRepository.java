@@ -12,4 +12,8 @@ public interface RefusedMemberRepository extends JpaRepository<RefusedMember, Lo
 	Optional<RefusedMember> findByMember(Member member);
 
 	List<RefusedMember> findAllByCreatedAtBefore(LocalDateTime localDateTime);
+
+	List<RefusedMember> findAllByMemberIn(List<Member> members);
+
+	void deleteAllByMemberIn(List<Member> members);
 }
