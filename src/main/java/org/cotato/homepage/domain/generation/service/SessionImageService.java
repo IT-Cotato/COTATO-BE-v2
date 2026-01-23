@@ -16,7 +16,6 @@ import org.cotato.homepage.api.session.dto.PresignedUrlResponse;
 import org.cotato.homepage.api.session.dto.SessionImageInfo;
 import org.cotato.homepage.api.session.dto.UpdateSessionImageOrderInfoRequest;
 import org.cotato.homepage.api.session.dto.UpdateSessionImageOrderRequest;
-import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.s3.S3Uploader;
@@ -44,7 +43,7 @@ public class SessionImageService {
 	public void deleteSessionImage(DeleteSessionImageRequest request) {
 		SessionImage deleteImage = sessionImageRepository.findById(request.imageId())
 			.orElseThrow(() -> new EntityNotFoundException("해당 사진을 찾을 수 없습니다."));
-		s3Uploader.deleteFile(deleteImage.getS3Info());
+		s3Uploader.deleteByKey(deleteImage.getS3Key());
 		sessionImageRepository.delete(deleteImage);
 
 		List<SessionImage> reorderImages = sessionImageRepository.findAllBySession(deleteImage.getSession()).stream()
@@ -124,11 +123,10 @@ public class SessionImageService {
 			throw new AppException(ErrorCode.SESSION_ORDER_INVALID);
 		}
 
-		S3Info s3Info = s3Uploader.createS3InfoFromKey(request.s3Key(), request.publicUrl());
-
 		SessionImage sessionImage = SessionImage.builder()
 			.session(session)
-			.s3Info(s3Info)
+			.s3Key(request.s3Key())
+			.imageUrl(request.publicUrl())
 			.order(request.order())
 			.build();
 
@@ -149,11 +147,10 @@ public class SessionImageService {
 				throw new AppException(ErrorCode.S3_OBJECT_NOT_FOUND);
 			}
 
-			S3Info s3Info = s3Uploader.createS3InfoFromKey(imageInfo.s3Key(), imageInfo.publicUrl());
-
 			SessionImage sessionImage = SessionImage.builder()
 				.session(session)
-				.s3Info(s3Info)
+				.s3Key(imageInfo.s3Key())
+				.imageUrl(imageInfo.publicUrl())
 				.order(imageInfo.order())
 				.build();
 

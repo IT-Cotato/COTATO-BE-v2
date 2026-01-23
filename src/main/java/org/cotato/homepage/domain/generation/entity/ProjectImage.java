@@ -1,10 +1,8 @@
 package org.cotato.homepage.domain.generation.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
-import org.cotato.homepage.common.entity.S3Info;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,8 +21,11 @@ public class ProjectImage extends BaseTimeEntity {
 	@Column(name = "project_image_id")
 	private Long id;
 
-	@Embedded
-	private S3Info s3Info;
+	@Column(name = "s3_key", nullable = false)
+	private String s3Key;
+
+	@Column(name = "image_url", nullable = false)
+	private String imageUrl;
 
 	@Column(name = "project_id", nullable = false)
 	private Long projectId;
@@ -32,14 +33,15 @@ public class ProjectImage extends BaseTimeEntity {
 	@Column(name = "project_image_order", nullable = false)
 	private int imageOrder;
 
-	private ProjectImage(S3Info s3Info, Long projectId, int imageOrder) {
-		this.s3Info = s3Info;
+	private ProjectImage(String s3Key, String imageUrl, Long projectId, int imageOrder) {
+		this.s3Key = s3Key;
+		this.imageUrl = imageUrl;
 		this.projectId = projectId;
 		this.imageOrder = imageOrder;
 	}
 
-	public static ProjectImage of(S3Info s3Info, Long projectId, int imageOrder) {
-		return new ProjectImage(s3Info, projectId, imageOrder);
+	public static ProjectImage of(String s3Key, String imageUrl, Long projectId, int imageOrder) {
+		return new ProjectImage(s3Key, imageUrl, projectId, imageOrder);
 	}
 
 	public void updateOrder(int newOrder) {

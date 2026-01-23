@@ -13,7 +13,6 @@ import org.cotato.homepage.api.session.dto.SessionImageInfo;
 import org.cotato.homepage.api.session.dto.SessionListImageInfoResponse;
 import org.cotato.homepage.api.session.dto.SessionListResponse;
 import org.cotato.homepage.api.session.dto.UpdateSessionRequest;
-import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.event.CotatoEventPublisher;
 import org.cotato.homepage.domain.attendance.embedded.Location;
@@ -176,17 +175,20 @@ class SessionServiceTest {
 		SessionImage image1 = SessionImage.builder()
 			.session(session)
 			.order(2)
-			.s3Info(new S3Info("url2", "fileName", "folderName"))
+			.s3Key("session/image2.jpg")
+			.imageUrl("url2")
 			.build();
 		SessionImage image2 = SessionImage.builder()
 			.session(session)
 			.order(1)
-			.s3Info(new S3Info("url1", "fileName", "folderName"))
+			.s3Key("session/image1.jpg")
+			.imageUrl("url1")
 			.build();
 		SessionImage image3 = SessionImage.builder()
 			.session(session)
 			.order(3)
-			.s3Info(new S3Info("url3", "fileName", "folderName"))
+			.s3Key("session/image3.jpg")
+			.imageUrl("url3")
 			.build();
 
 		when(sessionImageRepository.findAllBySessionIn(List.of(session)))
@@ -219,12 +221,14 @@ class SessionServiceTest {
 		SessionImage image1 = SessionImage.builder()
 			.session(session)
 			.order(1)
-			.s3Info(new S3Info("url1", "fileName1", "folderName1"))
+			.s3Key("session/image1.jpg")
+			.imageUrl("url1")
 			.build();
 		SessionImage image2 = SessionImage.builder()
 			.session(session)
 			.order(2)
-			.s3Info(new S3Info("url2", "fileName2", "folderName2"))
+			.s3Key("session/image2.jpg")
+			.imageUrl("url2")
 			.build();
 
 		when(generationReader.findById(generationId)).thenReturn(generation);

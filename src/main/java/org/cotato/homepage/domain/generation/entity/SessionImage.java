@@ -3,12 +3,8 @@ package org.cotato.homepage.domain.generation.entity;
 import static jakarta.persistence.FetchType.*;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
-import org.cotato.homepage.common.entity.S3Info;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,13 +26,11 @@ public class SessionImage extends BaseTimeEntity {
 	@Column(name = "session_image_id")
 	private Long id;
 
-	@Embedded
-	@AttributeOverrides({
-		@AttributeOverride(name = "folderName", column = @Column(nullable = false)),
-		@AttributeOverride(name = "fileName", column = @Column(nullable = false)),
-		@AttributeOverride(name = "url", column = @Column(nullable = false))
-	})
-	private S3Info s3Info;
+	@Column(name = "s3_key", nullable = false)
+	private String s3Key;
+
+	@Column(name = "image_url", nullable = false)
+	private String imageUrl;
 
 	@Column(name = "session_image_order", nullable = false)
 	private Integer order;
@@ -46,10 +40,11 @@ public class SessionImage extends BaseTimeEntity {
 	private Session session;
 
 	@Builder
-	public SessionImage(Session session, Integer order, S3Info s3Info) {
+	public SessionImage(Session session, Integer order, String s3Key, String imageUrl) {
 		this.session = session;
 		this.order = order;
-		this.s3Info = s3Info;
+		this.s3Key = s3Key;
+		this.imageUrl = imageUrl;
 	}
 
 	public void updateOrder(Integer order) {

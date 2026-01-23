@@ -17,7 +17,7 @@ public record ProjectImageInfoResponse(
 	public static ProjectImageInfoResponse from(ProjectImage projectImage) {
 		return new ProjectImageInfoResponse(
 			projectImage.getId(),
-			projectImage.getS3Info().getUrl(),
+			projectImage.getImageUrl(),
 			projectImage.getImageOrder()
 		);
 	}

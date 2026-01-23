@@ -35,7 +35,7 @@ public record ProjectSummaryResponse(
 			project.getShortDescription(),
 			project.getProjectType(),
 			project.getGenerationId(),
-			thumbnailImage != null ? thumbnailImage.getS3Info().getUrl() : null,
+			thumbnailImage != null ? thumbnailImage.getImageUrl() : null,
 			project.getProjectLink()
 		);
 	}

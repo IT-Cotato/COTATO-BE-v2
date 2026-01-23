@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.cotato.homepage.api.project.dto.ProjectSummaryResponse;
-import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Project;
 import org.cotato.homepage.domain.generation.entity.ProjectImage;
@@ -70,8 +69,8 @@ class ProjectServiceTest {
 		when(projectRepository.findAll()).thenReturn(projects);
 		when(generationRepository.findAllByIdsInQuery(anyList())).thenReturn(generations);
 
-		ProjectImage thumbnail1 = ProjectImage.of(S3Info.builder().url("thumbnail1").build(), project1.getId(), 0);
-		ProjectImage thumbnail2 = ProjectImage.of(S3Info.builder().url("thumbnail2").build(), project2.getId(), 0);
+		ProjectImage thumbnail1 = ProjectImage.of("projects/thumb1.jpg", "thumbnail1", project1.getId(), 0);
+		ProjectImage thumbnail2 = ProjectImage.of("projects/thumb2.jpg", "thumbnail2", project2.getId(), 0);
 
 		List<ProjectImage> thumbnails = List.of(thumbnail1, thumbnail2);
 		when(projectImageRepository.findThumbnailsByProjectIds(anyList()))

@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import org.cotato.homepage.api.project.dto.ProjectImageInfo;
 import org.cotato.homepage.api.session.dto.PresignedUrlResponse;
-import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.s3.S3Uploader;
@@ -56,8 +55,12 @@ public class ProjectImageService {
 				throw new AppException(ErrorCode.S3_OBJECT_NOT_FOUND);
 			}
 
-			S3Info s3Info = s3Uploader.createS3InfoFromKey(imageInfo.s3Key(), imageInfo.publicUrl());
-			newImages.add(ProjectImage.of(s3Info, projectId, imageInfo.order()));
+			newImages.add(ProjectImage.of(
+				imageInfo.s3Key(),
+				imageInfo.publicUrl(),
+				projectId,
+				imageInfo.order()
+			));
 		}
 
 		projectImageRepository.saveAll(newImages);
@@ -73,9 +76,8 @@ public class ProjectImageService {
 			: Set.of();
 
 		for (ProjectImage existingImage : existingImages) {
-			if (!newImageUrls.contains(existingImage.getS3Info().getUrl())) {
-				s3Uploader.deleteByKey(
-					existingImage.getS3Info().getFolderName() + "/" + existingImage.getS3Info().getFileName());
+			if (!newImageUrls.contains(existingImage.getImageUrl())) {
+				s3Uploader.deleteByKey(existingImage.getS3Key());
 			}
 		}
 
@@ -91,7 +93,7 @@ public class ProjectImageService {
 		List<ProjectImage> images = projectImageRepository.findAllByProjectId(projectId);
 
 		for (ProjectImage image : images) {
-			s3Uploader.deleteByKey(image.getS3Info().getFolderName() + "/" + image.getS3Info().getFileName());
+			s3Uploader.deleteByKey(image.getS3Key());
 		}
 
 		projectImageRepository.deleteAllByProjectId(projectId);
