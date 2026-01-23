@@ -2,26 +2,25 @@ package org.cotato.homepage.api.session.controller;
 
 import java.util.List;
 
-import org.cotato.homepage.api.session.dto.AddSessionImageRequest;
 import org.cotato.homepage.api.session.dto.AddSessionImageResponse;
 import org.cotato.homepage.api.session.dto.AddSessionRequest;
 import org.cotato.homepage.api.session.dto.AddSessionResponse;
+import org.cotato.homepage.api.session.dto.CompleteImageUploadRequest;
 import org.cotato.homepage.api.session.dto.DeleteSessionImageRequest;
+import org.cotato.homepage.api.session.dto.PresignedUrlRequest;
+import org.cotato.homepage.api.session.dto.PresignedUrlResponse;
 import org.cotato.homepage.api.session.dto.SessionListResponse;
 import org.cotato.homepage.api.session.dto.SessionWithAttendanceResponse;
 import org.cotato.homepage.api.session.dto.UpdateSessionImageOrderRequest;
 import org.cotato.homepage.api.session.dto.UpdateSessionRequest;
-import org.cotato.homepage.common.error.exception.ImageException;
 import org.cotato.homepage.common.role.RoleAuthority;
 import org.cotato.homepage.domain.auth.enums.MemberRole;
 import org.cotato.homepage.domain.generation.service.SessionImageService;
 import org.cotato.homepage.domain.generation.service.SessionService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,12 +57,12 @@ public class SessionController {
 		return ResponseEntity.status(HttpStatus.OK).body(sessionService.findSessionsByGenerationId(generationId));
 	}
 
-	@Operation(summary = "Session 추가 API")
+	@Operation(summary = "세션 추가 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<AddSessionResponse> addSession(@ModelAttribute @Valid AddSessionRequest request) {
+	@PostMapping("/admin")
+	public ResponseEntity<AddSessionResponse> addSession(@RequestBody @Valid AddSessionRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(sessionService.addSession(request.generationId(),
-			request.images(), request.toSession(), request.attendanceDeadLine(), request.lateDeadLine(),
+			request.imageInfos(), request.toSession(), request.attendanceEndTime(), request.lateEndTime(),
 			request.toLocation()));
 	}
 
@@ -83,18 +82,24 @@ public class SessionController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@Operation(summary = "세션 사진 추가 API")
+	@Operation(summary = "세션 이미지 업로드용 PresignedUrl 발급 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@PostMapping(value = "/admin/image", consumes = "multipart/form-data")
-	public ResponseEntity<AddSessionImageResponse> additionalSessionImage(
-		@ModelAttribute @Valid AddSessionImageRequest request)
-		throws ImageException {
-		return ResponseEntity.status(HttpStatus.CREATED).body(sessionImageService.additionalSessionImage(request));
+	@PostMapping("/admin/presigned-url")
+	public ResponseEntity<PresignedUrlResponse> getPresignedUrl(@RequestBody @Valid PresignedUrlRequest request) {
+		return ResponseEntity.ok(sessionImageService.generatePresignedUrl(request));
+	}
+
+	@Operation(summary = "세션 이미지 업로드 완료 알림 API")
+	@RoleAuthority(MemberRole.ADMIN)
+	@PostMapping("/admin/image/complete")
+	public ResponseEntity<AddSessionImageResponse> completeImageUpload(
+		@RequestBody @Valid CompleteImageUploadRequest request) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(sessionImageService.completeImageUpload(request));
 	}
 
 	@Operation(summary = "세션 사진 삭제 API")
 	@RoleAuthority(MemberRole.ADMIN)
-	@DeleteMapping(value = "/admin/image")
+	@DeleteMapping("/admin/image")
 	public ResponseEntity<Void> deleteSessionImage(@RequestBody DeleteSessionImageRequest request) {
 		sessionImageService.deleteSessionImage(request);
 		return ResponseEntity.noContent().build();

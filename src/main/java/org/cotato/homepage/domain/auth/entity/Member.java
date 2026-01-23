@@ -1,7 +1,6 @@
 package org.cotato.homepage.domain.auth.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
-import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.domain.auth.enums.Gender;
 import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.enums.MemberRole;
@@ -63,9 +62,6 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "passed_generation_number")
 	private Long passedGenerationNumber;
 
-	@Column(name = "member_profile_image")
-	private S3Info profileImage;
-
 	@Column(name = "introduction", columnDefinition = "TEXT")
 	private String introduction;
 
@@ -105,13 +101,6 @@ public class Member extends BaseTimeEntity {
 			passedGenerationNumber, termsOfServiceAgreed, privacyPolicyAgreed, MemberStatus.REQUESTED);
 	}
 
-	public String getProfileImageUrl() {
-		if (profileImage == null) {
-			return null;
-		}
-		return profileImage.getUrl();
-	}
-
 	public void updateRole(MemberRole role) {
 		this.role = role;
 	}
@@ -139,10 +128,6 @@ public class Member extends BaseTimeEntity {
 
 	public void updatePosition(MemberPosition position) {
 		this.position = position;
-	}
-
-	public void updateProfileImage(S3Info s3Info) {
-		this.profileImage = s3Info;
 	}
 
 	public void updateIntroduction(String introduction) {

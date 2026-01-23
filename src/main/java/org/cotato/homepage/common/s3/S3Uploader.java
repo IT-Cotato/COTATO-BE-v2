@@ -1,19 +1,17 @@
 package org.cotato.homepage.common.s3;
 
-import static org.cotato.homepage.common.util.FileUtil.*;
+import java.net.URL;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.UUID;
 
-import java.io.File;
-
-import org.cotato.homepage.common.entity.S3Info;
-import org.cotato.homepage.common.error.exception.ImageException;
+import org.cotato.homepage.api.session.dto.PresignedUrlResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,56 +21,68 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class S3Uploader {
 
-	private static final String CONTENT_TYPE = "multipart/formed-data";
+	private static final String SESSION_FOLDER = "session";
+	private static final int PRESIGNED_URL_EXPIRATION_MINUTES = 15;
+
 	private final AmazonS3Client amazonS3;
 
 	@Value("${cloud.aws.s3.bucket}")
 	private String bucket;
 
-	public S3Info uploadFiles(MultipartFile multipartFile, String folderName) throws ImageException {
-		log.info("{} 사진 업로드", multipartFile.getOriginalFilename());
-		File localUploadFile = convert(multipartFile);
-
-		return uploadFiles(localUploadFile, folderName);
+	public PresignedUrlResponse generatePresignedUrl(String fileName, String contentType) {
+		return generatePresignedUrl(fileName, contentType, SESSION_FOLDER);
 	}
 
-	public S3Info uploadFiles(File file, String folderName) {
-		String fileName = folderName + "/" + file.getName();
-		String uploadUrl = putS3(file, fileName);
-		file.delete();
+	public PresignedUrlResponse generatePresignedUrl(String fileName, String contentType, String folderName) {
+		String extension = extractExtension(fileName);
+		String s3Key = generateS3Key(folderName, extension);
 
-		return S3Info.builder()
-			.folderName(folderName)
-			.fileName(file.getName())
-			.url(uploadUrl)
-			.build();
+		Date expiration = calculateExpiration();
+
+		GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket, s3Key)
+			.withMethod(HttpMethod.PUT)
+			.withExpiration(expiration)
+			.withContentType(contentType);
+
+		URL presignedUrl = amazonS3.generatePresignedUrl(request);
+		String publicUrl = amazonS3.getUrl(bucket, s3Key).toString();
+
+		log.info("PresignedUrl 생성: s3Key={}, expiration={}", s3Key, expiration);
+
+		return new PresignedUrlResponse(
+			presignedUrl.toString(),
+			s3Key,
+			publicUrl,
+			expiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+		);
 	}
 
-	public void deleteFile(S3Info s3Info) {
-		String fileName = s3Info.getFolderName() + "/" + s3Info.getFileName();
-
-		log.info("{} 사진 삭제", fileName);
-		amazonS3.deleteObject(bucket, fileName);
+	public boolean doesObjectExist(String s3Key) {
+		return amazonS3.doesObjectExist(bucket, s3Key);
 	}
 
-	private String putS3(File uploadFile, String fileName) {
-		PutObjectRequest putObjectRequest = new PutObjectRequest(bucket, fileName, uploadFile)
-			.withCannedAcl(CannedAccessControlList.PublicRead);
+	public void deleteByKey(String s3Key) {
+		log.info("S3 객체 삭제: {}", s3Key);
+		amazonS3.deleteObject(bucket, s3Key);
+	}
 
-		if (isImageFile(uploadFile)) {
-			ObjectMetadata objMeta = new ObjectMetadata();
-			objMeta.setContentType(CONTENT_TYPE);
+	private String generateS3Key(String folderName, String extension) {
+		return folderName + "/" + UUID.randomUUID() + "." + extension;
+	}
+
+	private String extractExtension(String fileName) {
+		int lastDotIndex = fileName.lastIndexOf(".");
+		if (lastDotIndex == -1) {
+			return "";
 		}
-
-		amazonS3.putObject(putObjectRequest);
-
-		return amazonS3.getUrl(bucket, fileName).toString();
+		return fileName.substring(lastDotIndex + 1).toLowerCase();
 	}
 
-	private boolean isImageFile(File file) {
-		String fileName = file.getName();
-		String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
-
-		return isImageFileExtension(extension);
+	private Date calculateExpiration() {
+		Date expiration = new Date();
+		long expTimeMillis = expiration.getTime();
+		expTimeMillis += 1000L * 60 * PRESIGNED_URL_EXPIRATION_MINUTES;
+		expiration.setTime(expTimeMillis);
+		return expiration;
 	}
 }

@@ -52,8 +52,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class AttendanceRecordService {
 
-	private static final Double DEFAULT_LOCATION_ACCURACY = 0.0001;
-
 	private final AttendanceRecordRepository attendanceRecordRepository;
 	private final AttendanceRepository attendanceRepository;
 	private final MemberReader memberReader;
@@ -256,27 +254,5 @@ public class AttendanceRecordService {
 
 		attendanceRecord.updateAttendanceResult(attendanceResult);
 		attendanceRecordRepository.save(attendanceRecord);
-	}
-
-	@Transactional
-	public void refreshAttendanceRecords(final Attendance attendance) {
-		Session session = sessionReader.findById(attendance.getSessionId());
-		if (session.getSessionType() == SessionType.NO_ATTEND || session.getSessionDateTime()
-			.isBefore(LocalDateTime.now())) {
-			return;
-		}
-
-		List<AttendanceRecord> attendanceRecords = attendanceRecordRepository.findAllByAttendanceId(attendance.getId());
-		Set<Long> attendedMemberIds = attendanceRecords.stream()
-			.map(AttendanceRecord::getMemberId)
-			.collect(Collectors.toSet());
-
-		List<AttendanceRecord> newRecords = memberReader.findAllGenerationMember(session.getGeneration()).stream()
-			.map(Member::getId)
-			.filter(memberId -> !attendedMemberIds.contains(memberId))
-			.map(memberId -> AttendanceRecord.absentRecord(attendance, memberId))
-			.toList();
-
-		attendanceRecordRepository.saveAll(newRecords);
 	}
 }

@@ -2,8 +2,8 @@ package org.cotato.homepage.domain.generation.event;
 
 import java.util.List;
 
+import org.cotato.homepage.api.session.dto.SessionImageInfo;
 import org.cotato.homepage.domain.generation.entity.Session;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,5 +18,5 @@ public class SessionImageEventDto {
 
 	private Session session;
 
-	private List<MultipartFile> images;
+	private List<SessionImageInfo> imageInfos;
 }

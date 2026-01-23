@@ -1,19 +1,23 @@
 package org.cotato.homepage.api.project.dto;
 
 import org.cotato.homepage.domain.generation.entity.ProjectImage;
-import org.cotato.homepage.domain.generation.enums.ProjectImageType;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public record ProjectImageInfoResponse(
+	@Schema(description = "이미지 ID")
 	Long imageId,
+
+	@Schema(description = "이미지 URL")
 	String imageUrl,
-	ProjectImageType projectImageType,
+
+	@Schema(description = "이미지 순서")
 	int imageOrder
 ) {
 	public static ProjectImageInfoResponse from(ProjectImage projectImage) {
 		return new ProjectImageInfoResponse(
 			projectImage.getId(),
-			projectImage.getS3Info().getUrl(),
-			projectImage.getProjectImageType(),
+			projectImage.getImageUrl(),
 			projectImage.getImageOrder()
 		);
 	}

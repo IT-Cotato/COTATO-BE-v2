@@ -18,8 +18,6 @@ public record ProfileInfoResponse(
 	Long generationId,
 	@Schema(description = "멤버 포지션", requiredMode = RequiredMode.REQUIRED)
 	MemberPosition position,
-	@Schema(description = "프로필 사진", requiredMode = RequiredMode.REQUIRED, nullable = true)
-	String profileImage,
 	@Schema(description = "자기 소개", requiredMode = RequiredMode.REQUIRED, nullable = true)
 	String introduction,
 	@Schema(description = "대학교", requiredMode = RequiredMode.REQUIRED, nullable = true)
@@ -27,14 +25,12 @@ public record ProfileInfoResponse(
 	@Schema(description = "프로필 링크", requiredMode = RequiredMode.REQUIRED)
 	List<ProfileLinkResponse> profileLinks
 ) {
-	public static ProfileInfoResponse of(final Member member, final List<ProfileLink> profileLinks,
-		String profileImageUrl) {
+	public static ProfileInfoResponse of(final Member member, final List<ProfileLink> profileLinks) {
 		return new ProfileInfoResponse(
 			member.getId(),
 			member.getName(),
 			member.getPassedGenerationNumber(),
 			member.getPosition(),
-			profileImageUrl,
 			member.getIntroduction(),
 			member.getUniversity(),
 			profileLinks.stream()

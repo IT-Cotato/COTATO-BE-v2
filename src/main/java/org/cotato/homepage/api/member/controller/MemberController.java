@@ -1,7 +1,5 @@
 package org.cotato.homepage.api.member.controller;
 
-import java.io.IOException;
-
 import javax.naming.NoPermissionException;
 
 import org.cotato.homepage.api.member.dto.DeactivateRequest;
@@ -26,7 +24,6 @@ import org.cotato.homepage.domain.auth.service.MemberService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,9 +33,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -108,13 +103,11 @@ public class MemberController {
 	}
 
 	@Operation(summary = "멤버 프로필 정보 수정 API")
-	@PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PatchMapping("/profile")
 	public ResponseEntity<Void> updateProfileInfo(@AuthenticationPrincipal Member member,
-		@RequestPart final UpdateProfileInfoRequest request,
-		@RequestPart(required = false) MultipartFile profileImage)
-		throws IOException {
+		@RequestBody @Valid final UpdateProfileInfoRequest request) {
 		memberService.updateMemberProfileInfo(member, request.introduction(), request.university(),
-			request.profileLinks(), request.imageUpdateStatus(), profileImage);
+			request.profileLinks());
 		return ResponseEntity.noContent().build();
 	}
 

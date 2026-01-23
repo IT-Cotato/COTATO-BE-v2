@@ -61,6 +61,8 @@ public enum ErrorCode {
 	//세션 사진
 	SESSION_IMAGE_COUNT_MISMATCH(HttpStatus.BAD_REQUEST, "IM-101", "저장된 사진 수와 요청 사진 수가 다릅니다."),
 	SESSION_ORDER_INVALID(HttpStatus.BAD_REQUEST, "IM-102", "입력한 순서는 유효하지 않습니다."),
+	S3_OBJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "IM-201", "S3에 해당 이미지가 존재하지 않습니다."),
+	INVALID_CONTENT_TYPE(HttpStatus.BAD_REQUEST, "IM-103", "지원하지 않는 이미지 형식입니다."),
 
 	//출석 관련 AT
 	OFFLINE_ATTEND_FAIL(HttpStatus.BAD_REQUEST, "AT-101", "거리 부적합으로 인한 대면 출석 실패"),
@@ -79,9 +81,6 @@ public enum ErrorCode {
 	LOGO_IMAGE_EXIST(HttpStatus.CONFLICT, "PJ-301", "이미 로고 이미지가 존재합니다."),
 	THUMBNAIL_IMAGE_EXIST(HttpStatus.CONFLICT, "PJ-302", "이미 썸네일 이미지가 존재합니다."),
 
-	//프로필 이미지 관련
-	PROFILE_IMAGE_NOT_EXIST(HttpStatus.BAD_REQUEST, "PI-401", "요청에 프로필 이미지가 존재하지 않습니다."),
-
 	// 500 오류 -> 서버측에서 처리가 실패한 부분들
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-000", "예상치 못한 서버 내부 에러 발생"),
 	IMAGE_PROCESSING_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-002", "이미지 처리에 실패했습니다."),
@@ -89,7 +88,6 @@ public enum ErrorCode {
 	INTERNAL_SQL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-004", "SQL 관련 에러 발생"),
 	ENUM_NOT_RESOLVED(HttpStatus.BAD_REQUEST, "S-005", "입력한 Enum이 존재하지 않습니다."),
 	IMAGE_CONVERT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-007", "로컬 이미지 변환에 실패했습니다"),
-	WEBP_CONVERT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-009", "webp 변환에 실패했습니다"),
 	SSE_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-008", "서버 이벤트 전송간 오류 발생"),
 	EMAIL_SEND_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-013", "이메일 전송에 실패했습니다."),
 	FILE_GENERATION_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-014", "엑셀 파일 생성에 실패했습니다."),

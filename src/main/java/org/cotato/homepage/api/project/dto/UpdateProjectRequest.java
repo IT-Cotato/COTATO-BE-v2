@@ -10,7 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record CreateProjectRequest(
+public record UpdateProjectRequest(
 	@NotNull
 	@Schema(description = "기수 ID")
 	Long generationId,

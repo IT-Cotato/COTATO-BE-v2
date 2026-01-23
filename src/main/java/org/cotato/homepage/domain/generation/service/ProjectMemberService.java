@@ -25,4 +25,13 @@ public class ProjectMemberService {
 
 		projectMemberRepository.saveAll(newMembers);
 	}
+
+	@Transactional
+	public void updateProjectMembers(Project project, List<ProjectMemberRequest> members) {
+		projectMemberRepository.deleteAllByProjectId(project.getId());
+
+		if (members != null && !members.isEmpty()) {
+			createProjectMember(project, members);
+		}
+	}
 }

@@ -9,7 +9,7 @@ public record AddSessionImageResponse(
 ) {
 	public static AddSessionImageResponse from(SessionImage sessionImage) {
 		return new AddSessionImageResponse(sessionImage.getId(),
-			sessionImage.getS3Info().getUrl(),
+			sessionImage.getImageUrl(),
 			sessionImage.getOrder());
 	}
 }
