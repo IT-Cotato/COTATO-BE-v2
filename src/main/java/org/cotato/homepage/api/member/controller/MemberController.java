@@ -4,7 +4,6 @@ import javax.naming.NoPermissionException;
 
 import org.cotato.homepage.api.member.dto.DeactivateRequest;
 import org.cotato.homepage.api.member.dto.MemberInfoResponse;
-import org.cotato.homepage.api.member.dto.MemberMyPageInfoResponse;
 import org.cotato.homepage.api.member.dto.MemberResponse;
 import org.cotato.homepage.api.member.dto.ProfileInfoResponse;
 import org.cotato.homepage.api.member.dto.SearchedMembersResponse;
@@ -22,8 +21,6 @@ import org.cotato.homepage.domain.auth.enums.MemberStatus;
 import org.cotato.homepage.domain.auth.service.AdminMemberService;
 import org.cotato.homepage.domain.auth.service.MemberService;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -117,16 +114,6 @@ public class MemberController {
 		return ResponseEntity.ok(memberService.findMemberProfileInfo(memberId));
 	}
 
-	@GetMapping("/{memberId}/mypage")
-	public ResponseEntity<MemberMyPageInfoResponse> findMyPageInfo(@AuthenticationPrincipal Member member,
-		@PathVariable("memberId") Long memberId)
-		throws NoPermissionException {
-		if (!member.getId().equals(memberId)) {
-			throw new NoPermissionException("본인 외의 정보는 조회할 수 없습니다.");
-		}
-		return ResponseEntity.ok().body(memberService.findMyPageInfo(memberId));
-	}
-
 	@Operation(summary = "회원 탈퇴 API", description = "회원 탈퇴를 요청합니다. 탈퇴 정책에 동의해야 합니다.")
 	@PostMapping("/{memberId}/deactivate")
 	public ResponseEntity<Void> deactivateMember(@PathVariable("memberId") Long memberId,
@@ -136,31 +123,6 @@ public class MemberController {
 			throw new NoPermissionException("본인 외의 회원을 비활성화할 수 없습니다.");
 		}
 		memberService.deactivateMember(member, request.email(), request.password(), request.leavingPolicyAgreed());
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(summary = "회원 상태에 따른 조회 요청 API")
-	@RoleAuthority(MemberRole.ADMIN)
-	@GetMapping(value = "/admin", params = "status")
-	public ResponseEntity<PageResponse<MemberResponse>> findMembersByStatus(
-		@RequestParam("status") MemberStatus status,
-		@PageableDefault(sort = {"name"}, direction = Sort.Direction.ASC) Pageable pageable) {
-		return ResponseEntity.ok().body(PageResponse.of(memberService.getMembersByStatus(status, pageable)));
-	}
-
-	@Operation(summary = "부원 가입 승인")
-	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping("/admin/{memberId}/approve")
-	public ResponseEntity<Void> approveApplicant(@PathVariable("memberId") final Long memberId) {
-		adminMemberService.approveApplicant(memberId);
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(summary = "부원 가입 거절")
-	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping("/admin/{memberId}/reject")
-	public ResponseEntity<Void> rejectApplicant(@PathVariable("memberId") final Long memberId) {
-		adminMemberService.rejectApplicant(memberId);
 		return ResponseEntity.noContent().build();
 	}
 
