@@ -9,13 +9,9 @@ import java.util.List;
 
 import org.cotato.homepage.api.member.dto.MemberResponse;
 import org.cotato.homepage.api.member.dto.ProfileLinkRequest;
-import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.common.error.exception.ImageException;
-import org.cotato.homepage.common.s3.S3Uploader;
 import org.cotato.homepage.domain.auth.entity.Member;
 import org.cotato.homepage.domain.auth.entity.MemberLeavingRequest;
-import org.cotato.homepage.domain.auth.enums.ImageUpdateStatus;
 import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.enums.MemberStatus;
 import org.cotato.homepage.domain.auth.enums.UrlType;
@@ -33,9 +29,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(SpringExtension.class)
 class MemberServiceTest {
@@ -54,9 +48,6 @@ class MemberServiceTest {
 
 	@Mock
 	private MemberRepository memberRepository;
-
-	@Mock
-	private S3Uploader s3Uploader;
 
 	@Mock
 	private ProfileLinkRepository profileLinkRepository;
@@ -131,58 +122,34 @@ class MemberServiceTest {
 	}
 
 	@Test
-	void whenUpdateMemberProfileInfo_thenProfileUpdated() throws ImageException {
+	void whenUpdateMemberProfileInfo_thenProfileUpdated() {
 		//given
 		Member member = getDefaultMember();
 		String introduction = "새로운 소개";
 		String university = "새로운 대학교";
 		List<ProfileLinkRequest> profileLinkRequests = List.of(
 			new ProfileLinkRequest(UrlType.GITHUB, "https://github.com/user"));
-		MockMultipartFile profileImage = new MockMultipartFile("image", "image.jpg", "image/jpeg", new byte[10]);
-
-		S3Info newS3Info = S3Info.builder()
-			.url("new URL")
-			.fileName("new file")
-			.folderName("new folder")
-			.build();
-		when(s3Uploader.uploadFiles((MultipartFile)any(), any()))
-			.thenReturn(newS3Info);
 
 		//when
-		memberService.updateMemberProfileInfo(member, introduction, university, profileLinkRequests,
-			ImageUpdateStatus.UPDATE, profileImage);
+		memberService.updateMemberProfileInfo(member, introduction, university, profileLinkRequests);
 
 		//then
 		assertEquals(member.getIntroduction(), introduction);
 		assertEquals(member.getUniversity(), university);
-		assertEquals(member.getProfileImage(), newS3Info);
 	}
 
 	@Test
-	void whenProfileImageIsNull_thenThrowException() {
-		// given
-		Member member = getDefaultMember();
-
-		// when, then
-		assertThrows(AppException.class, () ->
-			memberService.updateMemberProfileInfo(member, null, null, null, ImageUpdateStatus.UPDATE, null)
-		);
-	}
-
-	@Test
-	void whenUpdateProfileWithNullValues_thenKeepExistingValues() throws ImageException {
+	void whenUpdateProfileWithNullValues_thenKeepExistingValues() {
 		//given
 		Member member = getDefaultMember();
 		String introduction = "새로운 소개";
 
 		//when
-		memberService.updateMemberProfileInfo(member, introduction, null, null,
-			ImageUpdateStatus.KEEP, null);
+		memberService.updateMemberProfileInfo(member, introduction, null, null);
 
 		//then
 		assertEquals(member.getIntroduction(), introduction);
 		assertEquals(member.getUniversity(), "before");
-		assertNotNull(member.getProfileImage());
 	}
 
 	private Member getDefaultMember() {
@@ -190,7 +157,6 @@ class MemberServiceTest {
 			MemberPosition.NONE, "before", null, null, true, true);
 		member.updateStatus(MemberStatus.APPROVED);
 		member.updateIntroduction("before");
-		member.updateProfileImage(new S3Info("url", "file", "folder"));
 		return member;
 	}
 

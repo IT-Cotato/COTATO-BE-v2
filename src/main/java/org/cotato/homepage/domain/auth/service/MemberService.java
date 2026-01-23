@@ -12,15 +12,11 @@ import org.cotato.homepage.api.member.dto.MemberResponse;
 import org.cotato.homepage.api.member.dto.ProfileInfoResponse;
 import org.cotato.homepage.api.member.dto.ProfileLinkRequest;
 import org.cotato.homepage.api.member.dto.SearchedMembersResponse;
-import org.cotato.homepage.common.entity.S3Info;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.common.error.exception.ImageException;
-import org.cotato.homepage.common.s3.S3Uploader;
 import org.cotato.homepage.domain.auth.entity.Member;
 import org.cotato.homepage.domain.auth.entity.MemberLeavingRequest;
 import org.cotato.homepage.domain.auth.entity.ProfileLink;
-import org.cotato.homepage.domain.auth.enums.ImageUpdateStatus;
 import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.auth.enums.MemberStatus;
 import org.cotato.homepage.domain.auth.repository.MemberLeavingRequestRepository;
@@ -31,7 +27,6 @@ import org.cotato.homepage.domain.auth.service.component.MemberReader;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +34,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -51,20 +45,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MemberService {
 
-	@Value("${profile-image.default-url}")
-	private String defaultProfileImageUrl;
-	@Value("${profile-image.default-file}")
-	private String defaultProfileImageFile;
-	@Value("${profile-image.default-folder}")
-	private String defaultProfileImageFolder;
-
-	private static final String PROFILE_BUCKET_DIRECTORY = "profile";
 	private final MemberReader memberReader;
 	private final GenerationReader generationReader;
 	private final MemberRepository memberRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final EncryptService encryptService;
-	private final S3Uploader s3Uploader;
 	private final ProfileLinkRepository profileLinkRepository;
 	private final GenerationMemberRepository generationMemberRepository;
 	private final MemberLeavingRequestRepository memberLeavingRequestRepository;
@@ -107,22 +92,12 @@ public class MemberService {
 	public ProfileInfoResponse findMemberProfileInfo(final Long memberId) {
 		Member member = memberReader.findById(memberId);
 		List<ProfileLink> profileLinks = profileLinkRepository.findAllByMember(member);
-		String imageUrl = resolveProfileImageOrDefault(member.getProfileImageUrl());
-		return ProfileInfoResponse.of(member, profileLinks, imageUrl);
-	}
-
-	String resolveProfileImageOrDefault(String savedUrl) {
-		if (savedUrl != null) {
-			return savedUrl;
-		}
-		return defaultProfileImageUrl;
+		return ProfileInfoResponse.of(member, profileLinks);
 	}
 
 	@Transactional
 	public void updateMemberProfileInfo(final Member member, final String introduction, final String university,
-		final List<ProfileLinkRequest> profileLinkRequests,
-		ImageUpdateStatus imageUpdateStatus, final MultipartFile profileImage)
-		throws ImageException {
+		final List<ProfileLinkRequest> profileLinkRequests) {
 		if (introduction != null) {
 			member.updateIntroduction(introduction);
 		}
@@ -139,49 +114,7 @@ public class MemberService {
 			profileLinkRepository.saveAll(profileLinks);
 		}
 
-		updateProfileImage(member, profileImage, imageUpdateStatus);
-
 		memberRepository.save(member);
-	}
-
-	private void deleteProfileImage(final Member member) {
-		if (member.getProfileImage() != null && !isDefaultImage(member.getProfileImage())) {
-			s3Uploader.deleteFile(member.getProfileImage());
-		}
-		member.updateProfileImage(null);
-	}
-
-	private boolean isDefaultImage(S3Info profileImage) {
-		return profileImage.getFolderName().equals(defaultProfileImageFolder)
-			&& profileImage.getFileName().equals(defaultProfileImageFile)
-			&& profileImage.getUrl().equals(defaultProfileImageUrl);
-	}
-
-	private void updateProfileImage(final Member member, final MultipartFile profileImage,
-		final ImageUpdateStatus imageUpdateStatus) throws ImageException {
-		switch (imageUpdateStatus) {
-			case KEEP:
-				//프로필 이미지를 변경하지 않음.
-				break;
-			case UPDATE:
-				if (profileImage == null || profileImage.isEmpty()) {
-					throw new AppException(ErrorCode.PROFILE_IMAGE_NOT_EXIST);
-				}
-				deleteProfileImage(member);
-				member.updateProfileImage(s3Uploader.uploadFiles(profileImage, PROFILE_BUCKET_DIRECTORY));
-				break;
-			case DEFAULT:
-				deleteProfileImage(member);
-				S3Info defaultImage = S3Info.builder()
-					.folderName(defaultProfileImageFolder)
-					.fileName(defaultProfileImageFile)
-					.url(defaultProfileImageUrl)
-					.build();
-				member.updateProfileImage(defaultImage);
-				break;
-			default:
-				throw new IllegalArgumentException("잘못 된 ImageUpdateStatus 값" + imageUpdateStatus);
-		}
 	}
 
 	public MemberMyPageInfoResponse findMyPageInfo(Long memberId) {

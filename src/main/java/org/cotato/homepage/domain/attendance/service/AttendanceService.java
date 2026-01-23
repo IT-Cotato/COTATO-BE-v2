@@ -38,19 +38,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AttendanceService {
 
-	private final AttendanceReader attendanceReader;
-	private final SessionReader sessionReader;
 	private final AttendanceRepository attendanceRepository;
 	private final SessionRepository sessionRepository;
 	private final GenerationRepository generationRepository;
 	private final SchedulerService schedulerService;
 	private final AttendanceNotificationRepository attendanceNotificationRepository;
 
-	public AttendanceResponse getAttendance(final Long attendanceId) {
-		Attendance attendance = attendanceReader.findById(attendanceId);
-		Session session = sessionReader.findById(attendance.getSessionId());
-		return AttendanceResponse.of(attendance, session);
-	}
 
 	@Transactional
 	public void createAttendance(Session session, Location location, LocalDateTime attendanceDeadline,
@@ -125,30 +118,5 @@ public class AttendanceService {
 			.generationId(generationId)
 			.attendances(attendances)
 			.build();
-	}
-
-	@Transactional(readOnly = true)
-	public AttendanceTimeResponse getAttendanceDetailInfo(final Long sessionId) {
-		Attendance attendance = attendanceRepository.findBySessionId(sessionId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 출석을 찾을 수 없습니다"));
-
-		return AttendanceTimeResponse.from(attendance);
-	}
-
-	@Transactional
-	public void updateAttendance(final Long attendanceId, final Location location, final LocalDateTime attendDeadline,
-		final LocalDateTime lateDeadline) {
-		Attendance attendance = attendanceRepository.findById(attendanceId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 출석 정보가 존재하지 않습니다"));
-		Session attendanceSession = sessionReader.findById(attendance.getSessionId());
-
-		AttendanceUtil.validateAttendanceTime(attendanceSession.getSessionDateTime(), attendDeadline, lateDeadline);
-
-		if (attendanceSession.getSessionDateTime() == null) {
-			throw new AppException(ErrorCode.SESSION_DATE_NOT_FOUND);
-		}
-
-		attendance.updateDeadLine(attendDeadline, lateDeadline);
-		attendance.updateLocation(location);
 	}
 }
