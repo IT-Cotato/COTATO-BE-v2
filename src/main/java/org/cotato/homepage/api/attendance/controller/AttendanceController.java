@@ -8,6 +8,7 @@ import org.cotato.homepage.api.attendance.dto.AttendanceSubmitResponse;
 import org.cotato.homepage.api.attendance.dto.AttendancesResponse;
 import org.cotato.homepage.api.attendance.dto.GenerationMemberAttendanceRecordResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendanceRecordsResponse;
+import org.cotato.homepage.api.attendance.dto.SessionAttendanceListResponse;
 import org.cotato.homepage.api.attendance.dto.UpdateAttendanceRecordRequest;
 import org.cotato.homepage.common.role.RoleAuthority;
 import org.cotato.homepage.domain.attendance.enums.AttendanceResult;
@@ -124,5 +125,20 @@ public class AttendanceController {
 		@Parameter(description = "월 필터 (1~12)") @RequestParam(name = "month", required = false) Integer month,
 		@AuthenticationPrincipal Member member) {
 		return ResponseEntity.ok().body(attendanceRecordService.findMyAttendanceRecords(member, month));
+	}
+
+	@Operation(
+		summary = "출석하기 - 세션 목록 조회",
+		description = "출석하기 화면을 위한 세션 목록을 조회합니다. "
+			+ "현재 활동 기수의 세션 목록과 출석 정보(출석 가능 상태, 내 출석 결과)를 반환합니다. "
+			+ "월(month) 파라미터로 특정 월의 세션만 필터링할 수 있습니다. "
+			+ "이전/다음 월 버튼 활성화 여부를 위해 hasPreviousMonth, hasNextMonth를 제공합니다."
+	)
+	@GetMapping("/sessions")
+	public ResponseEntity<SessionAttendanceListResponse> findSessionsWithAttendance(
+		@Parameter(description = "월 필터 (1~12, 미입력시 현재 월 또는 가장 최근 월)")
+		@RequestParam(name = "month", required = false) Integer month,
+		@AuthenticationPrincipal Member member) {
+		return ResponseEntity.ok().body(attendanceRecordService.findSessionsWithAttendance(member, month));
 	}
 }
