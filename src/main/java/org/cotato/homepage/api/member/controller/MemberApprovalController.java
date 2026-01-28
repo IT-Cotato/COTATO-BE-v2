@@ -36,17 +36,19 @@ public class MemberApprovalController {
 	private final AdminMemberService adminMemberService;
 
 	@Operation(summary = "가입 요청/거절 회원 검색", description = "상태(REQUESTED/REJECTED)와 이름으로 회원을 검색합니다.")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/applicants")
 	public ResponseEntity<PageResponse<ApplicantMemberResponse>> searchApplicants(
-		@RequestParam(value = "status", required = false) @Parameter(description = "회원 상태 (REQUESTED/REJECTED)") MemberStatus status,
-		@RequestParam(value = "name", required = false) @Parameter(description = "회원 이름") String name,
+		@RequestParam(value = "status", required = false)
+		@Parameter(description = "회원 상태 (REQUESTED/REJECTED)") MemberStatus status,
+		@RequestParam(value = "name", required = false)
+		@Parameter(description = "회원 이름") String name,
 		@PageableDefault(sort = {"createdAt"}, direction = Sort.Direction.DESC) Pageable pageable) {
 		return ResponseEntity.ok().body(PageResponse.of(memberService.searchApplicants(status, name, pageable)));
 	}
 
 	@Operation(summary = "부원 일괄 승인", description = "여러 부원의 가입을 일괄 승인합니다.")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/approve")
 	public ResponseEntity<Void> approveApplicants(@RequestBody @Valid BulkMemberIdsRequest request) {
 		adminMemberService.approveApplicants(request.memberIds());
@@ -54,7 +56,7 @@ public class MemberApprovalController {
 	}
 
 	@Operation(summary = "부원 일괄 거절", description = "여러 부원의 가입을 일괄 거절합니다.")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/reject")
 	public ResponseEntity<Void> rejectApplicants(@RequestBody @Valid BulkMemberIdsRequest request) {
 		adminMemberService.rejectApplicants(request.memberIds());
@@ -62,7 +64,7 @@ public class MemberApprovalController {
 	}
 
 	@Operation(summary = "거절된 회원 복원", description = "거절된 회원을 가입 요청 상태로 복원합니다.")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/restore")
 	public ResponseEntity<Void> restoreRejectedMembers(@RequestBody @Valid BulkMemberIdsRequest request) {
 		adminMemberService.restoreRejectedMembers(request.memberIds());
@@ -70,7 +72,7 @@ public class MemberApprovalController {
 	}
 
 	@Operation(summary = "거절된 회원 삭제", description = "거절된 회원을 영구 삭제합니다.")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@DeleteMapping
 	public ResponseEntity<Void> deleteRejectedMembers(@RequestBody @Valid BulkMemberIdsRequest request) {
 		adminMemberService.deleteRejectedMembers(request.memberIds());

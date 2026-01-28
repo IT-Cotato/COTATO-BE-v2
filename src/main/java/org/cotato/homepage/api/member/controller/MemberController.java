@@ -4,23 +4,9 @@ import javax.naming.NoPermissionException;
 
 import org.cotato.homepage.api.member.dto.DeactivateRequest;
 import org.cotato.homepage.api.member.dto.MemberInfoResponse;
-import org.cotato.homepage.api.member.dto.MemberResponse;
-import org.cotato.homepage.api.member.dto.ProfileInfoResponse;
-import org.cotato.homepage.api.member.dto.SearchedMembersResponse;
-import org.cotato.homepage.api.member.dto.UpdateActiveMemberToOldMemberRequest;
-import org.cotato.homepage.api.member.dto.UpdateMemberRoleRequest;
 import org.cotato.homepage.api.member.dto.UpdatePasswordRequest;
-import org.cotato.homepage.api.member.dto.UpdatePhoneNumberRequest;
-import org.cotato.homepage.api.member.dto.UpdateProfileInfoRequest;
-import org.cotato.homepage.common.response.PageResponse;
-import org.cotato.homepage.common.role.RoleAuthority;
 import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
-import org.cotato.homepage.domain.auth.service.AdminMemberService;
 import org.cotato.homepage.domain.auth.service.MemberService;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,61 +15,29 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
+@Tag(name = "회원 API", description = "회원 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/api/member")
 public class MemberController {
 
 	private final MemberService memberService;
-	private final AdminMemberService adminMemberService;
 
+	@Operation(summary = "내 정보 조회", description = "로그인한 회원의 기본 정보를 조회합니다.")
 	@GetMapping("/info")
 	public ResponseEntity<MemberInfoResponse> findMemberInfo(
 		@AuthenticationPrincipal Member member) {
-		return ResponseEntity.ok().body(memberService.findMemberInfo(member));
+		return ResponseEntity.ok().body(MemberInfoResponse.from(member));
 	}
 
-	@Operation(summary = "기수별 멤버에 추가 가능한 멤버 반환 API")
-	@RoleAuthority(MemberRole.ADMIN)
-	@GetMapping("/admin/addable")
-	public ResponseEntity<SearchedMembersResponse> findAddableMembersForGenerationMember(
-		@RequestParam(name = "generationId") @Parameter(description = "추가하고 싶은 기수의 Id")
-		Long generationId,
-		@RequestParam(name = "passedGenerationId", required = false)
-		@Parameter(description = "멤버 합격 기수 ID") Long passedGenerationId,
-		@RequestParam(name = "position", required = false) @Parameter(description = "멤버 포지션")
-		MemberPosition position,
-		@RequestParam(name = "name", required = false) @Parameter(description = "멤버 이름") String name
-	) {
-		return ResponseEntity.ok()
-			.body(memberService.findAddableMembers(generationId, passedGenerationId, position, name));
-	}
-
-	@Operation(summary = "OM 검색 API")
-	@RoleAuthority(MemberRole.ADMIN)
-	@GetMapping(value = "/admin/search", params = "status=RETIRED")
-	public ResponseEntity<PageResponse<MemberResponse>> findRetiredMembers(
-		@RequestParam(value = "passedGenerationId", required = false) Long passedGenerationId,
-		@RequestParam(value = "position", required = false) MemberPosition position,
-		@RequestParam(value = "name", required = false) String name,
-		Pageable pageable) {
-		return ResponseEntity.ok()
-			.body(PageResponse.of(
-				memberService.getMembersByName(passedGenerationId, position, name, MemberStatus.RETIRED,
-					pageable)));
-	}
-
-	@Operation(summary = "비밀번호 변경 API", description = "로그인한 회원의 비밀번호를 변경합니다. 비밀번호 찾기 후 발급받은 토큰으로도 변경 가능합니다.")
+	@Operation(summary = "비밀번호 변경", description = "로그인한 회원의 비밀번호를 변경합니다.")
 	@PatchMapping("/update/password")
 	public ResponseEntity<Void> updatePassword(@AuthenticationPrincipal Member member,
 		@RequestBody @Valid UpdatePasswordRequest request) {
@@ -91,30 +45,7 @@ public class MemberController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@Operation(summary = "멤버 전화번호 수정 API")
-	@PatchMapping("/phone-number")
-	public ResponseEntity<Void> updatePhoneNumber(@AuthenticationPrincipal Member member,
-		@RequestBody @Valid UpdatePhoneNumberRequest request) {
-		memberService.updatePhoneNumber(member, request.phoneNumber());
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(summary = "멤버 프로필 정보 수정 API")
-	@PatchMapping("/profile")
-	public ResponseEntity<Void> updateProfileInfo(@AuthenticationPrincipal Member member,
-		@RequestBody @Valid final UpdateProfileInfoRequest request) {
-		memberService.updateMemberProfileInfo(member, request.introduction(), request.university(),
-			request.profileLinks());
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(summary = "멤버 프로필 정보 반환 API")
-	@GetMapping("/{memberId}/profile")
-	public ResponseEntity<ProfileInfoResponse> findProfileInfo(@PathVariable("memberId") Long memberId) {
-		return ResponseEntity.ok(memberService.findMemberProfileInfo(memberId));
-	}
-
-	@Operation(summary = "회원 탈퇴 API", description = "회원 탈퇴를 요청합니다. 탈퇴 정책에 동의해야 합니다.")
+	@Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 요청합니다. 탈퇴 정책에 동의해야 합니다.")
 	@PostMapping("/{memberId}/deactivate")
 	public ResponseEntity<Void> deactivateMember(@PathVariable("memberId") Long memberId,
 		@Valid @RequestBody DeactivateRequest request,
@@ -123,38 +54,6 @@ public class MemberController {
 			throw new NoPermissionException("본인 외의 회원을 비활성화할 수 없습니다.");
 		}
 		memberService.deactivateMember(member, request.email(), request.password(), request.leavingPolicyAgreed());
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(summary = "부원 역할 변경")
-	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping("/admin/{memberId}/role")
-	public ResponseEntity<Void> updateMemberRole(@PathVariable("memberId") final Long memberId,
-		@RequestBody @Valid UpdateMemberRoleRequest request) {
-		adminMemberService.updateMemberRole(memberId, request.role());
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(summary = "멤버 활성화 API")
-	@PatchMapping("/{memberId}/activate")
-	public ResponseEntity<Void> activateMember(@PathVariable("memberId") Long memberId) {
-		memberService.activateMember(memberId);
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(summary = "부원 OM 전환")
-	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping(value = "/admin/status", params = "target=RETIRE")
-	public ResponseEntity<Void> updateMembersToOldMembers(@RequestBody UpdateActiveMemberToOldMemberRequest request) {
-		adminMemberService.updateToRetireMembers(request.memberIds());
-		return ResponseEntity.noContent().build();
-	}
-
-	@Operation(summary = "OM을 일반 부원으로 전환")
-	@RoleAuthority(MemberRole.ADMIN)
-	@PatchMapping(value = "/admin/{memberId}/status", params = "target=APPROVED")
-	public ResponseEntity<Void> updateToApprovedMember(@PathVariable("memberId") Long memberId) {
-		adminMemberService.updateToApprovedMember(memberId);
 		return ResponseEntity.noContent().build();
 	}
 }
