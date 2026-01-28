@@ -1,4 +1,4 @@
-# test - server
+# stage - server
 
 server:
   port: 8082
@@ -6,18 +6,17 @@ server:
 spring:
   jpa:
     hibernate:
-      ddl-auto: jdbc:mysql://${TEST_DDL_AUTO}
-    show_sql: true
+      ddl-auto: ${STAGE_DDL_AUTO:update}
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
 
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${TEST_DB_PATH}
-    username: ${TEST_DB_USERNAME}
-    password: ${TEST_DB_PWD}
+    url: jdbc:mysql://${STAGE_DB_PATH}
+    username: ${STAGE_DB_USERNAME}
+    password: ${STAGE_DB_PWD}
 
   config:
     import: classpath:variable/variable-stage.yml

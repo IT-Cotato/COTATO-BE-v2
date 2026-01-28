@@ -1,23 +1,22 @@
-# dev-local
+# local - server
 
 server:
   port: 8080
 
 spring:
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_PATH}
-    username: ${DB_USERNAME}
-    password: ${DB_PWD}
+    url: jdbc:mysql://${LOCAL_DB_PATH}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PWD}
 
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
-    show-sql: true
 
   config:
     import: classpath:variable/variable-local.yml
