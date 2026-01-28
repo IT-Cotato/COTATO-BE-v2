@@ -1,17 +1,30 @@
 package org.cotato.homepage.domain.generation.enums;
 
+import org.cotato.homepage.domain.auth.enums.MemberRole;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
 public enum GenerationMemberRole {
-	MEMBER("일반부원"),
-	LEADER_TEAM("회장단"),
-	OPERATION_SUPPORT_TEAM("운영지원팀"),
-	EDUCATION_TEAM("교육팀"),
-	PLANNING_TEAM("기획팀"),
-	MARKETING_TEAM("홍보팀");
+	MEMBER("일반 부원"),
+	PR("홍보팀"),
+	PLANNING("기획팀"),
+	EDUCATION("교육팀"),
+	OPERATION("운영진"),
+	DEV("코테이토 개발팀");
 
 	private final String description;
+
+	public MemberRole toMemberRole() {
+		return switch (this) {
+			case MEMBER -> MemberRole.MEMBER;
+			case PR -> MemberRole.PR;
+			case PLANNING -> MemberRole.PLANNING;
+			case EDUCATION -> MemberRole.EDUCATION;
+			case OPERATION -> MemberRole.OPERATION;
+			case DEV -> MemberRole.DEV;
+		};
+	}
 }
