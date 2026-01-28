@@ -62,9 +62,6 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "passed_generation_number")
 	private Long passedGenerationNumber;
 
-	@Column(name = "introduction", columnDefinition = "TEXT")
-	private String introduction;
-
 	@Column(name = "university")
 	private String university;
 
@@ -130,24 +127,20 @@ public class Member extends BaseTimeEntity {
 		this.position = position;
 	}
 
-	public void updateIntroduction(String introduction) {
-		this.introduction = introduction;
-	}
-
 	public void updateUniversity(String university) {
 		this.university = university;
 	}
 
+	public void updateName(String name) {
+		this.name = name;
+	}
+
+	public void updateGender(Gender gender) {
+		this.gender = gender;
+	}
+
 	public boolean isRejectedMember() {
 		return this.status == MemberStatus.REJECTED;
-	}
-
-	public boolean isApproved() {
-		return this.status == MemberStatus.APPROVED;
-	}
-
-	public boolean isRetired() {
-		return this.status == MemberStatus.RETIRED;
 	}
 
 	public boolean isDevTeam() {
