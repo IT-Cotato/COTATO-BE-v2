@@ -113,4 +113,90 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 			return count != null ? count : 0;
 		});
 	}
+
+	@Override
+	public Page<Member> searchAllMembers(
+		String search,
+		List<MemberStatus> statuses,
+		String sortBy,
+		String sortDirection,
+		Pageable pageable
+	) {
+		QMember qMember = QMember.member;
+		BooleanBuilder builder = new BooleanBuilder();
+
+		// 기본 필터: 승인된 회원 또는 수료 회원만 조회 (가입 신청 대기/거절/비활성화 제외)
+		if (statuses != null && !statuses.isEmpty()) {
+			builder.and(qMember.status.in(statuses));
+		} else {
+			builder.and(qMember.status.in(MemberStatus.APPROVED, MemberStatus.RETIRED));
+		}
+
+		// 통합 검색 처리
+		if (search != null && !search.isEmpty()) {
+			BooleanBuilder searchBuilder = new BooleanBuilder();
+
+			// 숫자인 경우: 기수, 전화번호 검색
+			if (search.matches("\\d+")) {
+				Long generationNumber = Long.parseLong(search);
+				searchBuilder.or(qMember.passedGenerationNumber.eq(generationNumber));
+				searchBuilder.or(qMember.phoneNumber.contains(search));
+			} else {
+				// 텍스트인 경우: 이름, 학교, 파트 검색
+				searchBuilder.or(qMember.name.containsIgnoreCase(search));
+				searchBuilder.or(qMember.university.containsIgnoreCase(search));
+
+				// 파트 매칭 (BE, FE, DESIGN, PM 등)
+				MemberPosition matchedPosition = findMatchingPosition(search);
+				if (matchedPosition != null) {
+					searchBuilder.or(qMember.position.eq(matchedPosition));
+				}
+			}
+
+			builder.and(searchBuilder);
+		}
+
+		// 정렬 처리
+		com.querydsl.core.types.OrderSpecifier<?> orderSpecifier;
+		boolean isAsc = "ASC".equalsIgnoreCase(sortDirection);
+
+		if ("passedGenerationNumber".equals(sortBy)) {
+			orderSpecifier = isAsc
+				? qMember.passedGenerationNumber.asc()
+				: qMember.passedGenerationNumber.desc();
+		} else if ("name".equals(sortBy)) {
+			orderSpecifier = isAsc
+				? qMember.name.asc()
+				: qMember.name.desc();
+		} else {
+			// 기본 정렬: 기수 내림차순
+			orderSpecifier = qMember.passedGenerationNumber.desc();
+		}
+
+		List<Member> results = queryFactory.selectFrom(qMember)
+			.where(builder)
+			.orderBy(orderSpecifier)
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.fetch();
+
+		JPAQuery<Long> countQuery = queryFactory.select(qMember.count())
+			.from(qMember)
+			.where(builder);
+
+		return PageableExecutionUtils.getPage(results, pageable, () -> {
+			Long count = countQuery.fetchOne();
+			return count != null ? count : 0;
+		});
+	}
+
+	private MemberPosition findMatchingPosition(String search) {
+		String upperSearch = search.toUpperCase();
+		for (MemberPosition position : MemberPosition.values()) {
+			if (position.name().equalsIgnoreCase(upperSearch)) {
+				return position;
+			}
+		}
+		return null;
+	}
 }
