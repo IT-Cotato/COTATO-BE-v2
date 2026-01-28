@@ -44,7 +44,7 @@ public class MinusPointController {
 			+ "출석 벌점(지각 -4, 결석 -7, 무단결석 -14), 세션 벌점, 비어 네트워킹 참여 수, 비어 네트워킹 상점(3회당 +5)을 포함합니다. "
 			+ "이름 검색(search), 누계 정렬(sortDirection: asc/desc)이 가능합니다."
 	)
-	@RoleAuthority(MemberRole.MANAGER)
+	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/admin/statistics")
 	public ResponseEntity<List<MemberMinusPointStatisticsResponse>> findMinusPointStatistics(
 		@Parameter(description = "기수 ID") @RequestParam(name = "generationId") Long generationId,
@@ -63,7 +63,7 @@ public class MinusPointController {
 			+ "세션 날짜, 이름, 출석 상태, 비어 네트워킹 참여 여부, 기타 벌점을 포함합니다. "
 			+ "이름 검색(search)이 가능합니다."
 	)
-	@RoleAuthority(MemberRole.MANAGER)
+	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/admin/sessions/{sessionId}")
 	public ResponseEntity<SessionMinusPointManagementResponse> findSessionMinusPointManagement(
 		@Parameter(description = "세션 ID") @PathVariable("sessionId") Long sessionId,
@@ -78,7 +78,7 @@ public class MinusPointController {
 		summary = "비어 네트워킹 참여 여부 수정",
 		description = "특정 세션의 회원 비어 네트워킹 참여 여부를 수정합니다."
 	)
-	@RoleAuthority(MemberRole.MANAGER)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/admin/sessions/{sessionId}/beer-networking")
 	public ResponseEntity<Void> updateBeerNetworking(
 		@Parameter(description = "세션 ID") @PathVariable("sessionId") Long sessionId,
@@ -92,7 +92,7 @@ public class MinusPointController {
 		summary = "기타 벌점 수정",
 		description = "특정 세션의 회원 기타 벌점을 수정합니다. 운영진 재량하에 부여되는 세션 벌점입니다."
 	)
-	@RoleAuthority(MemberRole.MANAGER)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/admin/sessions/{sessionId}/extra-minus-points")
 	public ResponseEntity<Void> updateExtraMinusPoint(
 		@Parameter(description = "세션 ID") @PathVariable("sessionId") Long sessionId,

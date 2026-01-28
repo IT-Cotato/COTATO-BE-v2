@@ -58,7 +58,7 @@ public class SessionController {
 	}
 
 	@Operation(summary = "세션 추가 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PostMapping("/admin")
 	public ResponseEntity<AddSessionResponse> addSession(@RequestBody @Valid AddSessionRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(sessionService.addSession(request.generationId(),
@@ -67,7 +67,7 @@ public class SessionController {
 	}
 
 	@Operation(summary = "세션 수정 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/admin")
 	public ResponseEntity<Void> updateSession(@RequestBody @Valid UpdateSessionRequest request) {
 		sessionService.updateSession(request);
@@ -75,7 +75,7 @@ public class SessionController {
 	}
 
 	@Operation(summary = "세션 사진 순서 변경 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/admin/image/order")
 	public ResponseEntity<Void> updateSessionImageOrder(@RequestBody UpdateSessionImageOrderRequest request) {
 		sessionImageService.updateSessionImageOrder(request);
@@ -83,14 +83,14 @@ public class SessionController {
 	}
 
 	@Operation(summary = "세션 이미지 업로드용 PresignedUrl 발급 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PostMapping("/admin/presigned-url")
 	public ResponseEntity<PresignedUrlResponse> getPresignedUrl(@RequestBody @Valid PresignedUrlRequest request) {
 		return ResponseEntity.ok(sessionImageService.generatePresignedUrl(request));
 	}
 
 	@Operation(summary = "세션 이미지 업로드 완료 알림 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PostMapping("/admin/image/complete")
 	public ResponseEntity<AddSessionImageResponse> completeImageUpload(
 		@RequestBody @Valid CompleteImageUploadRequest request) {
@@ -98,7 +98,7 @@ public class SessionController {
 	}
 
 	@Operation(summary = "세션 사진 삭제 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@DeleteMapping("/admin/image")
 	public ResponseEntity<Void> deleteSessionImage(@RequestBody DeleteSessionImageRequest request) {
 		sessionImageService.deleteSessionImage(request);

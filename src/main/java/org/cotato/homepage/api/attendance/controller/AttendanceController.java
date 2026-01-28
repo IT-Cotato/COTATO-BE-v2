@@ -70,7 +70,7 @@ public class AttendanceController {
 		summary = "전체 출석 통계 조회",
 		description = "기수 내 모든 회원의 전체 세션 출석 통계를 조회합니다. 파트별 필터링(position)과 이름 검색(search)이 가능합니다."
 	)
-	@RoleAuthority(MemberRole.MANAGER)
+	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/admin/records")
 	public ResponseEntity<List<GenerationMemberAttendanceRecordResponse>> findAttendanceRecords(
 		@Parameter(description = "기수 ID") @RequestParam(name = "generationId") Long generationId,
@@ -87,7 +87,7 @@ public class AttendanceController {
 		description = "특정 세션의 회원별 출석 현황을 조회합니다. "
 			+ "파트별 필터링(position), 출석상태 필터링(attendanceResults, 다중 선택 가능), 이름 검색(search)이 가능합니다."
 	)
-	@RoleAuthority(MemberRole.MANAGER)
+	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/admin/{attendanceId}/records")
 	public ResponseEntity<List<AttendanceRecordResponse>> findAttendanceRecordsByAttendance(
 		@Parameter(description = "출석(세션) ID") @PathVariable("attendanceId") Long attendanceId,
@@ -105,7 +105,7 @@ public class AttendanceController {
 		summary = "출석 상태 수정",
 		description = "운영진이 특정 회원의 출석 상태를 수정합니다. (PRESENT, LATE, ABSENT, UNAUTHORIZED_ABSENT)"
 	)
-	@RoleAuthority(MemberRole.MANAGER)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/admin/{attendanceId}/records")
 	public ResponseEntity<Void> updateAttendanceRecords(
 		@Parameter(description = "출석(세션) ID") @PathVariable("attendanceId") Long attendanceId,
