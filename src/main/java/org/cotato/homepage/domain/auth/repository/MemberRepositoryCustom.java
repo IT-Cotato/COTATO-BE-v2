@@ -15,4 +15,12 @@ public interface MemberRepositoryCustom {
 		MemberStatus memberStatus, String name, Pageable pageable);
 
 	Page<Member> findApplicantsByStatusAndName(MemberStatus status, String name, Pageable pageable);
+
+	Page<Member> searchAllMembers(
+		String search,
+		List<MemberStatus> statuses,
+		String sortBy,
+		String sortDirection,
+		Pageable pageable
+	);
 }

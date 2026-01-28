@@ -2,6 +2,7 @@ package org.cotato.homepage.domain.generation.service.component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.repository.GenerationRepository;
@@ -23,12 +24,16 @@ public class GenerationReader {
 			.orElseThrow(() -> new EntityNotFoundException(date + "해당 날짜에 해당하는 기수를 찾을 수 없습니다."));
 	}
 
+	public Optional<Generation> findByDateOptional(LocalDate date) {
+		return generationRepository.findByCurrentDate(date);
+	}
+
 	public Generation findById(Long generationId) {
 		return generationRepository.findById(generationId)
 			.orElseThrow(() -> new EntityNotFoundException("해당 기수를 찾을 수 없습니다."));
 	}
 
 	public List<Generation> getGenerations() {
-		return generationRepository.findAllByVisibleTrue();
+		return generationRepository.findAll();
 	}
 }

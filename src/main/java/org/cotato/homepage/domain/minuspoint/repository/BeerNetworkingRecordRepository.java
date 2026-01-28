@@ -22,7 +22,8 @@ public interface BeerNetworkingRecordRepository extends JpaRepository<BeerNetwor
 		@Param("sessionIds") List<Long> sessionIds,
 		@Param("memberId") Long memberId);
 
-	@Query("SELECT COUNT(br) FROM BeerNetworkingRecord br WHERE br.memberId = :memberId AND br.participated = true AND br.sessionId IN :sessionIds")
+	@Query("SELECT COUNT(br) FROM BeerNetworkingRecord br "
+		+ "WHERE br.memberId = :memberId AND br.participated = true AND br.sessionId IN :sessionIds")
 	long countParticipatedByMemberIdAndSessionIds(
 		@Param("memberId") Long memberId,
 		@Param("sessionIds") List<Long> sessionIds);

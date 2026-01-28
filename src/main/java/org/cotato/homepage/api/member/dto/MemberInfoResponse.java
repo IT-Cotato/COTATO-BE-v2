@@ -1,30 +1,22 @@
 package org.cotato.homepage.api.member.dto;
 
 import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 
 public record MemberInfoResponse(
-	@Schema(requiredMode = RequiredMode.REQUIRED)
+	@Schema(description = "회원 ID")
 	Long memberId,
+	@Schema(description = "회원 이름")
 	String name,
-	String backFourNumber,
-	MemberRole role,
-	MemberStatus status,
-	MemberPosition position
+	@Schema(description = "운영진 여부")
+	Boolean isAdmin
 ) {
-	public static MemberInfoResponse from(Member member, String backFourNumber) {
+	public static MemberInfoResponse from(Member member) {
 		return new MemberInfoResponse(
 			member.getId(),
 			member.getName(),
-			backFourNumber,
-			member.getRole(),
-			member.getStatus(),
-			member.getPosition()
+			member.getRole().isAdmin()
 		);
 	}
 }

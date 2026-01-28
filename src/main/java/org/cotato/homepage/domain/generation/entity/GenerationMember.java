@@ -2,6 +2,7 @@ package org.cotato.homepage.domain.generation.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
 import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.auth.enums.MemberPosition;
 import org.cotato.homepage.domain.generation.enums.GenerationMemberRole;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
@@ -44,21 +45,31 @@ public class GenerationMember extends BaseTimeEntity {
 	@ColumnDefault(value = "'MEMBER'")
 	private GenerationMemberRole role = GenerationMemberRole.MEMBER;
 
-	private GenerationMember(Generation generation, Member member, GenerationMemberRole role) {
+	@Enumerated(EnumType.STRING)
+	@Column(name = "position")
+	private MemberPosition position;
+
+	private GenerationMember(Generation generation, Member member, GenerationMemberRole role, MemberPosition position) {
 		this.generation = generation;
 		this.member = member;
 		this.role = role;
+		this.position = position;
 	}
 
 	public static GenerationMember of(Generation generation, Member member) {
-		return new GenerationMember(generation, member, GenerationMemberRole.MEMBER);
+		return new GenerationMember(generation, member, GenerationMemberRole.MEMBER, member.getPosition());
+	}
+
+	public static GenerationMember of(Generation generation, Member member, MemberPosition position) {
+		return new GenerationMember(generation, member, GenerationMemberRole.MEMBER, position);
 	}
 
 	public void updateMemberRole(GenerationMemberRole role) {
 		this.role = role;
 	}
 
-	public String getMemberName() {
-		return member.getName();
+	public void updatePosition(MemberPosition position) {
+		this.position = position;
 	}
+
 }

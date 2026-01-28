@@ -102,7 +102,8 @@ public class MinusPointService {
 				int sessionMinusPoint = sessionMinusPointSumByMemberId.getOrDefault(member.getId(), 0);
 				long beerNetworkingCount = beerNetworkingCountByMemberId.getOrDefault(member.getId(), 0L);
 
-				int attendanceMinusPoint = calculateAttendanceMinusPoint(lateCount, absentCount, unauthorizedAbsentCount);
+				int attendanceMinusPoint = calculateAttendanceMinusPoint(
+					lateCount, absentCount, unauthorizedAbsentCount);
 				int beerNetworkingBonusPoint = calculateBeerNetworkingBonusPoint(beerNetworkingCount);
 				int totalMinusPoint = attendanceMinusPoint + sessionMinusPoint + beerNetworkingBonusPoint;
 

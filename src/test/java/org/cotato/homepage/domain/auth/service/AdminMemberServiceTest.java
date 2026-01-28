@@ -37,52 +37,7 @@ class AdminMemberServiceTest {
 	private CotatoEventPublisher cotatoEventPublisher;
 
 	@Test
-	void whenApproveApplicant_thenStatusChangedToApproved() {
-		// given
-		Member member = Member.of("boysoeng@naver.com", "password", "name", "phoneNumber",
-			MemberPosition.BE, "university", null, 1L, true, true);
-		member.updateStatus(MemberStatus.REQUESTED);
-
-		when(memberReader.findById(any())).thenReturn(member);
-
-		// when
-		adminMemberService.approveApplicant(member.getId());
-
-		// then
-		assertEquals(MemberStatus.APPROVED, member.getStatus());
-	}
-
-	@Test
-	void whenApproveApplicantWithInvalidStatus_thenThrowException() {
-		// given
-		Member member = Member.of("boysoeng@naver.com", "password", "name", "phoneNumber",
-			MemberPosition.BE, "university", null, 1L, true, true);
-		member.updateStatus(MemberStatus.INACTIVE);
-
-		when(memberReader.findById(any())).thenReturn(member);
-
-		// when, then
-		assertThrows(AppException.class,
-			() -> adminMemberService.approveApplicant(member.getId()));
-	}
-
-	@Test
-	void whenUpdateMemberRole_thenRoleChanged() {
-		// given
-		Member member = Member.of("email", "pwd", "dd", "phoneNumber",
-			MemberPosition.NONE, null, null, null, true, true);
-		member.updateRole(MemberRole.MEMBER);
-		when(memberReader.findById(any())).thenReturn(member);
-
-		// when
-		adminMemberService.updateMemberRole(member.getId(), MemberRole.ADMIN);
-
-		// then
-		assertEquals(MemberRole.ADMIN, member.getRole());
-	}
-
-	@Test
-	void whenUpdateToRetireMembers_thenStatusChangedToRetired() {
+	void whenBulkUpdateMemberStatus_thenStatusChangedToRetired() {
 		// given
 		Member member1 = Member.of("email", "pwd", "dd", "1",
 			MemberPosition.NONE, null, null, null, true, true);
@@ -94,7 +49,7 @@ class AdminMemberServiceTest {
 		when(memberReader.findAllByIdsInWithValidation(anyList())).thenReturn(List.of(member1, member2));
 
 		// when
-		adminMemberService.updateToRetireMembers(List.of(1L, 2L));
+		adminMemberService.bulkUpdateMemberStatus(List.of(1L, 2L), MemberStatus.RETIRED);
 
 		// then
 		assertEquals(MemberStatus.RETIRED, member1.getStatus());
@@ -102,7 +57,7 @@ class AdminMemberServiceTest {
 	}
 
 	@Test
-	void whenUpdateDevTeamToRetired_thenThrowException() {
+	void whenBulkUpdateDevTeamToRetired_thenThrowException() {
 		// given
 		Member devTeam = Member.of("email", "pwd", "dd", "1",
 			MemberPosition.NONE, null, null, null, true, true);
@@ -113,40 +68,8 @@ class AdminMemberServiceTest {
 
 		// when, then
 		AppException exception = assertThrows(AppException.class, () ->
-			adminMemberService.updateToRetireMembers(List.of(1L))
+			adminMemberService.bulkUpdateMemberStatus(List.of(1L), MemberStatus.RETIRED)
 		);
 		assertEquals(ErrorCode.CANNOT_CHANGE_DEV_ROLE.getMessage(), exception.getErrorCode().getMessage());
-	}
-
-	@Test
-	void whenUpdateNonActiveMemberToRetired_thenThrowException() {
-		// given
-		Member member1 = Member.of("email", "pwd", "dd", "1",
-			MemberPosition.NONE, null, null, null, true, true);
-		Member member2 = Member.of("email2", "pwd", "dd2", "2",
-			MemberPosition.NONE, null, null, null, true, true);
-		member1.updateStatus(MemberStatus.INACTIVE);
-		member1.updateStatus(MemberStatus.REJECTED);
-
-		when(memberReader.findAllByIdsInWithValidation(anyList())).thenReturn(List.of(member1, member2));
-
-		// when, then
-		assertThrows(AppException.class, () -> adminMemberService.updateToRetireMembers(List.of(1L, 2L)));
-	}
-
-	@Test
-	void whenUpdateToApprovedMember_thenStatusChangedToApproved() {
-		// given
-		Member member = Member.of("email", "pwd", "dd", "1",
-			MemberPosition.NONE, null, null, null, true, true);
-		member.updateStatus(MemberStatus.RETIRED);
-
-		when(memberReader.findById(any())).thenReturn(member);
-
-		// when
-		adminMemberService.updateToApprovedMember(member.getId());
-
-		// then
-		assertEquals(MemberStatus.APPROVED, member.getStatus());
 	}
 }

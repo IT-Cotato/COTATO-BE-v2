@@ -58,7 +58,7 @@ public class ProjectController {
 	}
 
 	@Operation(summary = "프로젝트 이미지 PresignedUrl 발급 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PostMapping("/admin/presigned-url")
 	public ResponseEntity<PresignedUrlResponse> generatePresignedUrl(
 		@RequestBody @Valid ProjectPresignedUrlRequest request) {
@@ -66,14 +66,14 @@ public class ProjectController {
 	}
 
 	@Operation(summary = "프로젝트 등록 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PostMapping("/admin")
 	public ResponseEntity<CreateProjectResponse> createProject(@RequestBody @Valid CreateProjectRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createProject(request));
 	}
 
 	@Operation(summary = "프로젝트 수정 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PutMapping("/admin/{projectId}")
 	public ResponseEntity<Void> updateProject(
 		@PathVariable("projectId") Long projectId,
@@ -83,7 +83,7 @@ public class ProjectController {
 	}
 
 	@Operation(summary = "프로젝트 삭제 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@DeleteMapping("/admin/{projectId}")
 	public ResponseEntity<Void> deleteProject(@PathVariable("projectId") Long projectId) {
 		projectService.deleteProject(projectId);

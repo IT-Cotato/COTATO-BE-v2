@@ -30,29 +30,13 @@ public class Generation extends BaseTimeEntity {
 	})
 	private Period period;
 
-	@Column(name = "generation_recruiting")
-	private Boolean isRecruit;
-
-	@Column(name = "visible")
-	private boolean visible;
-
 	@Builder
 	public Generation(Long id, Period period) {
 		this.id = id;
 		this.period = period;
-		this.isRecruit = false;
-		this.visible = true;
-	}
-
-	public void changeRecruit(Boolean isRecruit) {
-		this.isRecruit = isRecruit;
 	}
 
 	public void changePeriod(Period period) {
 		this.period = period;
-	}
-
-	public void updateVisible(boolean visible) {
-		this.visible = visible;
 	}
 }

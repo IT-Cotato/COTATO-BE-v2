@@ -33,7 +33,7 @@ public class EventController {
 	}
 
 	@Operation(summary = "출결 이벤트 발송 API")
-	@RoleAuthority(MemberRole.ADMIN)
+	@RoleAuthority(MemberRole.OPERATION)
 	@PostMapping("/admin/attendances/{attendanceId}/test")
 	public ResponseEntity<Void> sendEvent(@PathVariable("attendanceId") Long attendanceId,
 		@AuthenticationPrincipal Member member) {
