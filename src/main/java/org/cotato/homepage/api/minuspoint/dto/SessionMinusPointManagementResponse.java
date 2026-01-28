@@ -12,7 +12,8 @@ public record SessionMinusPointManagementResponse(
 	LocalDateTime sessionDateTime,
 	List<MemberSessionMinusPointResponse> members
 ) {
-	public static SessionMinusPointManagementResponse of(Session session, List<MemberSessionMinusPointResponse> members) {
+	public static SessionMinusPointManagementResponse of(
+		Session session, List<MemberSessionMinusPointResponse> members) {
 		return new SessionMinusPointManagementResponse(
 			session.getId(),
 			session.getNumber(),

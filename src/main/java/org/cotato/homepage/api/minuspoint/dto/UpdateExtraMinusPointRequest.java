@@ -1,4 +1,4 @@
- package org.cotato.homepage.api.minuspoint.dto;
+package org.cotato.homepage.api.minuspoint.dto;
 
 import jakarta.validation.constraints.NotNull;
 

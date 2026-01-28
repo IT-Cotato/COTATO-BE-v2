@@ -292,7 +292,8 @@ public class AttendanceRecordService {
 			currentMonth = month;
 		} else {
 			int nowMonth = LocalDate.now().getMonthValue();
-			currentMonth = availableMonths.contains(nowMonth) ? nowMonth : availableMonths.get(availableMonths.size() - 1);
+			currentMonth = availableMonths.contains(nowMonth)
+				? nowMonth : availableMonths.get(availableMonths.size() - 1);
 		}
 
 		// 월 필터링
