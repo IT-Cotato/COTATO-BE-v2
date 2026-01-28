@@ -32,7 +32,12 @@ public class EventController {
 		return ResponseEntity.ok().body(sseService.subscribeAttendance(member));
 	}
 
-	@Operation(summary = "출결 이벤트 발송 API")
+	@Operation(
+		summary = "[테스트용] 출결 이벤트 수동 발송 API",
+		description = "운영진이 SSE 출결 알림을 수동으로 발송하는 테스트용 API입니다. "
+			+ "실제 운영에서는 세션 시작 시간에 스케줄러가 자동으로 이벤트를 발송하므로 이 API를 사용할 필요가 없습니다. "
+			+ "개발/디버깅 시 SSE 연동 테스트 또는 스케줄러 오류 시 수동 발송 용도로 사용합니다."
+	)
 	@RoleAuthority(MemberRole.OPERATION)
 	@PostMapping("/admin/attendances/{attendanceId}/test")
 	public ResponseEntity<Void> sendEvent(@PathVariable("attendanceId") Long attendanceId,
