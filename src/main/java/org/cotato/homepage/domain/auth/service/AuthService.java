@@ -30,7 +30,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,9 +91,8 @@ public class AuthService {
 			log.warn("블랙리스트에 존재하는 토큰: {}", blackListRepository.existsById(refreshToken));
 			throw new AppException(ErrorCode.REISSUE_FAIL);
 		}
-
 		Member member = jwtTokenProvider.getMember(refreshToken)
-			.orElseThrow(() -> new EntityNotFoundException("해당 리프레시 토큰을 가진 회원을 찾을 수 없습니다."));
+			.orElseThrow(() -> new AppException(ErrorCode.ENTITY_NOT_FOUND));
 
 		RefreshToken findToken = refreshTokenRepository.findById(member.getId())
 			.orElseThrow(() -> new AppException(ErrorCode.REFRESH_TOKEN_NOT_EXIST));
@@ -159,7 +157,7 @@ public class AuthService {
 	public MemberEmailResponse findMemberEmail(String name, String phoneNumber) {
 		String encryptedPhoneNumber = encryptService.encryptPhoneNumber(phoneNumber);
 		Member findMember = memberRepository.findByPhoneNumber(encryptedPhoneNumber)
-			.orElseThrow(() -> new EntityNotFoundException("해당 전화번호를 가진 회원을 찾을 수 없습니다."));
+			.orElseThrow(() -> new AppException(ErrorCode.ENTITY_NOT_FOUND));
 		validateMatchName(findMember.getName(), name);
 		String maskedId = getMaskId(findMember.getEmail());
 		return MemberEmailResponse.from(maskedId);
@@ -173,7 +171,7 @@ public class AuthService {
 
 	private void validateMatchName(String originName, String requestName) {
 		if (!originName.equals(requestName)) {
-			throw new EntityNotFoundException("해당 이름을 가진 회원을 찾을 수 없습니다.");
+			throw new AppException(ErrorCode.ENTITY_NOT_FOUND);
 		}
 	}
 

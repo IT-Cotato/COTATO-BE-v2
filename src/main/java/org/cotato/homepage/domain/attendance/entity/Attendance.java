@@ -26,9 +26,11 @@ public class Attendance extends BaseTimeEntity {
 	@Column(name = "attendance_id")
 	private Long id;
 
+	// 출석 마감 시간
 	@Column(name = "attendance_deadline", nullable = false)
 	private LocalDateTime attendanceDeadLine;
 
+	// 지각 마감 시간
 	@Column(name = "late_deadline", nullable = false)
 	private LocalDateTime lateDeadLine;
 

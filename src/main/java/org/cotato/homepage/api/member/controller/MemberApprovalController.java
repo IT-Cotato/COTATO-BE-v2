@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "가입 승인 관리")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/api/member/admin")
+@RequestMapping("/v1/api/admin/member-approvals")
 public class MemberApprovalController {
 
 	private final MemberService memberService;

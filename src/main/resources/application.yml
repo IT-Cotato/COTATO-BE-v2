@@ -67,4 +67,4 @@ aes:
 # 출석 위치 검증 정확도 (위경도 오차 제곱, 기본값: 0.0001)
 attendance:
   location:
-    accuracy: ${ATTENDANCE_LOCATION_ACCURACY:0.0001}
+    accuracy: ${ATTENDANCE_LOCATION_ACCURACY:0.001}

@@ -89,7 +89,7 @@ class AuthServiceTest {
 		when(jwtTokenProvider.getMember(refreshToken)).thenReturn(Optional.empty());
 
 		// when & then
-		assertThrows(EntityNotFoundException.class, () -> authService.reissue(refreshToken));
+		assertThrows(AppException.class, () -> authService.reissue(refreshToken));
 	}
 
 	@Test

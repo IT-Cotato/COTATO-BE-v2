@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -65,13 +64,13 @@ public class AttendanceRecordService {
 	private final AttendanceRecordReader attendanceRecordReader;
 	private final SessionImageRepository sessionImageRepository;
 
-	@Value("${attendance.location.accuracy:0.0001}")
+	@Value("${attendance.location.accuracy:0.001}")
 	private Double locationAccuracy;
 
 	@Transactional
 	public AttendanceSubmitResponse submitRecord(AttendanceRequest request, Member member) {
 		Attendance attendance = attendanceRepository.findById(request.attendanceId())
-			.orElseThrow(() -> new EntityNotFoundException("해당 출석이 존재하지 않습니다."));
+			.orElseThrow(() -> new AppException(ErrorCode.ENTITY_NOT_FOUND));
 
 		Session session = sessionReader.findById(attendance.getSessionId());
 

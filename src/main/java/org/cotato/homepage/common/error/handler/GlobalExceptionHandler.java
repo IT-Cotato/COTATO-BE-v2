@@ -3,8 +3,6 @@ package org.cotato.homepage.common.error.handler;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.naming.NoPermissionException;
-
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.error.exception.ImageException;
@@ -24,7 +22,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,15 +71,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 	}
 
-	@ExceptionHandler(EntityNotFoundException.class)
-	public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException exception,
-		HttpServletRequest request) {
-		log.error("Entity Not Found Exception 발생: {}", exception.getMessage());
-		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
-		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.ENTITY_NOT_FOUND, request);
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-	}
-
 	@ExceptionHandler(SQLException.class)
 	public ResponseEntity<ErrorResponse> handleSqlException(SQLException exception, HttpServletRequest request) {
 		log.error("발생한 에러: {}", exception.getErrorCode());
@@ -98,16 +86,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_PROCESSING_FAIL, request);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-	}
-
-	@ExceptionHandler(NoPermissionException.class)
-	public ResponseEntity<ErrorResponse> handleNoPermissionException(NoPermissionException exception,
-		HttpServletRequest request) {
-		log.error("No Permission Error occurred");
-		log.error("Error Method and Path {}, {}", request.getMethod(), request.getRequestURI());
-		ErrorResponse errorResponse = ErrorResponse.of(request, ErrorCode.NO_PERMISSION_EXCEPTION,
-			exception.getMessage());
-		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
 	}
 
 	@ExceptionHandler(Exception.class)
