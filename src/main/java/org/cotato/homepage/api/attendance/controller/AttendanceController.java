@@ -2,7 +2,6 @@ package org.cotato.homepage.api.attendance.controller;
 
 import org.cotato.homepage.api.attendance.dto.AttendanceRequest;
 import org.cotato.homepage.api.attendance.dto.AttendanceSubmitResponse;
-import org.cotato.homepage.api.attendance.dto.AttendancesResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendanceRecordsResponse;
 import org.cotato.homepage.api.attendance.dto.SessionAttendanceListResponse;
 import org.cotato.homepage.domain.attendance.service.AttendanceRecordService;
@@ -43,16 +42,6 @@ public class AttendanceController {
 		@RequestBody @Valid AttendanceRequest request,
 		@AuthenticationPrincipal Member member) {
 		return ResponseEntity.ok().body(attendanceRecordService.submitRecord(request, member));
-	}
-
-	@Operation(
-		summary = "기수별 세션 목록 조회",
-		description = "해당 기수의 세션(출석) 목록을 조회합니다. 세션 회차 드롭다운에 사용됩니다."
-	)
-	@GetMapping
-	public ResponseEntity<AttendancesResponse> findAttendancesByGeneration(
-		@Parameter(description = "기수 ID") @RequestParam("generationId") Long generationId) {
-		return ResponseEntity.ok().body(attendanceService.findAttendancesByGenerationId(generationId));
 	}
 
 	@Operation(

@@ -108,9 +108,16 @@ public class AttendanceRecordService {
 			}
 		}
 
-		// 출석 결과 계산
-		AttendanceResult result = calculateAttendanceStatus(
-			attendance, request.requestTime(), session.getSessionDateTime());
+		// 출석 결과 결정 (openStatus에 따라 직접 매핑)
+		AttendanceResult result;
+		if (openStatus == AttendanceOpenStatus.OPEN) {
+			result = AttendanceResult.PRESENT;
+		} else if (openStatus == AttendanceOpenStatus.LATE) {
+			result = AttendanceResult.LATE;
+		} else {
+			// 이 경우는 위에서 이미 예외가 발생했어야 하지만, 혹시 모를 상황에 대비
+			throw new AppException(ErrorCode.ATTENDANCE_NOT_OPEN);
+		}
 
 		// 출석 기록 저장
 		AttendanceRecord record = AttendanceRecord.createRecord(

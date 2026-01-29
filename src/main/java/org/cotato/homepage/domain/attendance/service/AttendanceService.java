@@ -1,16 +1,7 @@
 package org.cotato.homepage.domain.attendance.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import org.cotato.homepage.api.attendance.dto.AttendanceResponse;
-import org.cotato.homepage.api.attendance.dto.AttendanceTimeResponse;
-import org.cotato.homepage.api.attendance.dto.AttendanceWithSessionResponse;
-import org.cotato.homepage.api.attendance.dto.AttendancesResponse;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.schedule.SchedulerService;
@@ -80,43 +71,5 @@ public class AttendanceService {
 		if (location == null) {
 			throw new AppException(ErrorCode.INVALID_LOCATION);
 		}
-	}
-
-	@Transactional(readOnly = true)
-	public AttendancesResponse findAttendancesByGenerationId(final Long generationId) {
-		Generation findGeneration = generationRepository.findById(generationId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 기수를 찾을 수 없습니다."));
-
-		List<Session> sessions = sessionRepository.findAllByGenerationId(generationId);
-
-		Map<Long, Session> sessionById = sessions.stream()
-			.collect(Collectors.toMap(Session::getId, Function.identity()));
-
-		List<Long> sessionIds = sessions.stream()
-			.map(Session::getId)
-			.toList();
-
-		List<AttendanceWithSessionResponse> attendances = attendanceRepository.findAllBySessionIdsInQuery(sessionIds)
-			.stream()
-			.map(at -> {
-				final Session session = Optional.ofNullable(sessionById.get(at.getSessionId()))
-					.orElseThrow(() -> new EntityNotFoundException("출석에 연결된 세션을 찾을 수 없습니다."));
-
-				return AttendanceWithSessionResponse.builder()
-					.attendanceId(at.getId())
-					.sessionType(session.getSessionType())
-					.sessionId(at.getSessionId())
-					.sessionTitle(session.getTitle())
-					.sessionDateTime(session.getSessionDateTime())
-					.openStatus(AttendanceUtil.getAttendanceOpenStatus(session.getSessionDateTime(), at,
-						LocalDateTime.now()))
-					.build();
-			})
-			.toList();
-
-		return AttendancesResponse.builder()
-			.generationId(generationId)
-			.attendances(attendances)
-			.build();
 	}
 }
