@@ -36,4 +36,9 @@ public class GenerationReader {
 	public List<Generation> getGenerations() {
 		return generationRepository.findAll();
 	}
+
+	public Generation findLatestGeneration() {
+		return generationRepository.findLatestGeneration()
+			.orElseThrow(() -> new EntityNotFoundException("기수가 존재하지 않습니다."));
+	}
 }

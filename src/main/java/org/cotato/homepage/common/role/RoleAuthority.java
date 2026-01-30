@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.cotato.homepage.domain.auth.enums.MemberRole;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

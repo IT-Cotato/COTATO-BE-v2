@@ -6,7 +6,7 @@ import org.cotato.homepage.api.generation.dto.AddGenerationRequest;
 import org.cotato.homepage.api.generation.dto.GenerationDetailResponse;
 import org.cotato.homepage.api.generation.dto.UpdateGenerationRequest;
 import org.cotato.homepage.common.role.RoleAuthority;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.cotato.homepage.domain.generation.service.GenerationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

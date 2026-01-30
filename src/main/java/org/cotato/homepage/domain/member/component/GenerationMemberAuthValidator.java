@@ -1,8 +1,8 @@
-package org.cotato.homepage.domain.auth.component;
+package org.cotato.homepage.domain.member.component;
 
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
 import org.springframework.stereotype.Component;

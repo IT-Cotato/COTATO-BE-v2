@@ -2,7 +2,7 @@ package org.cotato.homepage.migration.generation;
 
 import java.util.List;
 
-import org.cotato.homepage.domain.auth.service.MemberService;
+import org.cotato.homepage.domain.member.service.MemberService;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;

@@ -45,7 +45,7 @@ public record MemberAttendResponse(
 		);
 	}
 
-	public static MemberAttendResponse recordedAttendance(Session session, Attendance attendance,
+	public static MemberAttendResponse recordedAttendance(Session session,
 		AttendanceRecord attendanceRecord) {
 		return new MemberAttendResponse(
 			session.getId(),

@@ -1,4 +1,4 @@
-package org.cotato.homepage.domain.auth.enums;
+package org.cotato.homepage.domain.member.enums;
 
 import java.util.Map;
 import java.util.function.Function;

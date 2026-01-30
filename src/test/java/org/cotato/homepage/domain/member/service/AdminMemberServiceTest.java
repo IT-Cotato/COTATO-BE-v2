@@ -1,4 +1,4 @@
-package org.cotato.homepage.domain.auth.service;
+package org.cotato.homepage.domain.member.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -9,12 +9,12 @@ import java.util.List;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.event.CotatoEventPublisher;
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
-import org.cotato.homepage.domain.auth.repository.MemberRepository;
-import org.cotato.homepage.domain.auth.service.component.MemberReader;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberRole;
+import org.cotato.homepage.domain.member.enums.MemberStatus;
+import org.cotato.homepage.domain.member.repository.MemberRepository;
+import org.cotato.homepage.domain.member.service.component.MemberReader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

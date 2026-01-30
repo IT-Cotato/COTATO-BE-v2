@@ -1,7 +1,7 @@
 package org.cotato.homepage.domain.generation.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

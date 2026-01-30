@@ -1,4 +1,4 @@
-package org.cotato.homepage.domain.auth.entity;
+package org.cotato.homepage.domain.member.entity;
 
 import static jakarta.persistence.FetchType.*;
 

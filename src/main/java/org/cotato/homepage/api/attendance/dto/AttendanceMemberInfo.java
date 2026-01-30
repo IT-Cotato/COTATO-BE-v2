@@ -1,7 +1,7 @@
 package org.cotato.homepage.api.attendance.dto;
 
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
 
 public record AttendanceMemberInfo(
 	Long memberId,

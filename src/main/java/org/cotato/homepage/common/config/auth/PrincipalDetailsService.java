@@ -1,7 +1,7 @@
 package org.cotato.homepage.common.config.auth;
 
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.repository.MemberRepository;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.repository.MemberRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

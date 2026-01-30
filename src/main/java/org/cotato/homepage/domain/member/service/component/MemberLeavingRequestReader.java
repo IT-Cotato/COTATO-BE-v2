@@ -1,8 +1,8 @@
-package org.cotato.homepage.domain.auth.service.component;
+package org.cotato.homepage.domain.member.service.component;
 
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.entity.MemberLeavingRequest;
-import org.cotato.homepage.domain.auth.repository.MemberLeavingRequestRepository;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.entity.MemberLeavingRequest;
+import org.cotato.homepage.domain.member.repository.MemberLeavingRequestRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

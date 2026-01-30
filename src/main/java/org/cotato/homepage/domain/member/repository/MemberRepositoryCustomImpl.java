@@ -1,11 +1,11 @@
-package org.cotato.homepage.domain.auth.repository;
+package org.cotato.homepage.domain.member.repository;
 
 import java.util.List;
 
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.entity.QMember;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.entity.QMember;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;

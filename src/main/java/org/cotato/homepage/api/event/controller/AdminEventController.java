@@ -2,8 +2,8 @@ package org.cotato.homepage.api.event.controller;
 
 import org.cotato.homepage.common.role.RoleAuthority;
 import org.cotato.homepage.common.sse.SseService;
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;

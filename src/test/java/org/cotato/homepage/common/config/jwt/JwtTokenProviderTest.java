@@ -6,9 +6,9 @@ import static org.mockito.Mockito.*;
 import java.util.Optional;
 
 import org.cotato.homepage.domain.auth.constant.TokenConstants;
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.repository.MemberRepository;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

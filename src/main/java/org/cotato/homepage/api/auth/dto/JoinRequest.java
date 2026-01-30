@@ -2,8 +2,8 @@ package org.cotato.homepage.api.auth.dto;
 
 import org.cotato.homepage.common.validator.Password;
 import org.cotato.homepage.common.validator.Phone;
-import org.cotato.homepage.domain.auth.enums.Gender;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.Gender;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;

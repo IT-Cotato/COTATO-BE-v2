@@ -10,11 +10,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.cotato.homepage.api.attendance.dto.AttendanceRecordResponse;
 import org.cotato.homepage.api.attendance.dto.AttendanceRequest;
 import org.cotato.homepage.api.attendance.dto.AttendanceStatistic;
 import org.cotato.homepage.api.attendance.dto.AttendanceSubmitResponse;
-import org.cotato.homepage.api.attendance.dto.GenerationMemberAttendanceRecordResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendanceRecordsResponse;
 import org.cotato.homepage.api.attendance.dto.SessionAttendanceListResponse;
@@ -27,12 +25,10 @@ import org.cotato.homepage.domain.attendance.entity.AttendanceRecord;
 import org.cotato.homepage.domain.attendance.enums.AttendanceOpenStatus;
 import org.cotato.homepage.domain.attendance.enums.AttendanceResult;
 import org.cotato.homepage.domain.attendance.repository.AttendanceRecordRepository;
-import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceRecordReader;
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.service.component.MemberReader;
+import org.cotato.homepage.domain.member.component.GenerationMemberAuthValidator;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.entity.SessionImage;
@@ -43,12 +39,13 @@ import org.cotato.homepage.domain.generation.service.component.SessionReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 사용자(부원)용 출석 기록 서비스
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -56,231 +53,127 @@ import lombok.extern.slf4j.Slf4j;
 public class AttendanceRecordService {
 
 	private final AttendanceRecordRepository attendanceRecordRepository;
-	private final AttendanceRepository attendanceRepository;
-	private final MemberReader memberReader;
 	private final GenerationReader generationReader;
 	private final SessionReader sessionReader;
 	private final AttendanceReader attendanceReader;
 	private final AttendanceRecordReader attendanceRecordReader;
 	private final SessionImageRepository sessionImageRepository;
+	private final GenerationMemberAuthValidator generationMemberAuthValidator;
 
 	@Value("${attendance.location.accuracy:0.001}")
 	private Double locationAccuracy;
 
+	/**
+	 * 출석을 제출합니다.
+	 * - 온라인 세션: 위치 정보 없이 출석 가능
+	 * - 대면 세션: 위치 정보(latitude, longitude) 필수
+	 */
 	@Transactional
 	public AttendanceSubmitResponse submitRecord(AttendanceRequest request, Member member) {
-		Attendance attendance = attendanceRepository.findById(request.attendanceId())
-			.orElseThrow(() -> new AppException(ErrorCode.ENTITY_NOT_FOUND));
-
+		// 1. 출석 및 세션 정보 조회
+		Attendance attendance = attendanceReader.findById(request.attendanceId());
 		Session session = sessionReader.findById(attendance.getSessionId());
 
-		// 출결 입력 가능 시간인지 확인
+		// 2. 출석 가능 시간 검증 (OPEN 또는 LATE 상태여야 함)
 		AttendanceOpenStatus openStatus = getAttendanceOpenStatus(
 			session.getSessionDateTime(), attendance, request.requestTime());
 		if (openStatus == AttendanceOpenStatus.CLOSED || openStatus == AttendanceOpenStatus.BEFORE) {
 			throw new AppException(ErrorCode.ATTENDANCE_NOT_OPEN);
 		}
 
-		// 이미 출석했는지 확인
-		if (attendanceRecordRepository.existsByAttendanceIdAndMemberId(request.attendanceId(), member.getId())) {
+		// 3. 중복 출석 검증
+		if (attendanceRecordReader.existsByAttendanceAndMember(attendance, member)) {
 			throw new AppException(ErrorCode.ALREADY_ATTEND);
 		}
 
-		// 세션 타입에 따른 위치 검증
-		SessionType sessionType = session.getSessionType();
-		Double accuracy = null;
+		// 4. 대면 세션인 경우 위치 검증
+		Double accuracy = validateLocationIfOffline(session.getSessionType(), request, attendance);
 
-		if (sessionType.hasOffline()) {
-			// 대면 세션인 경우 위치 검증 필요
-			Location requestLocation = request.toLocation();
-			if (requestLocation == null) {
-				throw new AppException(ErrorCode.INVALID_LOCATION);
-			}
+		// 5. 출석 결과 결정 및 저장
+		AttendanceResult result = (openStatus == AttendanceOpenStatus.OPEN)
+			? AttendanceResult.PRESENT
+			: AttendanceResult.LATE;
 
-			Location attendanceLocation = attendance.getLocation();
-			if (attendanceLocation == null) {
-				throw new AppException(ErrorCode.INVALID_LOCATION);
-			}
-
-			accuracy = attendanceLocation.calculateAccuracy(requestLocation);
-			if (accuracy > locationAccuracy) {
-				throw new AppException(ErrorCode.INVALID_LOCATION);
-			}
-		}
-
-		// 출석 결과 결정 (openStatus에 따라 직접 매핑)
-		AttendanceResult result;
-		if (openStatus == AttendanceOpenStatus.OPEN) {
-			result = AttendanceResult.PRESENT;
-		} else if (openStatus == AttendanceOpenStatus.LATE) {
-			result = AttendanceResult.LATE;
-		} else {
-			// 이 경우는 위에서 이미 예외가 발생했어야 하지만, 혹시 모를 상황에 대비
-			throw new AppException(ErrorCode.ATTENDANCE_NOT_OPEN);
-		}
-
-		// 출석 기록 저장
 		AttendanceRecord record = AttendanceRecord.createRecord(
 			attendance, member.getId(), result, accuracy, request.requestTime());
-
 		attendanceRecordRepository.save(record);
 
 		return AttendanceSubmitResponse.of(result);
 	}
 
-	public List<GenerationMemberAttendanceRecordResponse> findAttendanceRecords(Long generationId,
-		MemberPosition position, String search) {
-		Generation generation = generationReader.findById(generationId);
-		List<Long> sessionIds = sessionReader.findAllByGeneration(generation).stream().map(Session::getId).toList();
-		List<Attendance> attendances = attendanceRepository.findAllBySessionIdsInQuery(sessionIds);
-
-		List<Long> attendanceIds = attendances.stream().map(Attendance::getId).toList();
-
-		Map<Long, List<AttendanceRecord>> recordsByMemberId = attendanceRecordRepository.findAllByAttendanceIdsInQuery(
-				attendanceIds).stream()
-			.collect(Collectors.groupingBy(AttendanceRecord::getMemberId));
-
-		return memberReader.findAllGenerationMember(generation).stream()
-			.filter(member -> position == null || member.getPosition() == position)
-			.filter(member -> !StringUtils.hasText(search) || member.getName().contains(search))
-			.sorted(Comparator.comparing(Member::getName))
-			.map(member -> GenerationMemberAttendanceRecordResponse.of(
-				member,
-				AttendanceStatistic.of(recordsByMemberId.getOrDefault(member.getId(), List.of()),
-					attendances.size())
-			))
-			.toList();
-	}
-
-	public List<AttendanceRecordResponse> findAttendanceRecordsByAttendance(Long attendanceId,
-		MemberPosition position, List<AttendanceResult> attendanceResults, String search) {
-		Attendance attendance = attendanceRepository.findById(attendanceId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 출석이 존재하지 않습니다"));
-		Session session = sessionReader.findById(attendance.getSessionId());
-
-		Map<Long, Member> memberById = memberReader.findAllGenerationMember(session.getGeneration()).stream()
-			.collect(Collectors.toMap(Member::getId, Function.identity()));
-
-		Map<Long, AttendanceResult> attendanceResultByMemberId =
-			attendanceRecordRepository.findAllByAttendanceIdAndMemberIdIn(
-				attendance.getId(), memberById.keySet().stream().toList()).stream()
-			.collect(Collectors.toMap(AttendanceRecord::getMemberId, AttendanceRecord::getAttendanceResult));
-
-		return memberById.keySet().stream()
-			.filter(memberId -> position == null || memberById.get(memberId).getPosition() == position)
-			.filter(memberId -> !StringUtils.hasText(search) || memberById.get(memberId).getName().contains(search))
-			.filter(memberId -> {
-				if (attendanceResults == null || attendanceResults.isEmpty()) {
-					return true;
-				}
-				AttendanceResult result = attendanceResultByMemberId.get(memberId);
-				// null은 "출석전" 상태로 간주 - 필터에 null이 포함되어 있으면 출석전 회원도 포함
-				if (result == null) {
-					return attendanceResults.stream().anyMatch(r -> r == null);
-				}
-				return attendanceResults.contains(result);
-			})
-			.sorted(Comparator.comparing(memberId -> memberById.get(memberId).getName()))
-			.map(memberId -> AttendanceRecordResponse.of(memberById.get(memberId),
-				attendanceResultByMemberId.get(memberId)))
-			.toList();
-	}
-
+	/**
+	 * 내 출석 현황을 조회합니다.
+	 * - 통계는 전체 기간 기준으로 계산
+	 * - 출석 목록은 월 필터가 있으면 해당 월만, 없으면 전체 반환
+	 */
 	public MemberAttendanceRecordsResponse findMyAttendanceRecords(final Member member, final Integer month) {
+		// 1. 현재 기수 조회 및 멤버 검증
 		Generation generation = generationReader.findByDate(LocalDate.now());
-		List<Session> sessions = sessionReader.findAllByGeneration(generation);
+		generationMemberAuthValidator.checkGenerationPermission(member, generation);
 
+		// 2. 현재 기수의 세션 조회
+		List<Session> sessions = sessionReader.findAllByGeneration(generation);
 		Map<Long, Session> sessionMap = sessions.stream()
 			.collect(Collectors.toUnmodifiableMap(Session::getId, Function.identity()));
 
-		List<Long> sessionIds = sessions.stream()
-			.map(Session::getId)
-			.toList();
-
-		// 종료된 출석만 필터링 (lateDeadLine이 지난 출석)
+		// 3. 마감된 출석만 필터링 (지각 마감 시간이 지난 출석)
 		LocalDateTime now = LocalDateTime.now();
-		List<Attendance> closedAttendances = attendanceRepository.findAllBySessionIdsInQuery(sessionIds).stream()
+		List<Attendance> closedAttendances = attendanceReader.getAllBySessions(sessions).stream()
 			.filter(at -> at.getLateDeadLine().isBefore(now))
 			.toList();
 
-		List<Long> attendanceIds = closedAttendances.stream()
-			.map(Attendance::getId)
-			.toList();
-
-		Map<Long, AttendanceRecord> attendanceRecordMap =
-			attendanceRecordRepository.findAllByAttendanceIdsInQueryAndMemberId(
-				attendanceIds, member.getId()).stream()
+		// 4. 해당 멤버의 출석 기록 조회
+		Map<Long, AttendanceRecord> attendanceRecordMap = attendanceRecordReader
+			.getAllByAttendancesAndMember(closedAttendances, member).stream()
 			.collect(Collectors.toUnmodifiableMap(AttendanceRecord::getAttendanceId, Function.identity()));
 
-		// 전체 통계 계산 (월 필터 적용 전)
-		List<AttendanceRecord> allRecords = attendanceRecordMap.values().stream().toList();
-		AttendanceStatistic statistic = AttendanceStatistic.of(allRecords, closedAttendances.size());
+		// 5. 전체 기간 통계 계산 (월 필터 적용 전)
+		AttendanceStatistic statistic = AttendanceStatistic.of(attendanceRecordMap.values().stream().toList());
 
-		// 월 필터 적용
-		List<Attendance> filteredAttendances = closedAttendances;
-		if (month != null) {
-			filteredAttendances = closedAttendances.stream()
-				.filter(at -> {
-					Session session = sessionMap.get(at.getSessionId());
-					return session != null && session.getSessionDateTime() != null
-						&& session.getSessionDateTime().getMonthValue() == month;
-				})
-				.toList();
-		}
+		// 6. 월 필터 적용 (월이 지정되지 않으면 전체 반환)
+		List<Attendance> filteredAttendances = (month == null) ? closedAttendances : closedAttendances.stream()
+			.filter(at -> {
+				Session session = sessionMap.get(at.getSessionId());
+				return session != null && session.getSessionDateTime() != null
+					&& session.getSessionDateTime().getMonthValue() == month;
+			})
+			.toList();
 
-		Map<Boolean, List<Attendance>> recordedAttendance = filteredAttendances.stream()
-			.collect(Collectors.partitioningBy(at -> attendanceRecordMap.containsKey(at.getId())));
-
-		List<MemberAttendResponse> responses = recordedAttendance.get(true).stream()
-			.map(at -> MemberAttendResponse.recordedAttendance(sessionMap.get(at.getSessionId()), at,
-				attendanceRecordMap.get(at.getId())))
+		// 7. 응답 생성 (출석 기록 유무에 따라 다른 응답 생성 후 최신순 정렬)
+		List<MemberAttendResponse> responses = filteredAttendances.stream()
+			.map(at -> {
+				Session session = sessionMap.get(at.getSessionId());
+				AttendanceRecord record = attendanceRecordMap.get(at.getId());
+				return (record != null)
+					? MemberAttendResponse.recordedAttendance(session, record)
+					: MemberAttendResponse.unrecordedAttendance(session, at, member.getId());
+			})
 			.sorted(Comparator.comparing(MemberAttendResponse::sessionDateTime).reversed())
-			.collect(Collectors.toList());
-
-		responses.addAll(recordedAttendance.get(false).stream()
-			.map(at -> MemberAttendResponse.unrecordedAttendance(sessionMap.get(at.getSessionId()), at,
-				member.getId()))
-			.sorted(Comparator.comparing(MemberAttendResponse::sessionDateTime).reversed())
-			.toList());
-
-		// 전체 정렬 (최신순)
-		responses.sort(Comparator.comparing(MemberAttendResponse::sessionDateTime).reversed());
+			.toList();
 
 		return MemberAttendanceRecordsResponse.of(generation.getId(), statistic, responses);
 	}
 
-	@Transactional
-	public void updateAttendanceRecord(final Long attendanceId, final Long memberId,
-		AttendanceResult attendanceResult) {
-		Attendance attendance = attendanceReader.findById(attendanceId);
-		Session session = sessionReader.getByAttendance(attendance);
-
-		if (!session.getSessionType().canChangeResult(attendanceResult)) {
-			throw new AppException(ErrorCode.INVALID_RECORD_UPDATE);
-		}
-
-		Member member = memberReader.findById(memberId);
-		AttendanceRecord attendanceRecord = attendanceRecordReader.getByAttendanceAndMember(attendance, member)
-			.orElseGet(() -> AttendanceRecord.absentRecord(attendance, memberId));
-
-		attendanceRecord.updateAttendanceResult(attendanceResult);
-		attendanceRecordRepository.save(attendanceRecord);
-	}
-
+	/**
+	 * 세션별 출석 현황을 조회합니다.
+	 * - 월 필터가 없으면 현재 월 또는 가장 최근 월의 세션 반환
+	 * - 각 세션의 출석 가능 상태와 내 출석 결과 포함
+	 */
 	public SessionAttendanceListResponse findSessionsWithAttendance(final Member member, final Integer month) {
+		// 1. 현재 기수 조회 및 멤버 검증
 		Generation generation = generationReader.findByDate(LocalDate.now());
-		List<Session> sessions = sessionReader.findAllByGeneration(generation);
+		generationMemberAuthValidator.checkGenerationPermission(member, generation);
+
+		// 2. 현재 기수의 세션 조회 (날짜순 정렬)
+		List<Session> sessions = sessionReader.findAllByGeneration(generation).stream()
+			.sorted(Comparator.comparing(Session::getSessionDateTime, Comparator.nullsLast(Comparator.naturalOrder())))
+			.toList();
 
 		if (sessions.isEmpty()) {
 			return SessionAttendanceListResponse.empty(generation.getId(), month);
 		}
 
-		// 세션을 날짜순 정렬
-		sessions = sessions.stream()
-			.sorted(Comparator.comparing(Session::getSessionDateTime, Comparator.nullsLast(Comparator.naturalOrder())))
-			.toList();
-
-		// 사용 가능한 월 목록 추출
+		// 3. 사용 가능한 월 목록 추출
 		List<Integer> availableMonths = sessions.stream()
 			.filter(s -> s.getSessionDateTime() != null)
 			.map(s -> s.getSessionDateTime().getMonthValue())
@@ -292,66 +185,90 @@ public class AttendanceRecordService {
 			return SessionAttendanceListResponse.empty(generation.getId(), month);
 		}
 
-		// 현재 월 결정 (파라미터가 없으면 현재 날짜의 월, 없으면 가장 최근 월)
-		int currentMonth;
-		if (month != null && availableMonths.contains(month)) {
-			currentMonth = month;
-		} else {
-			int nowMonth = LocalDate.now().getMonthValue();
-			currentMonth = availableMonths.contains(nowMonth)
-				? nowMonth : availableMonths.get(availableMonths.size() - 1);
-		}
+		// 4. 현재 월 결정 (파라미터 > 현재 날짜의 월 > 가장 최근 월)
+		int currentMonth = determineCurrentMonth(month, availableMonths);
 
-		// 월 필터링
+		// 5. 해당 월의 세션 필터링 (최신순 정렬)
 		List<Session> filteredSessions = sessions.stream()
 			.filter(s -> s.getSessionDateTime() != null && s.getSessionDateTime().getMonthValue() == currentMonth)
 			.sorted(Comparator.comparing(Session::getSessionDateTime).reversed())
 			.toList();
 
-		List<Long> sessionIds = filteredSessions.stream().map(Session::getId).toList();
-
-		// 세션 이미지 조회
+		// 6. 세션별 이미지, 출석 정보, 내 출석 기록 조회
 		Map<Long, List<SessionImage>> imagesBySessionId = sessionImageRepository.findAllBySessionIn(filteredSessions)
 			.stream()
 			.sorted(Comparator.comparing(SessionImage::getOrder))
 			.collect(Collectors.groupingBy(img -> img.getSession().getId()));
 
-		// 출석 정보 조회
-		Map<Long, Attendance> attendanceBySessionId = attendanceRepository.findAllBySessionIdsInQuery(sessionIds)
-			.stream()
+		Map<Long, Attendance> attendanceBySessionId = attendanceReader.getAllBySessions(filteredSessions).stream()
 			.collect(Collectors.toMap(Attendance::getSessionId, Function.identity()));
 
-		// 내 출석 기록 조회
-		List<Long> attendanceIds = attendanceBySessionId.values().stream().map(Attendance::getId).toList();
-		Map<Long, AttendanceRecord> myRecordByAttendanceId = attendanceRecordRepository
-			.findAllByAttendanceIdsInQueryAndMemberId(attendanceIds, member.getId())
-			.stream()
+		Map<Long, AttendanceRecord> myRecordByAttendanceId = attendanceRecordReader
+			.getAllByAttendancesAndMember(attendanceBySessionId.values(), member).stream()
 			.collect(Collectors.toMap(AttendanceRecord::getAttendanceId, Function.identity()));
 
+		// 7. 응답 생성
 		LocalDateTime now = LocalDateTime.now();
-
 		List<SessionAttendanceResponse> responses = filteredSessions.stream()
-			.map(session -> {
-				List<SessionImage> images = imagesBySessionId.getOrDefault(session.getId(), List.of());
-				Attendance attendance = attendanceBySessionId.get(session.getId());
-
-				if (attendance == null) {
-					// 출석이 없는 세션 (NO_ATTEND)
-					return SessionAttendanceResponse.noAttendance(session, images);
-				}
-
-				// 출석 가능 상태 계산
-				AttendanceOpenStatus status = getAttendanceOpenStatus(
-					session.getSessionDateTime(), attendance, now);
-
-				// 내 출석 결과
-				AttendanceRecord myRecord = myRecordByAttendanceId.get(attendance.getId());
-				AttendanceResult myResult = myRecord != null ? myRecord.getAttendanceResult() : null;
-
-				return SessionAttendanceResponse.of(session, images, attendance, status, myResult);
-			})
+			.map(session -> buildSessionAttendanceResponse(
+				session, imagesBySessionId, attendanceBySessionId, myRecordByAttendanceId, now))
 			.toList();
 
 		return SessionAttendanceListResponse.of(generation.getId(), availableMonths, currentMonth, responses);
+	}
+
+	private Double validateLocationIfOffline(SessionType sessionType, AttendanceRequest request,
+		Attendance attendance) {
+		if (!sessionType.hasOffline()) {
+			return null;
+		}
+
+		Location requestLocation = request.toLocation();
+		if (requestLocation == null) {
+			throw new AppException(ErrorCode.INVALID_LOCATION);
+		}
+
+		Location attendanceLocation = attendance.getLocation();
+		if (attendanceLocation == null) {
+			throw new AppException(ErrorCode.INVALID_LOCATION);
+		}
+
+		Double accuracy = attendanceLocation.calculateAccuracy(requestLocation);
+		if (accuracy > locationAccuracy) {
+			throw new AppException(ErrorCode.INVALID_LOCATION);
+		}
+
+		return accuracy;
+	}
+
+	private int determineCurrentMonth(Integer month, List<Integer> availableMonths) {
+		if (month != null && availableMonths.contains(month)) {
+			return month;
+		}
+		int nowMonth = LocalDate.now().getMonthValue();
+		return availableMonths.contains(nowMonth)
+			? nowMonth
+			: availableMonths.get(availableMonths.size() - 1);
+	}
+
+	private SessionAttendanceResponse buildSessionAttendanceResponse(
+		Session session,
+		Map<Long, List<SessionImage>> imagesBySessionId,
+		Map<Long, Attendance> attendanceBySessionId,
+		Map<Long, AttendanceRecord> myRecordByAttendanceId,
+		LocalDateTime now) {
+
+		List<SessionImage> images = imagesBySessionId.getOrDefault(session.getId(), List.of());
+		Attendance attendance = attendanceBySessionId.get(session.getId());
+
+		if (attendance == null) {
+			return SessionAttendanceResponse.noAttendance(session, images);
+		}
+
+		AttendanceOpenStatus status = getAttendanceOpenStatus(session.getSessionDateTime(), attendance, now);
+		AttendanceRecord myRecord = myRecordByAttendanceId.get(attendance.getId());
+		AttendanceResult myResult = (myRecord != null) ? myRecord.getAttendanceResult() : null;
+
+		return SessionAttendanceResponse.of(session, images, attendance, status, myResult);
 	}
 }

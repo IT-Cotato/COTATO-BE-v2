@@ -1,11 +1,11 @@
-package org.cotato.homepage.domain.auth.service.component;
+package org.cotato.homepage.domain.member.service.component;
 
 import java.util.List;
 
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.repository.MemberRepository;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.repository.MemberRepository;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;

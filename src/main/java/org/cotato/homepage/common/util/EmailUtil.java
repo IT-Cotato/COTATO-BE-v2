@@ -2,7 +2,7 @@ package org.cotato.homepage.common.util;
 
 import static org.cotato.homepage.domain.auth.constant.EmailConstants.*;
 
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 
 public class EmailUtil {
 

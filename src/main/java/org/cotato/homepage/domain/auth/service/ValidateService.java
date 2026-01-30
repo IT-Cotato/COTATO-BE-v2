@@ -2,7 +2,7 @@ package org.cotato.homepage.domain.auth.service;
 
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.domain.auth.repository.MemberRepository;
+import org.cotato.homepage.domain.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;

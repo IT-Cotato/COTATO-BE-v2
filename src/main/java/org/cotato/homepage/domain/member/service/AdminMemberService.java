@@ -1,4 +1,4 @@
-package org.cotato.homepage.domain.auth.service;
+package org.cotato.homepage.domain.member.service;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -11,20 +11,20 @@ import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.event.CotatoEventPublisher;
 import org.cotato.homepage.common.event.EventType;
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.entity.RefusedMember;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.entity.RefusedMember;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberStatus;
 import org.cotato.homepage.domain.auth.event.EmailSendEvent;
 import org.cotato.homepage.domain.auth.event.EmailSendEventDto;
-import org.cotato.homepage.domain.auth.repository.MemberRepository;
-import org.cotato.homepage.domain.auth.repository.RefusedMemberRepository;
-import org.cotato.homepage.domain.auth.service.component.MemberReader;
+import org.cotato.homepage.domain.member.repository.MemberRepository;
+import org.cotato.homepage.domain.member.repository.RefusedMemberRepository;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.enums.GenerationMemberRole;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
+import org.cotato.homepage.domain.member.service.component.MemberReader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -64,6 +64,7 @@ public class AdminMemberService {
 				.data(dto)
 				.build());
 		});
+
 		memberRepository.saveAll(members);
 	}
 
@@ -105,7 +106,7 @@ public class AdminMemberService {
 
 	private void validateAllMembersStatus(final List<Member> members, final MemberStatus expectedStatus) {
 		if (members.stream().anyMatch(member -> member.getStatus() != expectedStatus)) {
-			throw new AppException(ErrorCode.ROLE_IS_NOT_MATCH);
+			throw new AppException(ErrorCode.INVALID_MEMBER_STATUS);
 		}
 	}
 
@@ -210,7 +211,7 @@ public class AdminMemberService {
 
 		// 유효한 상태 변경인지 확인 (APPROVED 또는 RETIRED만 허용)
 		if (status != MemberStatus.APPROVED && status != MemberStatus.RETIRED) {
-			throw new AppException(ErrorCode.ROLE_IS_NOT_MATCH);
+			throw new AppException(ErrorCode.INVALID_MEMBER_STATUS);
 		}
 
 		members.forEach(member -> member.updateStatus(status));

@@ -1,6 +1,6 @@
 package org.cotato.homepage.domain.auth.event;
 
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 
 import lombok.Builder;
 

@@ -7,7 +7,7 @@ import org.cotato.homepage.api.minuspoint.dto.SessionMinusPointManagementRespons
 import org.cotato.homepage.api.minuspoint.dto.UpdateBeerNetworkingRequest;
 import org.cotato.homepage.api.minuspoint.dto.UpdateExtraMinusPointRequest;
 import org.cotato.homepage.common.role.RoleAuthority;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.cotato.homepage.domain.minuspoint.service.MinusPointService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

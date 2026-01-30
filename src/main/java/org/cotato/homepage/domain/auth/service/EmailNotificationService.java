@@ -4,7 +4,7 @@ import static org.cotato.homepage.common.util.EmailUtil.*;
 import static org.cotato.homepage.domain.auth.constant.EmailConstants.*;
 
 import org.cotato.homepage.common.email.EmailSender;
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;

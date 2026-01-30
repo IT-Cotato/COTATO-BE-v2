@@ -1,6 +1,6 @@
 package org.cotato.homepage.api.member.dto;
 
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

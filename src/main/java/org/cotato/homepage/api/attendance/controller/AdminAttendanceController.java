@@ -7,9 +7,9 @@ import org.cotato.homepage.api.attendance.dto.GenerationMemberAttendanceRecordRe
 import org.cotato.homepage.api.attendance.dto.UpdateAttendanceRecordRequest;
 import org.cotato.homepage.common.role.RoleAuthority;
 import org.cotato.homepage.domain.attendance.enums.AttendanceResult;
-import org.cotato.homepage.domain.attendance.service.AttendanceRecordService;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
+import org.cotato.homepage.domain.attendance.service.AdminAttendanceRecordService;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/v1/api/admin/attendances")
 public class AdminAttendanceController {
 
-	private final AttendanceRecordService attendanceRecordService;
+	private final AdminAttendanceRecordService adminAttendanceRecordService;
 
 	@Operation(
 		summary = "전체 출석 통계 조회",
@@ -48,7 +48,7 @@ public class AdminAttendanceController {
 		@Parameter(description = "회원 이름 검색어")
 		@RequestParam(name = "search", required = false) String search
 	) {
-		return ResponseEntity.ok().body(attendanceRecordService.findAttendanceRecords(generationId, position, search));
+		return ResponseEntity.ok().body(adminAttendanceRecordService.findAttendanceRecords(generationId, position, search));
 	}
 
 	@Operation(
@@ -66,7 +66,7 @@ public class AdminAttendanceController {
 		@RequestParam(name = "attendanceResults", required = false) List<AttendanceResult> attendanceResults,
 		@Parameter(description = "회원 이름 검색어")
 		@RequestParam(name = "search", required = false) String search) {
-		return ResponseEntity.ok().body(attendanceRecordService.findAttendanceRecordsByAttendance(
+		return ResponseEntity.ok().body(adminAttendanceRecordService.findAttendanceRecordsByAttendance(
 			attendanceId, position, attendanceResults, search));
 	}
 
@@ -79,7 +79,7 @@ public class AdminAttendanceController {
 	public ResponseEntity<Void> updateAttendanceRecords(
 		@Parameter(description = "출석(세션) ID") @PathVariable("attendanceId") Long attendanceId,
 		@RequestBody @Valid UpdateAttendanceRecordRequest request) {
-		attendanceRecordService.updateAttendanceRecord(attendanceId, request.memberId(), request.result());
+		adminAttendanceRecordService.updateAttendanceRecord(attendanceId, request.memberId(), request.result());
 		return ResponseEntity.noContent().build();
 	}
 }

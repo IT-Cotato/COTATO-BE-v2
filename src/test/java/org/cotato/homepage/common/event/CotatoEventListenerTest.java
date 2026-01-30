@@ -5,7 +5,7 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 
 import org.cotato.homepage.api.session.dto.SessionImageInfo;
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.auth.event.EmailSendEvent;
 import org.cotato.homepage.domain.auth.event.EmailSendEventDto;
 import org.cotato.homepage.domain.auth.service.EmailNotificationService;

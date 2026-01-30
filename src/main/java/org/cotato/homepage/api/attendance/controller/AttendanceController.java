@@ -5,8 +5,7 @@ import org.cotato.homepage.api.attendance.dto.AttendanceSubmitResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendanceRecordsResponse;
 import org.cotato.homepage.api.attendance.dto.SessionAttendanceListResponse;
 import org.cotato.homepage.domain.attendance.service.AttendanceRecordService;
-import org.cotato.homepage.domain.attendance.service.AttendanceService;
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -31,7 +30,6 @@ import lombok.RequiredArgsConstructor;
 public class AttendanceController {
 
 	private final AttendanceRecordService attendanceRecordService;
-	private final AttendanceService attendanceService;
 
 	@Operation(
 		summary = "출석하기",

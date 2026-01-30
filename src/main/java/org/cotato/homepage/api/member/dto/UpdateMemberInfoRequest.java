@@ -1,9 +1,9 @@
 package org.cotato.homepage.api.member.dto;
 
-import org.cotato.homepage.domain.auth.enums.Gender;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
+import org.cotato.homepage.domain.member.enums.Gender;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberRole;
+import org.cotato.homepage.domain.member.enums.MemberStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

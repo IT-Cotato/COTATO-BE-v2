@@ -15,7 +15,7 @@ public record AttendanceStatistic(
 ) {
 	private static final Long ZERO_VALUE = 0L;
 
-	public static AttendanceStatistic of(List<AttendanceRecord> attendanceRecords, Integer totalAttendanceCount) {
+	public static AttendanceStatistic of(List<AttendanceRecord> attendanceRecords) {
 		Map<AttendanceResult, Long> attendanceRecordsByResult = attendanceRecords.stream()
 			.collect(Collectors.groupingBy(AttendanceRecord::getAttendanceResult, Collectors.counting()));
 

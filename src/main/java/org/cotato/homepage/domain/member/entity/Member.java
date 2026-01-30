@@ -1,10 +1,10 @@
-package org.cotato.homepage.domain.auth.entity;
+package org.cotato.homepage.domain.member.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
-import org.cotato.homepage.domain.auth.enums.Gender;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
+import org.cotato.homepage.domain.member.enums.Gender;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberRole;
+import org.cotato.homepage.domain.member.enums.MemberStatus;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 

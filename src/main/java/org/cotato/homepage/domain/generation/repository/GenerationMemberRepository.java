@@ -3,7 +3,7 @@ package org.cotato.homepage.domain.generation.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.springframework.data.domain.Pageable;

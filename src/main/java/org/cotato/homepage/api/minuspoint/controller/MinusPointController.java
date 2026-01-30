@@ -2,7 +2,7 @@ package org.cotato.homepage.api.minuspoint.controller;
 
 import org.cotato.homepage.api.minuspoint.dto.MyMinusPointDashboardResponse;
 import org.cotato.homepage.api.minuspoint.dto.MyMinusPointRecordsResponse;
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.minuspoint.service.MinusPointService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

@@ -6,7 +6,7 @@ import org.cotato.homepage.api.project.dto.ProjectPresignedUrlRequest;
 import org.cotato.homepage.api.project.dto.UpdateProjectRequest;
 import org.cotato.homepage.api.session.dto.PresignedUrlResponse;
 import org.cotato.homepage.common.role.RoleAuthority;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.cotato.homepage.domain.generation.service.ProjectImageService;
 import org.cotato.homepage.domain.generation.service.ProjectService;
 import org.springframework.http.HttpStatus;

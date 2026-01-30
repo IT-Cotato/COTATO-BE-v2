@@ -2,7 +2,7 @@ package org.cotato.homepage.api.member.dto;
 
 import java.util.List;
 
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
+import org.cotato.homepage.domain.member.enums.MemberStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;

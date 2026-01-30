@@ -1,6 +1,6 @@
 package org.cotato.homepage.api.attendance.dto;
 
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 
 public record GenerationMemberAttendanceRecordResponse(
 	AttendanceMemberInfo memberInfo,

@@ -2,8 +2,8 @@ package org.cotato.homepage.common.role;
 
 import javax.naming.NoPermissionException;
 
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberRole;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;

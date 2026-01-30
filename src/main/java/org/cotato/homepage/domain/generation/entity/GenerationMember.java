@@ -1,8 +1,8 @@
 package org.cotato.homepage.domain.generation.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
 import org.cotato.homepage.domain.generation.enums.GenerationMemberRole;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;

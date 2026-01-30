@@ -1,4 +1,4 @@
-package org.cotato.homepage.domain.auth.enums;
+package org.cotato.homepage.domain.member.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -6,8 +6,8 @@ import java.util.Optional;
 import org.cotato.homepage.common.error.exception.FilterAuthenticationException;
 import org.cotato.homepage.common.error.exception.InterceptorException;
 import org.cotato.homepage.domain.auth.constant.TokenConstants;
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.repository.MemberRepository;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

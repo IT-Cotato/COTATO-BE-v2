@@ -28,4 +28,7 @@ public interface GenerationRepository extends JpaRepository<Generation, Long> {
 	@Query(value = "SELECT * FROM generation g WHERE g.generation_end_date < :currentDate "
 		+ "ORDER BY g.generation_end_date DESC LIMIT 1", nativeQuery = true)
 	Optional<Generation> findPreviousGenerationByCurrentDate(@Param("currentDate") LocalDate currentDate);
+
+	@Query("SELECT g FROM Generation g ORDER BY g.id DESC LIMIT 1")
+	Optional<Generation> findLatestGeneration();
 }

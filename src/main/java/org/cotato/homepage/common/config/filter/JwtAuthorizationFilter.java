@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.cotato.homepage.common.config.jwt.JwtTokenProvider;
-import org.cotato.homepage.domain.auth.entity.Member;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

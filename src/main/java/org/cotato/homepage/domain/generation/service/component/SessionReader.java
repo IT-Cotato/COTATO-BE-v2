@@ -37,12 +37,6 @@ public class SessionReader {
 	}
 
 	@Transactional(readOnly = true)
-	public List<Session> getAllByAttendances(List<Attendance> attendances) {
-		List<Long> sessionIds = attendances.stream().map(Attendance::getSessionId).toList();
-		return sessionRepository.findAllByIdIn(sessionIds);
-	}
-
-	@Transactional(readOnly = true)
 	public Optional<Session> getByDate(LocalDate date) {
 		return sessionRepository.findBySessionDate(date);
 	}

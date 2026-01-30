@@ -2,9 +2,9 @@ package org.cotato.homepage.api.member.dto;
 
 import java.time.LocalDateTime;
 
-import org.cotato.homepage.domain.auth.entity.Member;
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
-import org.cotato.homepage.domain.auth.enums.MemberStatus;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
@@ -25,11 +25,9 @@ public record ApplicantMemberResponse(
 	@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "전체 전화번호")
 	String phoneNumber,
 	@Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "회원 상태")
-	MemberStatus status,
-	@Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, description = "거절일 (거절된 경우에만)")
-	LocalDateTime rejectedAt
+	MemberStatus status
 ) {
-	public static ApplicantMemberResponse of(Member member, String phoneNumber, LocalDateTime rejectedAt) {
+	public static ApplicantMemberResponse of(Member member, String phoneNumber) {
 		return ApplicantMemberResponse.builder()
 			.memberId(member.getId())
 			.name(member.getName())
@@ -38,7 +36,6 @@ public record ApplicantMemberResponse(
 			.position(member.getPosition())
 			.phoneNumber(phoneNumber)
 			.status(member.getStatus())
-			.rejectedAt(rejectedAt)
 			.build();
 	}
 }

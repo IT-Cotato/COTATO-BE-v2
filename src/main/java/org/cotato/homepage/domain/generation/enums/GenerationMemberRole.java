@@ -1,6 +1,6 @@
 package org.cotato.homepage.domain.generation.enums;
 
-import org.cotato.homepage.domain.auth.enums.MemberRole;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

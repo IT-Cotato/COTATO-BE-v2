@@ -1,6 +1,6 @@
 package org.cotato.homepage.api.project.dto;
 
-import org.cotato.homepage.domain.auth.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
 import org.cotato.homepage.domain.generation.entity.ProjectMember;
 
 public record ProjectMemberInfoResponse(

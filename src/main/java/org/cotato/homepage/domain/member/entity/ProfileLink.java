@@ -1,7 +1,7 @@
-package org.cotato.homepage.domain.auth.entity;
+package org.cotato.homepage.domain.member.entity;
 
 import org.cotato.homepage.common.entity.BaseTimeEntity;
-import org.cotato.homepage.domain.auth.enums.UrlType;
+import org.cotato.homepage.domain.member.enums.UrlType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

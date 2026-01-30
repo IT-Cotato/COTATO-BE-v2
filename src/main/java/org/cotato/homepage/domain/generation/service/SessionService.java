@@ -167,7 +167,17 @@ public class SessionService {
 
 	public List<SessionListResponse> findSessionsByGenerationId(Long generationId) {
 		Generation generation = generationReader.findById(generationId);
+		return findSessionsByGeneration(generation);
+	}
 
+	public List<SessionListResponse> findSessionsByGenerationIdOrLatest(Long generationId) {
+		Generation generation = (generationId != null)
+			? generationReader.findById(generationId)
+			: generationReader.findLatestGeneration();
+		return findSessionsByGeneration(generation);
+	}
+
+	private List<SessionListResponse> findSessionsByGeneration(Generation generation) {
 		List<Session> sessions = sessionRepository.findAllByGeneration(generation);
 
 		Map<Long, List<SessionImage>> imagesGroupBySession = sessionImageRepository.findAllBySessionIn(sessions)

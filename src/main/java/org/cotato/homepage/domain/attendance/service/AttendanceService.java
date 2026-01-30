@@ -8,19 +8,13 @@ import org.cotato.homepage.common.schedule.SchedulerService;
 import org.cotato.homepage.domain.attendance.embedded.Location;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
 import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
-import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.util.AttendanceUtil;
 import org.cotato.homepage.domain.generation.entity.AttendanceNotification;
-import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.repository.AttendanceNotificationRepository;
-import org.cotato.homepage.domain.generation.repository.GenerationRepository;
-import org.cotato.homepage.domain.generation.repository.SessionRepository;
-import org.cotato.homepage.domain.generation.service.component.SessionReader;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AttendanceService {
 
 	private final AttendanceRepository attendanceRepository;
-	private final SessionRepository sessionRepository;
-	private final GenerationRepository generationRepository;
 	private final SchedulerService schedulerService;
 	private final AttendanceNotificationRepository attendanceNotificationRepository;
 

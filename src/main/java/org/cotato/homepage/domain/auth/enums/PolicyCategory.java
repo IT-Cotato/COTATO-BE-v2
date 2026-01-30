@@ -6,8 +6,10 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum PolicyCategory {
-	PERSONAL_INFORMATION("개인정보 관련된 정책"),
-	LEAVING("회원 탈퇴 시 필요한 정책");
+	MEMBER_WITHDRAWAL("회원 탈퇴"),
+	TERMS_OF_SERVICE("이용약관"),
+	PRIVACY_POLICY("개인정보처리방침"),
+	CLUB_RULES("동아리 규정");
 
 	private final String description;
 }
