@@ -12,12 +12,10 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class RoleInterceptor implements HandlerInterceptor {
 
 	@Override
@@ -36,6 +34,11 @@ public class RoleInterceptor implements HandlerInterceptor {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		Member member = (Member)authentication.getPrincipal();
+
+		// DEV 팀은 항상 최고 권한
+		if (member.isDevTeam()) {
+			return true;
+		}
 
 		RoleAuthority methodAnnotation = handlerMethod.getMethodAnnotation(RoleAuthority.class);
 		MemberRole minimumRole = methodAnnotation.value();
