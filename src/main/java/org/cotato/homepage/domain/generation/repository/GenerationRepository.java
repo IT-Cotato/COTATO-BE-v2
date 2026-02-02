@@ -31,4 +31,6 @@ public interface GenerationRepository extends JpaRepository<Generation, Long> {
 
 	@Query("SELECT g FROM Generation g ORDER BY g.id DESC LIMIT 1")
 	Optional<Generation> findLatestGeneration();
+
+	Optional<Generation> findByPeriod_EndDate(LocalDate endDate);
 }
