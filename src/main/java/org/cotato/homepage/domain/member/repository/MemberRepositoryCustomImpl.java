@@ -125,11 +125,11 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 		QMember qMember = QMember.member;
 		BooleanBuilder builder = new BooleanBuilder();
 
-		// 기본 필터: 승인된 회원 또는 수료 회원만 조회 (가입 신청 대기/거절/비활성화 제외)
+		// 기본 필터: 승인된 회원, 수료 회원, 미수료 회원만 조회 (가입 신청 대기/거절/비활성화 제외)
 		if (statuses != null && !statuses.isEmpty()) {
 			builder.and(qMember.status.in(statuses));
 		} else {
-			builder.and(qMember.status.in(MemberStatus.APPROVED, MemberStatus.RETIRED));
+			builder.and(qMember.status.in(MemberStatus.APPROVED, MemberStatus.RETIRED, MemberStatus.NOT_RETIRED));
 		}
 
 		// 통합 검색 처리

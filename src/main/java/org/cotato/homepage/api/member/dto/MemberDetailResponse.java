@@ -1,5 +1,6 @@
 package org.cotato.homepage.api.member.dto;
 
+import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.member.enums.Gender;
 import org.cotato.homepage.domain.member.enums.MemberPosition;
@@ -24,6 +25,8 @@ public record MemberDetailResponse(
 	String university,
 	@Schema(description = "합격 기수")
 	Long passedGenerationNumber,
+	@Schema(description = "최근 활동 기수")
+	Long latestGenerationNumber,
 	@Schema(description = "파트")
 	MemberPosition position,
 	@Schema(description = "역할")
@@ -33,7 +36,17 @@ public record MemberDetailResponse(
 	@Schema(description = "이메일")
 	String email
 ) {
-	public static MemberDetailResponse from(Member member) {
+	public static MemberDetailResponse from(Member member, GenerationMember latestGenerationMember) {
+		Long latestGenNumber = latestGenerationMember != null
+			? latestGenerationMember.getGeneration().getId()
+			: null;
+		MemberPosition position = latestGenerationMember != null
+			? latestGenerationMember.getPosition()
+			: member.getPosition();
+		MemberRole role = latestGenerationMember != null
+			? latestGenerationMember.getRole()
+			: member.getRole();
+
 		return MemberDetailResponse.builder()
 			.memberId(member.getId())
 			.name(member.getName())
@@ -41,8 +54,9 @@ public record MemberDetailResponse(
 			.phoneNumber(member.getPhoneNumber())
 			.university(member.getUniversity())
 			.passedGenerationNumber(member.getPassedGenerationNumber())
-			.position(member.getPosition())
-			.role(member.getRole())
+			.latestGenerationNumber(latestGenNumber)
+			.position(position)
+			.role(role)
 			.status(member.getStatus())
 			.email(member.getEmail())
 			.build();

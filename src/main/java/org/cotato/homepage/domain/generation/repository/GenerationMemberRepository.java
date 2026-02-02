@@ -46,4 +46,11 @@ public interface GenerationMemberRepository extends JpaRepository<GenerationMemb
 	Optional<GenerationMember> findByGenerationAndMember(Generation generation, Member member);
 
 	boolean existsByMemberAndIdNot(Member member, Long excludeId);
+
+	@Query("SELECT gm FROM GenerationMember gm " +
+		"WHERE gm.member IN :members " +
+		"AND gm.generation.id = (" +
+		"  SELECT MAX(gm2.generation.id) FROM GenerationMember gm2 " +
+		"  WHERE gm2.member = gm.member)")
+	List<GenerationMember> findLatestByMembers(@Param("members") List<Member> members);
 }

@@ -7,9 +7,8 @@ import org.cotato.homepage.api.member.dto.AllMemberResponse;
 import org.cotato.homepage.api.member.dto.BulkUpdateMemberStatusRequest;
 import org.cotato.homepage.api.member.dto.DeleteMembersRequest;
 import org.cotato.homepage.api.member.dto.MemberDetailResponse;
-import org.cotato.homepage.api.member.dto.UpdateGenerationMemberPositionRequest;
+import org.cotato.homepage.api.member.dto.UpdateActiveMemberInfoRequest;
 import org.cotato.homepage.api.member.dto.UpdateGenerationMemberRoleRequest;
-import org.cotato.homepage.api.member.dto.UpdateMemberInfoRequest;
 import org.cotato.homepage.common.response.PageResponse;
 import org.cotato.homepage.common.response.SliceResponse;
 import org.cotato.homepage.common.role.RoleAuthority;
@@ -52,7 +51,7 @@ public class AdminMemberController {
 		@RequestParam(value = "search", required = false)
 		@Parameter(description = "검색어 (숫자: 기수/전화번호, 텍스트: 이름/학교/파트)") String search,
 		@RequestParam(value = "statuses", required = false)
-		@Parameter(description = "회원 상태 목록 (APPROVED, RETIRED)") List<MemberStatus> statuses,
+		@Parameter(description = "회원 상태 목록 (APPROVED, RETIRED, NOT_RETIRED)") List<MemberStatus> statuses,
 		@RequestParam(value = "sortBy", required = false, defaultValue = "passedGenerationNumber")
 		@Parameter(description = "정렬 기준 (passedGenerationNumber, name)") String sortBy,
 		@RequestParam(value = "sortDirection", required = false, defaultValue = "DESC")
@@ -72,19 +71,6 @@ public class AdminMemberController {
 		@PathVariable("memberId") Long memberId
 	) {
 		return ResponseEntity.ok().body(adminMemberService.getMemberDetail(memberId));
-	}
-
-	@Operation(
-		summary = "회원 정보 수정",
-		description = "개별 회원의 정보를 수정합니다. (이름, 성별, 학교, 기수, 파트, 전화번호, 역할, 활동여부)")
-	@RoleAuthority(MemberRole.OPERATION)
-	@PatchMapping("/{memberId}")
-	public ResponseEntity<Void> updateMemberInfo(
-		@PathVariable("memberId") Long memberId,
-		@RequestBody @Valid UpdateMemberInfoRequest request
-	) {
-		adminMemberService.updateMemberInfo(memberId, request);
-		return ResponseEntity.noContent().build();
 	}
 
 	@Operation(
@@ -135,14 +121,25 @@ public class AdminMemberController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@Operation(summary = "활동 회원 파트 변경", description = "특정 기수 내 활동 회원의 파트를 변경합니다.")
+	@Operation(
+		summary = "활동 회원 정보 수정",
+		description = "특정 기수 내 활동 회원의 정보를 수정합니다. 최신 기수의 회원만 수정 가능합니다.")
 	@RoleAuthority(MemberRole.OPERATION)
-	@PatchMapping("/active/{generationMemberId}/position")
-	public ResponseEntity<Void> updateGenerationMemberPosition(
+	@PatchMapping("/active/{generationMemberId}")
+	public ResponseEntity<Void> updateActiveMemberInfo(
 		@PathVariable("generationMemberId") Long generationMemberId,
-		@RequestBody @Valid UpdateGenerationMemberPositionRequest request
+		@RequestBody @Valid UpdateActiveMemberInfoRequest request
 	) {
-		adminMemberService.updateGenerationMemberPosition(generationMemberId, request.position());
+		adminMemberService.updateActiveMemberInfo(
+			generationMemberId,
+			request.name(),
+			request.gender(),
+			request.university(),
+			request.phoneNumber(),
+			request.position(),
+			request.role(),
+			request.status()
+		);
 		return ResponseEntity.noContent().build();
 	}
 

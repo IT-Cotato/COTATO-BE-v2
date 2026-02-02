@@ -1,18 +1,19 @@
 package org.cotato.homepage.domain.member.service;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.cotato.homepage.api.member.dto.ActiveMemberResponse;
 import org.cotato.homepage.api.member.dto.AllMemberResponse;
 import org.cotato.homepage.api.member.dto.MemberDetailResponse;
-import org.cotato.homepage.api.member.dto.UpdateMemberInfoRequest;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.event.CotatoEventPublisher;
 import org.cotato.homepage.common.event.EventType;
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.member.entity.RefusedMember;
+import org.cotato.homepage.domain.member.enums.Gender;
 import org.cotato.homepage.domain.member.enums.MemberPosition;
 import org.cotato.homepage.domain.member.enums.MemberStatus;
 import org.cotato.homepage.domain.auth.event.EmailSendEvent;
@@ -21,8 +22,8 @@ import org.cotato.homepage.domain.member.repository.MemberRepository;
 import org.cotato.homepage.domain.member.repository.RefusedMemberRepository;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
-import org.cotato.homepage.domain.generation.enums.GenerationMemberRole;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.cotato.homepage.domain.member.service.component.MemberReader;
 import org.springframework.data.domain.Page;
@@ -127,77 +128,27 @@ public class AdminMemberService {
 		Page<Member> members = memberRepository.searchAllMembers(
 			search, statuses, sortBy, sortDirection, pageable
 		);
-		return members.map(AllMemberResponse::from);
+
+		List<Member> memberList = members.getContent();
+		List<GenerationMember> latestGenerationMembers = generationMemberRepository.findLatestByMembers(memberList);
+
+		Map<Long, GenerationMember> memberIdToLatestGm = latestGenerationMembers.stream()
+			.collect(Collectors.toMap(
+				gm -> gm.getMember().getId(),
+				gm -> gm
+			));
+
+		return members.map(member -> AllMemberResponse.from(
+			member,
+			memberIdToLatestGm.get(member.getId())
+		));
 	}
 
 	public MemberDetailResponse getMemberDetail(Long memberId) {
 		Member member = memberReader.findById(memberId);
-		return MemberDetailResponse.from(member);
-	}
-
-	@Transactional
-	public void updateMemberInfo(Long memberId, UpdateMemberInfoRequest request) {
-		Member member = memberReader.findById(memberId);
-
-		// DEV 팀 보호 - DEV 역할 회원의 정보는 수정 불가
-		if (member.isDevTeam()) {
-			throw new AppException(ErrorCode.CANNOT_CHANGE_DEV_ROLE);
-		}
-
-		Long oldGenerationNumber = member.getPassedGenerationNumber();
-
-		if (request.name() != null) {
-			member.updateName(request.name());
-		}
-		if (request.gender() != null) {
-			member.updateGender(request.gender());
-		}
-		if (request.university() != null) {
-			member.updateUniversity(request.university());
-		}
-		if (request.phoneNumber() != null) {
-			member.updatePhoneNumber(request.phoneNumber());
-		}
-		if (request.status() != null) {
-			member.updateStatus(request.status());
-		}
-
-		// 기수 변경 시 GenerationMember도 이동
-		if (request.passedGenerationNumber() != null
-			&& !request.passedGenerationNumber().equals(oldGenerationNumber)) {
-			// 기존 기수의 GenerationMember 삭제
-			Generation oldGeneration = generationReader.findById(oldGenerationNumber);
-			generationMemberRepository.findByGenerationAndMember(oldGeneration, member)
-				.ifPresent(generationMemberRepository::delete);
-
-			// 새 기수에 GenerationMember 생성
-			Generation newGeneration = generationReader.findById(request.passedGenerationNumber());
-			GenerationMember newGenerationMember = GenerationMember.of(newGeneration, member);
-			generationMemberRepository.save(newGenerationMember);
-
-			member.updatePassedGenerationNumber(request.passedGenerationNumber());
-		}
-
-		// 파트 변경 시 Member + GenerationMember 모두 업데이트
-		if (request.position() != null) {
-			member.updatePosition(request.position());
-			// 현재 합격 기수의 GenerationMember 파트도 업데이트
-			Generation currentGeneration = generationReader.findById(member.getPassedGenerationNumber());
-			generationMemberRepository.findByGenerationAndMember(currentGeneration, member)
-				.ifPresent(gm -> gm.updatePosition(request.position()));
-		}
-
-		// 역할 변경 시 Member + GenerationMember 모두 업데이트
-		if (request.role() != null) {
-			member.updateRole(request.role());
-			// 현재 합격 기수의 GenerationMember 역할도 업데이트
-			Generation currentGeneration = generationReader.findById(member.getPassedGenerationNumber());
-			generationMemberRepository.findByGenerationAndMember(currentGeneration, member)
-				.ifPresent(gm -> gm.updateMemberRole(
-					GenerationMemberRole.valueOf(request.role().name())));
-		}
-
-		memberRepository.save(member);
+		List<GenerationMember> latestList = generationMemberRepository.findLatestByMembers(List.of(member));
+		GenerationMember latestGenerationMember = latestList.isEmpty() ? null : latestList.get(0);
+		return MemberDetailResponse.from(member, latestGenerationMember);
 	}
 
 	@Transactional
@@ -209,22 +160,22 @@ public class AdminMemberService {
 			throw new AppException(ErrorCode.CANNOT_CHANGE_DEV_ROLE);
 		}
 
-		// 유효한 상태 변경인지 확인 (APPROVED 또는 RETIRED만 허용)
-		if (status != MemberStatus.APPROVED && status != MemberStatus.RETIRED) {
+		// 유효한 상태 변경인지 확인 (APPROVED, RETIRED, NOT_RETIRED만 허용)
+		if (status != MemberStatus.APPROVED && status != MemberStatus.RETIRED && status != MemberStatus.NOT_RETIRED) {
 			throw new AppException(ErrorCode.INVALID_MEMBER_STATUS);
 		}
 
 		members.forEach(member -> member.updateStatus(status));
 		memberRepository.saveAll(members);
 
-		// 활동중(APPROVED)으로 변경 시 현재 활동 기수에 자동 추가
+		// 활동중(APPROVED)으로 변경 시 최신 기수에 자동 추가
 		if (status == MemberStatus.APPROVED) {
-			Generation currentGeneration = generationReader.findByDate(LocalDate.now());
+			Generation latestGeneration = generationReader.findLatestGeneration();
 			members.stream()
 				.filter(member -> !generationMemberRepository
-					.existsByGenerationAndMember(currentGeneration, member))
+					.existsByGenerationAndMember(latestGeneration, member))
 				.forEach(member -> {
-					GenerationMember generationMember = GenerationMember.of(currentGeneration, member);
+					GenerationMember generationMember = GenerationMember.of(latestGeneration, member);
 					generationMemberRepository.save(generationMember);
 				});
 		}
@@ -256,9 +207,11 @@ public class AdminMemberService {
 	}
 
 	@Transactional
-	public void updateGenerationMemberRole(Long generationMemberId, GenerationMemberRole role) {
+	public void updateGenerationMemberRole(Long generationMemberId, MemberRole role) {
 		GenerationMember generationMember = generationMemberRepository.findById(generationMemberId)
 			.orElseThrow(() -> new AppException(ErrorCode.ENTITY_NOT_FOUND));
+
+		validateLatestGeneration(generationMember);
 
 		Member member = generationMember.getMember();
 
@@ -267,16 +220,20 @@ public class AdminMemberService {
 			throw new AppException(ErrorCode.CANNOT_CHANGE_DEV_ROLE);
 		}
 
-		generationMember.updateMemberRole(role);
-		// MemberRole도 함께 업데이트
-		member.updateRole(role.toMemberRole());
+		// 기수별 역할 기록 (아카이빙)
+		generationMember.updateRole(role);
+		// 현재 권한 업데이트
+		member.updateRole(role);
 		memberRepository.save(member);
 	}
 
 	@Transactional
-	public void updateGenerationMemberPosition(Long generationMemberId, MemberPosition position) {
+	public void updateActiveMemberInfo(Long generationMemberId, String name, Gender gender,
+		String university, String phoneNumber, MemberPosition position, MemberRole role, MemberStatus status) {
 		GenerationMember generationMember = generationMemberRepository.findById(generationMemberId)
 			.orElseThrow(() -> new AppException(ErrorCode.ENTITY_NOT_FOUND));
+
+		validateLatestGeneration(generationMember);
 
 		Member member = generationMember.getMember();
 
@@ -285,7 +242,38 @@ public class AdminMemberService {
 			throw new AppException(ErrorCode.CANNOT_CHANGE_DEV_ROLE);
 		}
 
-		generationMember.updatePosition(position);
+		if (name != null) {
+			member.updateName(name);
+		}
+		if (gender != null) {
+			member.updateGender(gender);
+		}
+		if (university != null) {
+			member.updateUniversity(university);
+		}
+		if (phoneNumber != null) {
+			member.updatePhoneNumber(phoneNumber);
+		}
+		if (position != null) {
+			generationMember.updatePosition(position);
+		}
+		if (role != null) {
+			generationMember.updateRole(role);
+			member.updateRole(role);
+		}
+		if (status != null) {
+			member.updateStatus(status);
+		}
+
+		memberRepository.save(member);
+	}
+
+	private void validateLatestGeneration(GenerationMember generationMember) {
+		Generation latestGeneration = generationReader.findLatestGeneration();
+
+		if (!generationMember.getGeneration().getId().equals(latestGeneration.getId())) {
+			throw new AppException(ErrorCode.GENERATION_NOT_ACTIVE);
+		}
 	}
 
 	@Transactional
