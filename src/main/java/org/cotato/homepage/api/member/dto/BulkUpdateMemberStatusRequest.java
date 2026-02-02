@@ -13,7 +13,7 @@ public record BulkUpdateMemberStatusRequest(
 	@NotEmpty(message = "최소 1명 이상의 회원을 선택해야 합니다.")
 	List<Long> memberIds,
 
-	@Schema(description = "변경할 상태 (APPROVED: 활동중, RETIRED: 수료)")
+	@Schema(description = "변경할 상태 (APPROVED: 활동중, RETIRED: 수료, NOT_RETIRED: 미수료)")
 	@NotNull(message = "변경할 상태를 선택해야 합니다.")
 	MemberStatus status
 ) {

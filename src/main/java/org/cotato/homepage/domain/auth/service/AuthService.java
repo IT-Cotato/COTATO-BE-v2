@@ -182,7 +182,9 @@ public class AuthService {
 			throw new AppException(ErrorCode.INVALID_PASSWORD);
 		}
 
-		if (member.getStatus() != MemberStatus.APPROVED && member.getStatus() != MemberStatus.RETIRED) {
+		if (member.getStatus() != MemberStatus.APPROVED
+			&& member.getStatus() != MemberStatus.RETIRED
+			&& member.getStatus() != MemberStatus.NOT_RETIRED) {
 			throw new AppException(ErrorCode.MEMBER_NOT_APPROVED);
 		}
 
