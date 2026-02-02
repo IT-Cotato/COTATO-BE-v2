@@ -3,7 +3,7 @@ package org.cotato.homepage.domain.generation.entity;
 import org.cotato.homepage.common.entity.BaseTimeEntity;
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.member.enums.MemberPosition;
-import org.cotato.homepage.domain.generation.enums.GenerationMemberRole;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
@@ -43,13 +43,13 @@ public class GenerationMember extends BaseTimeEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role")
 	@ColumnDefault(value = "'MEMBER'")
-	private GenerationMemberRole role = GenerationMemberRole.MEMBER;
+	private MemberRole role = MemberRole.MEMBER;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "position")
 	private MemberPosition position;
 
-	private GenerationMember(Generation generation, Member member, GenerationMemberRole role, MemberPosition position) {
+	private GenerationMember(Generation generation, Member member, MemberRole role, MemberPosition position) {
 		this.generation = generation;
 		this.member = member;
 		this.role = role;
@@ -57,19 +57,18 @@ public class GenerationMember extends BaseTimeEntity {
 	}
 
 	public static GenerationMember of(Generation generation, Member member) {
-		return new GenerationMember(generation, member, GenerationMemberRole.MEMBER, member.getPosition());
+		return new GenerationMember(generation, member, MemberRole.MEMBER, member.getPosition());
 	}
 
 	public static GenerationMember of(Generation generation, Member member, MemberPosition position) {
-		return new GenerationMember(generation, member, GenerationMemberRole.MEMBER, position);
+		return new GenerationMember(generation, member, MemberRole.MEMBER, position);
 	}
 
-	public void updateMemberRole(GenerationMemberRole role) {
+	public void updateRole(MemberRole role) {
 		this.role = role;
 	}
 
 	public void updatePosition(MemberPosition position) {
 		this.position = position;
 	}
-
 }

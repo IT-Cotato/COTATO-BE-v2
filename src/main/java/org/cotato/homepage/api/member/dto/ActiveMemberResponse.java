@@ -2,8 +2,8 @@ package org.cotato.homepage.api.member.dto;
 
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.member.enums.MemberPosition;
+import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
-import org.cotato.homepage.domain.generation.enums.GenerationMemberRole;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
@@ -23,8 +23,8 @@ public record ActiveMemberResponse(
 	String university,
 	@Schema(description = "해당 기수에서의 파트")
 	MemberPosition position,
-	@Schema(description = "기수 내 역할")
-	GenerationMemberRole generationRole,
+	@Schema(description = "역할")
+	MemberRole role,
 	@Schema(description = "합격 기수 (처음 가입한 기수)")
 	Long passedGenerationNumber
 ) {
@@ -38,7 +38,7 @@ public record ActiveMemberResponse(
 			.phoneNumber(member.getPhoneNumber())
 			.university(member.getUniversity())
 			.position(generationMember.getPosition())
-			.generationRole(generationMember.getRole())
+			.role(generationMember.getRole())
 			.passedGenerationNumber(member.getPassedGenerationNumber())
 			.build();
 	}
