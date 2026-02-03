@@ -39,7 +39,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 		"/v1/api/generations",
 		"/v1/api/generations/current",
 		"/v1/api/policies",
-		"/v1/api/projects/**"
+		"/v1/api/projects/**",
+		"/actuator/**"
 	};
 
 	private final JwtTokenProvider jwtTokenProvider;
