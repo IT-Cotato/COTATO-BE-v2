@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 
 import org.cotato.homepage.api.session.dto.SessionImageInfo;
-import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.auth.event.EmailSendEvent;
 import org.cotato.homepage.domain.auth.event.EmailSendEventDto;
 import org.cotato.homepage.domain.auth.service.EmailNotificationService;
@@ -13,6 +12,7 @@ import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.event.SessionImageEvent;
 import org.cotato.homepage.domain.generation.event.SessionImageEventDto;
 import org.cotato.homepage.domain.generation.service.SessionImageService;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

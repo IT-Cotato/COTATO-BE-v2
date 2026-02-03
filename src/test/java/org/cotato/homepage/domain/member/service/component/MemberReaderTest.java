@@ -1,17 +1,15 @@
 package org.cotato.homepage.domain.member.service.component;
 
-import org.cotato.homepage.domain.member.service.component.MemberReader;
-
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
 
-import org.cotato.homepage.domain.member.entity.Member;
-import org.cotato.homepage.domain.member.enums.MemberPosition;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
