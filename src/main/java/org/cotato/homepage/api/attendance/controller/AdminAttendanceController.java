@@ -48,7 +48,8 @@ public class AdminAttendanceController {
 		@Parameter(description = "회원 이름 검색어")
 		@RequestParam(name = "search", required = false) String search
 	) {
-		return ResponseEntity.ok().body(adminAttendanceRecordService.findAttendanceRecords(generationId, position, search));
+		return ResponseEntity.ok()
+			.body(adminAttendanceRecordService.findAttendanceRecords(generationId, position, search));
 	}
 
 	@Operation(

@@ -1,7 +1,7 @@
 package org.cotato.homepage.api.project.dto;
 
-import org.cotato.homepage.domain.member.enums.MemberPosition;
 import org.cotato.homepage.domain.generation.entity.ProjectMember;
+import org.cotato.homepage.domain.member.enums.MemberPosition;
 
 public record ProjectMemberInfoResponse(
 	Long memberId,

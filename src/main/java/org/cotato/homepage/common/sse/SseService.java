@@ -8,13 +8,13 @@ import org.cotato.homepage.domain.attendance.enums.AttendanceOpenStatus;
 import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.util.AttendanceUtil;
-import org.cotato.homepage.domain.member.component.GenerationMemberAuthValidator;
-import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.enums.SessionType;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.cotato.homepage.domain.generation.service.component.SessionReader;
+import org.cotato.homepage.domain.member.component.GenerationMemberAuthValidator;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 

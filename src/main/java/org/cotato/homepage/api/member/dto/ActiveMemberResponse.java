@@ -1,9 +1,9 @@
 package org.cotato.homepage.api.member.dto;
 
+import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.member.enums.MemberPosition;
 import org.cotato.homepage.domain.member.enums.MemberRole;
-import org.cotato.homepage.domain.generation.entity.GenerationMember;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;

@@ -2,11 +2,11 @@ package org.cotato.homepage.migration.generation;
 
 import java.util.List;
 
-import org.cotato.homepage.domain.member.service.MemberService;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
 import org.cotato.homepage.domain.generation.repository.GenerationRepository;
+import org.cotato.homepage.domain.member.service.MemberService;
 import org.cotato.homepage.migration.MigrationJob;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

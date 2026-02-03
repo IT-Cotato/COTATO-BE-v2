@@ -3,9 +3,9 @@ package org.cotato.homepage.domain.generation.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -47,10 +47,10 @@ public interface GenerationMemberRepository extends JpaRepository<GenerationMemb
 
 	boolean existsByMemberAndIdNot(Member member, Long excludeId);
 
-	@Query("SELECT gm FROM GenerationMember gm " +
-		"WHERE gm.member IN :members " +
-		"AND gm.generation.id = (" +
-		"  SELECT MAX(gm2.generation.id) FROM GenerationMember gm2 " +
-		"  WHERE gm2.member = gm.member)")
+	@Query("SELECT gm FROM GenerationMember gm "
+		+ "WHERE gm.member IN :members "
+		+ "AND gm.generation.id = ("
+		+ "  SELECT MAX(gm2.generation.id) FROM GenerationMember gm2 "
+		+ "  WHERE gm2.member = gm.member)")
 	List<GenerationMember> findLatestByMembers(@Param("members") List<Member> members);
 }
