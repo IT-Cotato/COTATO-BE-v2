@@ -68,3 +68,9 @@ aes:
 attendance:
   location:
     accuracy: ${ATTENDANCE_LOCATION_ACCURACY:0.001}
+
+# Actuator 설정
+management:
+  health:
+    mail:
+      enabled: false

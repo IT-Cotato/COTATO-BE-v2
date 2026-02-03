@@ -119,6 +119,9 @@ fi
 if ! docker ps --format '{{.Names}}' | grep -q "^$NGINX_CONTAINER$"; then
     echo "[5.5/8] Starting Nginx container..."
 
+    # 중지된 nginx 컨테이너가 있으면 삭제
+    docker rm -f $NGINX_CONTAINER 2>/dev/null || true
+
     # 초기 설정 파일 복사
     cp $NGINX_DIR/templates/${ENV_PREFIX}-${IDLE_COLOR}.conf $NGINX_DIR/conf.d/${ENV_PREFIX}.conf
 
