@@ -1,0 +1,134 @@
+name: Create Hotfix Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: '기준 브랜치 (hotfix를 생성할 브랜치)'
+        required: true
+        type: choice
+        options:
+          - main
+          - develop
+        default: 'main'
+      version_type:
+        description: '버전 타입 (날짜 기반 자동 생성)'
+        required: true
+        type: choice
+        options:
+          - auto
+          - custom
+        default: 'auto'
+      custom_version:
+        description: '사용자 정의 버전 (custom 선택 시, 예: 2025.12.01-hotfix.1)'
+        required: false
+        type: string
+      description:
+        description: 'Hotfix 설명'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-branch:
+    name: Create Hotfix Branch
+    runs-on: ubuntu-latest
+    outputs:
+      branch_name: ${{ steps.version.outputs.branch_name }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.base_branch }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate version
+        id: version
+        run: |
+          if [ "${{ github.event.inputs.version_type }}" == "custom" ]; then
+            VERSION="${{ github.event.inputs.custom_version }}"
+          else
+            # build.gradle에서 현재 버전 읽기
+            CURRENT_VERSION=$(grep "^version = " build.gradle | sed "s/version = '\(.*\)'/\1/")
+            echo "Current version in build.gradle: $CURRENT_VERSION"
+
+            # 버전이 YYYY.MM.DD.N 형식인지 확인
+            if [[ $CURRENT_VERSION =~ ^[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.([0-9]+)$ ]]; then
+              # 마지막 숫자를 1 증가
+              COUNTER=${BASH_REMATCH[1]}
+              COUNTER=$((COUNTER + 1))
+              DATE=$(echo $CURRENT_VERSION | cut -d'.' -f1-3)
+            else
+              # 버전 형식이 다르면 새로 생성
+              DATE=$(date +'%Y.%m.%d')
+              COUNTER=1
+            fi
+
+            VERSION="$DATE.$COUNTER"
+            echo "New hotfix version: $VERSION"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "branch_name=hotfix/$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if branch exists
+        id: check_branch
+        run: |
+          if git ls-remote --heads origin ${{ steps.version.outputs.branch_name }} | grep -q ${{ steps.version.outputs.branch_name }}; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create hotfix branch
+        if: steps.check_branch.outputs.exists == 'false'
+        run: |
+          git checkout -b ${{ steps.version.outputs.branch_name }}
+          git push origin ${{ steps.version.outputs.branch_name }}
+
+      - name: Update version in build.gradle
+        if: steps.check_branch.outputs.exists == 'false'
+        run: |
+          sed -i "s/version = .*/version = '${{ steps.version.outputs.version }}'/" build.gradle
+          if git diff --quiet build.gradle; then
+            echo "[INFO] Version already up to date: ${{ steps.version.outputs.version }}"
+          else
+            git add build.gradle
+            git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+            git push origin ${{ steps.version.outputs.branch_name }}
+            echo "[INFO] Version updated to: ${{ steps.version.outputs.version }}"
+          fi
+
+      - name: Branch already exists
+        if: steps.check_branch.outputs.exists == 'true'
+        run: |
+          echo "[ERROR] Branch ${{ steps.version.outputs.branch_name }} already exists"
+          exit 1
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "=========================================="
+          echo "Hotfix Branch Created"
+          echo "Branch: ${{ steps.version.outputs.branch_name }}"
+          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Next: Triggering QA deployment"
+          echo "=========================================="
+
+  deploy-to-qa:
+    name: Deploy to QA Server
+    needs: create-branch
+    if: needs.create-branch.result == 'success'
+    uses: ./.github/workflows/deploy-qa.yml
+    with:
+      ref: ${{ needs.create-branch.outputs.branch_name }}
+    secrets: inherit

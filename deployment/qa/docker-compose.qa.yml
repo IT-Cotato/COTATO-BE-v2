@@ -1,0 +1,90 @@
+services:
+  qa-redis:
+    image: redis:7-alpine
+    container_name: qa-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - qa_redis_data:/data
+    networks:
+      - qa_network
+    restart: unless-stopped
+
+  qa-blue:
+    container_name: qa-blue
+    image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+    restart: on-failure
+    environment:
+      SPRING_PROFILES_ACTIVE: qa
+      TZ: "Asia/Seoul"
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: qa-redis
+      REDIS_PORT: 6379
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AES_SECRET_KEY: ${AES_SECRET_KEY}
+      AES_SECRET_SALT: ${AES_SECRET_SALT}
+    depends_on:
+      - qa-redis
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - qa_network
+
+  qa-green:
+    container_name: qa-green
+    image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+    restart: on-failure
+    environment:
+      SPRING_PROFILES_ACTIVE: qa
+      TZ: "Asia/Seoul"
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: qa-redis
+      REDIS_PORT: 6379
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AES_SECRET_KEY: ${AES_SECRET_KEY}
+      AES_SECRET_SALT: ${AES_SECRET_SALT}
+    depends_on:
+      - qa-redis
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - qa_network
+
+networks:
+  qa_network:
+    driver: bridge
+
+volumes:
+  qa_redis_data:

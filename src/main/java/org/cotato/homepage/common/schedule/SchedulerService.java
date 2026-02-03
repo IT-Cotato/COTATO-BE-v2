@@ -108,7 +108,7 @@ public class SchedulerService {
 			return;
 		}
 
-		// 종료된 기수의 APPROVED 회원들을 NOT_RETIRED로 변경
+		// 종료된 기수의 APPROVED 회원들을 RETIRED로 변경
 		List<GenerationMember> expiredMembers = generationMemberRepository
 			.findAllByGeneration(expiredGeneration.get());
 
@@ -117,10 +117,10 @@ public class SchedulerService {
 			.filter(member -> member.getStatus() == MemberStatus.APPROVED)
 			.toList();
 
-		approvedMembers.forEach(member -> member.updateStatus(MemberStatus.NOT_RETIRED));
+		approvedMembers.forEach(member -> member.updateStatus(MemberStatus.RETIRED));
 		memberRepository.saveAll(approvedMembers);
 
-		log.info("{}명의 회원이 미수료로 변경되었습니다.", approvedMembers.size());
+		log.info("{}명의 회원이 수료로 변경되었습니다.", approvedMembers.size());
 	}
 
 	public void scheduleAttendanceNotification(final AttendanceNotification attendanceNotification) {

@@ -9,14 +9,14 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${SENDER_EMAIL}
-    password: ${SENDER_PASSWORD}
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -34,7 +34,7 @@ spring:
       max-request-size: 100MB
 
 jwt:
-  secretKey: ${JWT_SECRET_KEY}
+  secretKey: ${JWT_SECRET}
   access:
     expiration: 1800000
   refresh:
@@ -43,12 +43,12 @@ jwt:
 cloud:
   aws:
     s3:
-      bucket: ${S3_BUCKET_NAME}
+      bucket: ${AWS_S3_BUCKET}
     stack.auto: false
-    region: ap-northeast-2
+    region: ${AWS_REGION:ap-northeast-2}
     credentials:
-      accessKey: ${S3_ACCESS_KEY}
-      secretKey: ${S3_ACCESS_PASSWORD}
+      accessKey: ${AWS_ACCESS_KEY}
+      secretKey: ${AWS_SECRET_KEY}
 
 springdoc:
   show-login-endpoint: true

@@ -14,9 +14,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${PROD_DB_PATH}
-    username: ${PROD_DB_USERNAME}
-    password: ${PROD_DB_PWD}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   config:
     import: classpath:variable/variable-prod.yml
