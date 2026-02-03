@@ -33,6 +33,7 @@ public class SecurityConfig {
 		"/v1/api/session",
 		"/v1/api/projects/**",
 		"/v1/api/policies",
+		"/actuator/health",
 	};
 
 	private final CorsFilter corsFilter;
