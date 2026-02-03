@@ -17,6 +17,7 @@ public class AwsSesConfig {
 
 	private final AwsProperties awsProperties;
 
+
 	@Bean
 	public AmazonSimpleEmailService amazonSimpleEmailService() {
 		final BasicAWSCredentials basicAwsCredentials = new BasicAWSCredentials(awsProperties.getAccessKey(),
