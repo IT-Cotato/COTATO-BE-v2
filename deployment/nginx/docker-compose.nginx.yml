@@ -18,7 +18,7 @@ services:
 networks:
   qa_network:
     external: true
-    name: qa_qa_network
+    name: qa_network
   prod_network:
     external: true
-    name: production_prod_network
+    name: prod_network

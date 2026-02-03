@@ -84,7 +84,8 @@ services:
 
 networks:
   qa_network:
-    driver: bridge
+    external: true
+    name: qa_network
 
 volumes:
   qa_redis_data:

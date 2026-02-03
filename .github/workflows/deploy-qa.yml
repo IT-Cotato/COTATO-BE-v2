@@ -14,7 +14,7 @@ on:
         type: string
 
 env:
-  DOCKER_IMAGE_NAME: cotato-recruit
+  DOCKER_IMAGE_NAME: cotato-homepage
 
 jobs:
   build-and-push:

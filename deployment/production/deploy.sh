@@ -35,8 +35,8 @@ echo "[INFO] SSL certificates found"
 mkdir -p ~/certbot/www
 
 # 네트워크 생성 (없으면 생성)
-docker network create qa_qa_network 2>/dev/null || true
-docker network create production_prod_network 2>/dev/null || true
+docker network create qa_network 2>/dev/null || true
+docker network create prod_network 2>/dev/null || true
 
 # nginx conf.d 디렉토리 생성
 mkdir -p $NGINX_DIR/conf.d
