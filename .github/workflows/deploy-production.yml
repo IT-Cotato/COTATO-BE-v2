@@ -86,7 +86,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.event.inputs.tag || github.ref }}
+          ref: develop
 
       - name: Copy deployment files to server
         uses: appleboy/scp-action@v0.1.7
