@@ -6,7 +6,7 @@ server:
 spring:
   jpa:
     hibernate:
-      ddl-auto: ${PROD_DDL_AUTO:none}
+      ddl-auto: ${DDL_AUTO:none}
     show-sql: false
     properties:
       hibernate:
