@@ -88,12 +88,15 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
         run: |
           RELEASE_TYPE="${{ steps.version.outputs.is_hotfix == 'true' && 'Hotfix' || 'Release' }}"
 
+          echo "$CHANGELOG" > /tmp/release-notes.md
+
           gh release create ${{ steps.version.outputs.tag_name }} \
             --title "$RELEASE_TYPE ${{ steps.version.outputs.version }}" \
-            --notes "${{ steps.changelog.outputs.changelog }}" \
+            --notes-file /tmp/release-notes.md \
             --target main
 
       - name: Sync main to develop

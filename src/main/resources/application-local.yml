@@ -21,9 +21,6 @@ spring:
   config:
     import: classpath:variable/variable-local.yml
 
-  config:
-    import: classpath:variable/variable-local.yml
-
 springdoc:
   swagger-ui:
     enabled: true
