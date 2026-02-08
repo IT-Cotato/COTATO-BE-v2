@@ -1,0 +1,127 @@
+name: Create Tag and Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-tag:
+    name: Create Tag and Release
+    # PR이 merge되었고, release/ 또는 hotfix/ 브랜치에서 왔을 때만 실행
+    if: |
+      github.event.pull_request.merged == true &&
+      (startsWith(github.event.pull_request.head.ref, 'release/') ||
+       startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.version.outputs.tag_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Extract version from branch name
+        id: version
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=$(echo $BRANCH_NAME | sed 's/^release\///' | sed 's/^hotfix\///')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=v$VERSION" >> $GITHUB_OUTPUT
+          echo "is_hotfix=${{ startsWith(github.event.pull_request.head.ref, 'hotfix/') }}" >> $GITHUB_OUTPUT
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse ${{ steps.version.outputs.tag_name }} >/dev/null 2>&1; then
+            echo "[ERROR] Tag ${{ steps.version.outputs.tag_name }} already exists"
+            exit 1
+          fi
+
+      - name: Create and push tag
+        run: |
+          git tag -a ${{ steps.version.outputs.tag_name }} -m "Release ${{ steps.version.outputs.version }}"
+          git push origin ${{ steps.version.outputs.tag_name }}
+          echo "[INFO] Tag created: ${{ steps.version.outputs.tag_name }}"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # develop 브랜치 fetch
+          git fetch origin develop:develop 2>/dev/null || true
+
+          # PR의 커밋 메시지들을 수집
+          if git rev-parse develop >/dev/null 2>&1; then
+            COMMITS=$(git log --oneline develop...${{ github.event.pull_request.merge_commit_sha }} --pretty=format:"- %s (%h)" 2>/dev/null || echo "- Initial release")
+          else
+            COMMITS=$(git log --oneline --max-count=10 --pretty=format:"- %s (%h)")
+          fi
+
+          # Changelog 생성
+          CHANGELOG="## Changes
+
+          $COMMITS
+
+          ## Pull Request
+          - PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}
+          - Merged by: @${{ github.event.pull_request.merged_by.login }}
+          - Merged at: ${{ github.event.pull_request.merged_at }}"
+
+          # 여러 줄 출력을 위한 처리
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_TYPE="${{ steps.version.outputs.is_hotfix == 'true' && 'Hotfix' || 'Release' }}"
+
+          gh release create ${{ steps.version.outputs.tag_name }} \
+            --title "$RELEASE_TYPE ${{ steps.version.outputs.version }}" \
+            --notes "${{ steps.changelog.outputs.changelog }}" \
+            --target main
+
+      - name: Sync main to develop
+        if: success()
+        run: |
+          echo "[INFO] Syncing main to develop..."
+          git fetch origin develop
+          git checkout develop
+          git merge origin/main --no-edit
+          git push origin develop
+          echo "[INFO] Sync completed: main -> develop"
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "=========================================="
+          echo "Tag and Release Created"
+          echo "Tag: ${{ steps.version.outputs.tag_name }}"
+          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Type: ${{ steps.version.outputs.is_hotfix == 'true' && 'Hotfix' || 'Release' }}"
+          echo "Synced: main -> develop"
+          echo "Next: Triggering production deployment"
+          echo "=========================================="
+
+  trigger-production-deploy:
+    name: Trigger Production Deployment
+    needs: create-tag
+    uses: ./.github/workflows/deploy-production.yml
+    with:
+      tag: ${{ needs.create-tag.outputs.tag_name }}
+    secrets: inherit

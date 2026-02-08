@@ -1,0 +1,52 @@
+package org.cotato.homepage.common.role;
+
+import javax.naming.NoPermissionException;
+
+import org.cotato.homepage.domain.member.entity.Member;
+import org.cotato.homepage.domain.member.enums.MemberRole;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Component
+public class RoleInterceptor implements HandlerInterceptor {
+
+	@Override
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+		throws Exception {
+		if (!(handler instanceof HandlerMethod)) {
+			return true;
+		}
+
+		HandlerMethod handlerMethod = (HandlerMethod)handler;
+
+		if (!handlerMethod.hasMethodAnnotation(RoleAuthority.class)) {
+			return true;
+		}
+
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		Member member = (Member)authentication.getPrincipal();
+
+		// DEV 팀은 항상 최고 권한
+		if (member.isDevTeam()) {
+			return true;
+		}
+
+		RoleAuthority methodAnnotation = handlerMethod.getMethodAnnotation(RoleAuthority.class);
+		MemberRole minimumRole = methodAnnotation.value();
+
+		if (!member.getRole().canAccess(minimumRole)) {
+			throw new NoPermissionException("cannot process this method with role " + member.getRole());
+		}
+
+		return true;
+	}
+}

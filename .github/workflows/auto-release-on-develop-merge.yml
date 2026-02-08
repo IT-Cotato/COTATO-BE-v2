@@ -1,0 +1,111 @@
+name: Auto Release on Develop Merge
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release-branch:
+    name: Create Release Branch
+    runs-on: ubuntu-latest
+    outputs:
+      branch_name: ${{ steps.version.outputs.branch_name }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate version
+        id: version
+        run: |
+          # 오늘 날짜
+          TODAY=$(date +'%Y.%m.%d')
+          echo "Today: $TODAY"
+
+          # 원격 브랜치에서 오늘 날짜로 시작하는 release 브랜치 찾기
+          git fetch origin 'refs/heads/release/*:refs/remotes/origin/release/*' 2>/dev/null || true
+
+          # 오늘 날짜의 최대 카운터 찾기
+          MAX_COUNTER=0
+          for branch in $(git branch -r | grep "origin/release/$TODAY" | sed 's/.*release\///' || echo ""); do
+            if [[ $branch =~ ^$TODAY\.([0-9]+)$ ]]; then
+              COUNTER=${BASH_REMATCH[1]}
+              if [ $COUNTER -gt $MAX_COUNTER ]; then
+                MAX_COUNTER=$COUNTER
+              fi
+            fi
+          done
+
+          # 새 버전 생성 (기존 최대값 + 1)
+          NEW_COUNTER=$((MAX_COUNTER + 1))
+          VERSION="$TODAY.$NEW_COUNTER"
+
+          echo "Found max counter: $MAX_COUNTER"
+          echo "New version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "branch_name=release/$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if branch exists
+        id: check_branch
+        run: |
+          if git ls-remote --heads origin ${{ steps.version.outputs.branch_name }} | grep -q ${{ steps.version.outputs.branch_name }}; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Branch already exists error
+        if: steps.check_branch.outputs.exists == 'true'
+        run: |
+          echo "[ERROR] Branch ${{ steps.version.outputs.branch_name }} already exists"
+          echo "This should not happen. The version increment logic may have a bug."
+          exit 1
+
+      - name: Create release branch
+        if: steps.check_branch.outputs.exists == 'false'
+        run: |
+          git checkout -b ${{ steps.version.outputs.branch_name }}
+          git push origin ${{ steps.version.outputs.branch_name }}
+          echo "[INFO] Release branch created: ${{ steps.version.outputs.branch_name }}"
+
+      - name: Update version in build.gradle
+        run: |
+          sed -i "s/version = .*/version = '${{ steps.version.outputs.version }}'/" build.gradle
+          if git diff --quiet build.gradle; then
+            echo "[INFO] Version already up to date: ${{ steps.version.outputs.version }}"
+          else
+            git add build.gradle
+            git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+            git push origin ${{ steps.version.outputs.branch_name }}
+            echo "[INFO] Version updated to: ${{ steps.version.outputs.version }}"
+          fi
+
+      - name: Summary
+        run: |
+          echo "=========================================="
+          echo "Release Branch: ${{ steps.version.outputs.branch_name }}"
+          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Next: Triggering QA deployment"
+          echo "=========================================="
+
+  deploy-to-qa:
+    name: Deploy to QA Server
+    needs: create-release-branch
+    uses: ./.github/workflows/deploy-qa.yml
+    with:
+      ref: ${{ needs.create-release-branch.outputs.branch_name }}
+    secrets: inherit

@@ -1,0 +1,37 @@
+package org.cotato.homepage.domain.generation.service;
+
+import java.util.List;
+
+import org.cotato.homepage.api.project.dto.ProjectMemberRequest;
+import org.cotato.homepage.domain.generation.entity.Project;
+import org.cotato.homepage.domain.generation.entity.ProjectMember;
+import org.cotato.homepage.domain.generation.repository.ProjectMemberRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class ProjectMemberService {
+
+	private final ProjectMemberRepository projectMemberRepository;
+
+	@Transactional
+	public void createProjectMember(Project project, List<ProjectMemberRequest> members) {
+		List<ProjectMember> newMembers = members.stream()
+			.map(request -> ProjectMember.of(request.position(), request.name(), project))
+			.toList();
+
+		projectMemberRepository.saveAll(newMembers);
+	}
+
+	@Transactional
+	public void updateProjectMembers(Project project, List<ProjectMemberRequest> members) {
+		projectMemberRepository.deleteAllByProjectId(project.getId());
+
+		if (members != null && !members.isEmpty()) {
+			createProjectMember(project, members);
+		}
+	}
+}

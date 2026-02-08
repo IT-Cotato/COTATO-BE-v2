@@ -1,0 +1,31 @@
+package org.cotato.homepage.domain.generation.repository;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import org.cotato.homepage.domain.generation.entity.Generation;
+import org.cotato.homepage.domain.generation.entity.Session;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.LockModeType;
+
+public interface SessionRepository extends JpaRepository<Session, Long> {
+	List<Session> findAllByGeneration(Generation generation);
+
+	List<Session> findAllByGenerationId(Long generationId);
+
+	@Transactional(readOnly = true)
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT s FROM Session s WHERE s.id = :sessionId")
+	Optional<Session> findByIdWithPessimisticXLock(@Param("sessionId") Long sessionId);
+
+	List<Session> findAllByIdIn(List<Long> sessionIds);
+
+	@Query("SELECT s FROM Session s WHERE DATE(s.sessionDateTime) = :targetDate")
+	Optional<Session> findBySessionDate(@Param("targetDate") LocalDate targetDate);
+}

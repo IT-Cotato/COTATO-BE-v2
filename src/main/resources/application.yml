@@ -9,14 +9,14 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${SENDER_EMAIL}
-    password: ${SENDER_PASSWORD}
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -27,33 +27,28 @@ spring:
           connection-timeout: 5000
           timeout: 5000
           write timeout: 5000
-    auth-code-expiration-millis: 1800000
 
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
 
-
 jwt:
-  secretKey: ${JWT_SECRET_KEY}
+  secretKey: ${JWT_SECRET}
   access:
     expiration: 1800000
-
   refresh:
     expiration: 259200000
 
 cloud:
   aws:
     s3:
-      bucket: ${S3_BUCKET_NAME}
+      bucket: ${AWS_S3_BUCKET}
     stack.auto: false
-    region: ap-northeast-2
+    region: ${AWS_REGION:ap-northeast-2}
     credentials:
-      accessKey: ${S3_ACCESS_KEY}
-      secretKey: ${S3_ACCESS_PASSWORD}
-    ses:
-      emailAddress: ${EMAIL_ADDRESS}
+      accessKey: ${AWS_ACCESS_KEY}
+      secretKey: ${AWS_SECRET_KEY}
 
 springdoc:
   show-login-endpoint: true
@@ -69,20 +64,13 @@ aes:
     key: ${AES_SECRET_KEY}
     salt: ${AES_SECRET_SALT}
 
-location:
-  distance: ${STANDARD_DISTANCE}
+# 출석 위치 검증 정확도 (위경도 오차 제곱, 기본값: 0.0001)
+attendance:
+  location:
+    accuracy: ${ATTENDANCE_LOCATION_ACCURACY:0.001}
 
-discord:
-  bot:
-    token: ${TEST_DISCORD_TOKEN}
-
-  guild:
-    id: ${TEST_GUILD_ID}
-
-  channel:
-    id: ${TEST_CHANNEL_ID}
-
-profile-image:
-  default-folder: ${DEFAULT_PROFILE_IMAGE_FOLDER}
-  default-file: ${DEFAULT_PROFILE_IMAGE_FILE}
-  default-url: ${DEFAULT_PROFILE_IMAGE_URL}
+# Actuator 설정
+management:
+  health:
+    mail:
+      enabled: false

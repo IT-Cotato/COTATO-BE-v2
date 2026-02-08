@@ -1,0 +1,44 @@
+package org.cotato.homepage.domain.generation.service.component;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import org.cotato.homepage.domain.generation.entity.Generation;
+import org.cotato.homepage.domain.generation.repository.GenerationRepository;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class GenerationReader {
+
+	private final GenerationRepository generationRepository;
+
+	public Generation findByDate(LocalDate date) {
+		return generationRepository.findByCurrentDate(date)
+			.orElseThrow(() -> new EntityNotFoundException(date + "해당 날짜에 해당하는 기수를 찾을 수 없습니다."));
+	}
+
+	public Optional<Generation> findByDateOptional(LocalDate date) {
+		return generationRepository.findByCurrentDate(date);
+	}
+
+	public Generation findById(Long generationId) {
+		return generationRepository.findById(generationId)
+			.orElseThrow(() -> new EntityNotFoundException("해당 기수를 찾을 수 없습니다."));
+	}
+
+	public List<Generation> getGenerations() {
+		return generationRepository.findAll();
+	}
+
+	public Generation findLatestGeneration() {
+		return generationRepository.findLatestGeneration()
+			.orElseThrow(() -> new EntityNotFoundException("기수가 존재하지 않습니다."));
+	}
+}

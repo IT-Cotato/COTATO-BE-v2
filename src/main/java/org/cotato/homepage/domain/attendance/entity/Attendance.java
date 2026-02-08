@@ -1,0 +1,59 @@
+package org.cotato.homepage.domain.attendance.entity;
+
+import java.time.LocalDateTime;
+
+import org.cotato.homepage.common.entity.BaseTimeEntity;
+import org.cotato.homepage.domain.attendance.embedded.Location;
+import org.cotato.homepage.domain.generation.entity.Session;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Attendance extends BaseTimeEntity {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "attendance_id")
+	private Long id;
+
+	// 출석 마감 시간
+	@Column(name = "attendance_deadline", nullable = false)
+	private LocalDateTime attendanceDeadLine;
+
+	// 지각 마감 시간
+	@Column(name = "late_deadline", nullable = false)
+	private LocalDateTime lateDeadLine;
+
+	private Location location;
+
+	@Column(name = "session_id", nullable = false, unique = true)
+	private Long sessionId;
+
+	@Builder
+	public Attendance(LocalDateTime attendanceDeadLine, LocalDateTime lateDeadLine, Location location,
+		Session session) {
+		this.attendanceDeadLine = attendanceDeadLine;
+		this.lateDeadLine = lateDeadLine;
+		this.location = location;
+		this.sessionId = session.getId();
+	}
+
+	public void updateLocation(Location location) {
+		this.location = location;
+	}
+
+	public void updateDeadLine(LocalDateTime attendanceDeadLine, LocalDateTime lateDeadLine) {
+		this.attendanceDeadLine = attendanceDeadLine;
+		this.lateDeadLine = lateDeadLine;
+	}
+}
