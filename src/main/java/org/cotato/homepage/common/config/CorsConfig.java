@@ -29,6 +29,7 @@ public class CorsConfig {
 		}
 
 		config.addAllowedOrigin("http://localhost:3000");
+		config.addAllowedOrigin("http://localhost:3001");
 		config.addAllowedHeader("*");
 		config.addAllowedMethod("*");
 		config.setExposedHeaders(List.of("accessToken", HttpHeaders.CONTENT_DISPOSITION, "Set-Cookie"));
