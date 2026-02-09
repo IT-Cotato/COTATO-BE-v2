@@ -76,8 +76,8 @@ class CotatoEventListenerTest {
 		SessionImageEventDto dto = mock(SessionImageEventDto.class);
 		Session session = mock(Session.class);
 		List<SessionImageInfo> imageInfos = List.of(
-			new SessionImageInfo("session/uuid1.jpg", "https://example.com/session/uuid1.jpg", 0),
-			new SessionImageInfo("session/uuid2.jpg", "https://example.com/session/uuid2.jpg", 1)
+			new SessionImageInfo("session/uuid1.jpg", 0),
+			new SessionImageInfo("session/uuid2.jpg", 1)
 		);
 		when(dto.getSession()).thenReturn(session);
 		when(dto.getImageInfos()).thenReturn(imageInfos);

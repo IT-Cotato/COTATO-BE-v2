@@ -12,9 +12,6 @@ public record PresignedUrlResponse(
 	@Schema(description = "S3 객체 키")
 	String s3Key,
 
-	@Schema(description = "업로드 후 접근 가능한 Public URL")
-	String publicUrl,
-
 	@Schema(description = "PresignedUrl 만료 시간")
 	LocalDateTime expireAt
 ) {

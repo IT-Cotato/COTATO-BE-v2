@@ -126,7 +126,7 @@ public class SessionImageService {
 		SessionImage sessionImage = SessionImage.builder()
 			.session(session)
 			.s3Key(request.s3Key())
-			.imageUrl(request.publicUrl())
+			.imageUrl(s3Uploader.getPublicUrl(request.s3Key()))
 			.order(request.order())
 			.build();
 
@@ -150,7 +150,7 @@ public class SessionImageService {
 			SessionImage sessionImage = SessionImage.builder()
 				.session(session)
 				.s3Key(imageInfo.s3Key())
-				.imageUrl(imageInfo.publicUrl())
+				.imageUrl(s3Uploader.getPublicUrl(imageInfo.s3Key()))
 				.order(imageInfo.order())
 				.build();
 
