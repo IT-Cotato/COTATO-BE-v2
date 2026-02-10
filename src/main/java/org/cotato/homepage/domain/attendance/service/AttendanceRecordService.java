@@ -146,9 +146,9 @@ public class AttendanceRecordService {
 				AttendanceRecord record = attendanceRecordMap.get(at.getId());
 				return (record != null)
 					? MemberAttendResponse.recordedAttendance(session, record)
-					: MemberAttendResponse.unrecordedAttendance(session, at, member.getId());
+					: MemberAttendResponse.unrecordedAttendance(session);
 			})
-			.sorted(Comparator.comparing(MemberAttendResponse::sessionDateTime).reversed())
+			.sorted(Comparator.comparing(MemberAttendResponse::sessionNumber).reversed())
 			.toList();
 
 		return MemberAttendanceRecordsResponse.of(generation.getId(), statistic, responses);

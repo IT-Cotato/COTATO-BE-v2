@@ -14,7 +14,10 @@ public record MyMinusPointRecordResponse(
 	LocalDateTime sessionDateTime,
 	@Schema(description = "내용 (상/벌점 사유)", requiredMode = RequiredMode.REQUIRED)
 	String content,
-	@Schema(description = "상/벌점 구분 (BONUS: 상점, MINUS: 벌점)", requiredMode = RequiredMode.REQUIRED)
+	@Schema(description = "상/벌점 구분. "
+		+ "BONUS: 상점 (비어네트워킹 3회 참여 시 +5점 부여), "
+		+ "MINUS: 벌점 (지각 -4, 결석 -7, 무단결석 -14, 세션참여 불성실 등)",
+		requiredMode = RequiredMode.REQUIRED)
 	PointType pointType,
 	@Schema(description = "해당 항목의 점수", requiredMode = RequiredMode.REQUIRED)
 	Integer point,
