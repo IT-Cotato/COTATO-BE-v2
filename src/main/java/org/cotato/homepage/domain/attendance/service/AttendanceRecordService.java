@@ -15,6 +15,7 @@ import org.cotato.homepage.api.attendance.dto.AttendanceStatistic;
 import org.cotato.homepage.api.attendance.dto.AttendanceSubmitResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendanceRecordsResponse;
+import org.cotato.homepage.api.attendance.dto.MyAttendanceDashboardResponse;
 import org.cotato.homepage.api.attendance.dto.SessionAttendanceListResponse;
 import org.cotato.homepage.api.attendance.dto.SessionAttendanceResponse;
 import org.cotato.homepage.common.error.ErrorCode;
@@ -102,9 +103,34 @@ public class AttendanceRecordService {
 	}
 
 	/**
-	 * 내 출석 현황을 조회합니다.
-	 * - 통계는 전체 기간 기준으로 계산
-	 * - 출석 목록은 월 필터가 있으면 해당 월만, 없으면 전체 반환
+	 * 내 출석 대시보드(통계)를 조회합니다.
+	 * - 전체 기간 기준으로 출석/지각/결석/무단결석 통계 반환
+	 */
+	public MyAttendanceDashboardResponse findMyAttendanceDashboard(final Member member) {
+		// 1. 현재 기수 조회 및 멤버 검증
+		Generation generation = generationReader.findByDate(LocalDate.now());
+		generationMemberAuthValidator.checkGenerationPermission(member, generation);
+
+		// 2. 현재 기수의 세션 조회
+		List<Session> sessions = sessionReader.findAllByGeneration(generation);
+
+		// 3. 마감된 출석만 필터링 (지각 마감 시간이 지난 출석)
+		LocalDateTime now = LocalDateTime.now();
+		List<Attendance> closedAttendances = attendanceReader.getAllBySessions(sessions).stream()
+			.filter(at -> at.getLateDeadLine().isBefore(now))
+			.toList();
+
+		// 4. 해당 멤버의 출석 기록 조회 및 통계 계산
+		List<AttendanceRecord> records = attendanceRecordReader
+			.getAllByAttendancesAndMember(closedAttendances, member);
+		AttendanceStatistic statistic = AttendanceStatistic.of(records);
+
+		return MyAttendanceDashboardResponse.of(generation.getId(), statistic);
+	}
+
+	/**
+	 * 내 출석 기록을 조회합니다.
+	 * - 월 필터가 있으면 해당 월만, 없으면 전체 반환
 	 */
 	public MemberAttendanceRecordsResponse findMyAttendanceRecords(final Member member, final Integer month) {
 		// 1. 현재 기수 조회 및 멤버 검증
@@ -127,10 +153,7 @@ public class AttendanceRecordService {
 			.getAllByAttendancesAndMember(closedAttendances, member).stream()
 			.collect(Collectors.toUnmodifiableMap(AttendanceRecord::getAttendanceId, Function.identity()));
 
-		// 5. 전체 기간 통계 계산 (월 필터 적용 전)
-		AttendanceStatistic statistic = AttendanceStatistic.of(attendanceRecordMap.values().stream().toList());
-
-		// 6. 월 필터 적용 (월이 지정되지 않으면 전체 반환)
+		// 5. 월 필터 적용 (월이 지정되지 않으면 전체 반환)
 		List<Attendance> filteredAttendances = (month == null) ? closedAttendances : closedAttendances.stream()
 			.filter(at -> {
 				Session session = sessionMap.get(at.getSessionId());
@@ -139,7 +162,7 @@ public class AttendanceRecordService {
 			})
 			.toList();
 
-		// 7. 응답 생성 (출석 기록 유무에 따라 다른 응답 생성 후 최신순 정렬)
+		// 6. 응답 생성 (출석 기록 유무에 따라 다른 응답 생성 후 최신순 정렬)
 		List<MemberAttendResponse> responses = filteredAttendances.stream()
 			.map(at -> {
 				Session session = sessionMap.get(at.getSessionId());
@@ -151,7 +174,7 @@ public class AttendanceRecordService {
 			.sorted(Comparator.comparing(MemberAttendResponse::sessionNumber).reversed())
 			.toList();
 
-		return MemberAttendanceRecordsResponse.of(generation.getId(), statistic, responses);
+		return MemberAttendanceRecordsResponse.of(generation.getId(), responses);
 	}
 
 	/**

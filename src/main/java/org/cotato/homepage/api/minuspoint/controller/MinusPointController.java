@@ -30,7 +30,8 @@ public class MinusPointController {
 	@Operation(
 		summary = "내 상벌점 대시보드 조회",
 		description = "로그인한 사용자 본인의 상벌점 대시보드를 조회합니다. "
-			+ "현재 활동 기수의 상/벌점 총합, 상점(비어네트워킹 보너스), 벌점(출석+세션), 비어네트워킹 참여 횟수를 반환합니다."
+			+ "현재 활동 기수의 상/벌점 총합, 상점(비어네트워킹 보너스), 벌점(출석+세션), 비어네트워킹 참여 횟수를 반환합니다. "
+			+ "벌점 기록이 입력되지 않은 경우 각 필드에 null이 포함될 수 있습니다."
 	)
 	@GetMapping("/my/dashboard")
 	public ResponseEntity<MyMinusPointDashboardResponse> findMyMinusPointDashboard(
