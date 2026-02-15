@@ -19,7 +19,7 @@ public class SwaggerConfig {
 	@Bean
 	public OpenAPI customOpenApi() {
 		return new OpenAPI()
-			.addServersItem(new Server().url("https://cotato-beta.p-e.kr")
+			.addServersItem(new Server().url("https://api.qa.cotato.kr")
 				.description("QA Server"))
 			.addServersItem(new Server().url("http://localhost:8080").description("개발자 로컬 서버"))
 			.addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
