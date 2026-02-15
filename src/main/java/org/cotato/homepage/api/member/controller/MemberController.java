@@ -53,7 +53,7 @@ public class MemberController {
 		if (!member.getId().equals(memberId)) {
 			throw new NoPermissionException("본인 외의 회원을 비활성화할 수 없습니다.");
 		}
-		memberService.deactivateMember(member, request.email(), request.password(), request.leavingPolicyAgreed());
+		memberService.deactivateMember(member, request.leavingPolicyAgreed());
 		return ResponseEntity.noContent().build();
 	}
 }
