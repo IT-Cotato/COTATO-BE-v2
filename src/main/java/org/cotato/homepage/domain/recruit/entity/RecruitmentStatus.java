@@ -1,9 +1,9 @@
 package org.cotato.homepage.domain.recruit.entity;
 
-import org.hibernate.annotations.Immutable;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -12,18 +12,22 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "generations")
-@Immutable
+@Table(name = "recruitment_status")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RecruitmentStatus {
 
 	@Id
-	@Column(name = "generation_id")
-	private Long generationId;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-	@Column(name = "is_recruiting_active")
-	private boolean isRecruitingActive;
+	@Column(nullable = false)
+	private boolean active;
 
-	@Column(name = "is_additional_recruitment_active")
-	private boolean isAdditionalRecruitmentActive;
+	public static RecruitmentStatus createDefault() {
+		return new RecruitmentStatus();
+	}
+
+	public void toggleActive() {
+		this.active = !this.active;
+	}
 }
