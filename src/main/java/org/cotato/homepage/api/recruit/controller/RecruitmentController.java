@@ -21,7 +21,7 @@ public class RecruitmentController {
 
 	@Operation(
 		summary = "모집 상태 조회",
-		description = "현재 모집 진행 여부와 추가 모집 여부를 조회합니다."
+		description = "현재 모집 활성화 여부를 조회합니다."
 	)
 	@GetMapping("/status")
 	public ResponseEntity<RecruitmentStatusResponse> getRecruitmentStatus() {

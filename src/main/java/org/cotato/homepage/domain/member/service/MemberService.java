@@ -52,30 +52,24 @@ public class MemberService {
 		}
 	}
 
+	public void verifyPassword(final Member member, final String password) {
+		if (!bCryptPasswordEncoder.matches(password, member.getPassword())) {
+			throw new AppException(ErrorCode.INVALID_PASSWORD);
+		}
+	}
+
 	public List<Member> findActiveMember() {
 		Generation currentGeneration = generationReader.findByDate(LocalDate.now());
 		return memberReader.findAllGenerationMember(currentGeneration);
 	}
 
 	@Transactional
-	public void deactivateMember(final Member member, final String email, final String password,
-		final Boolean leavingPolicyAgreed) {
-		validateMember(member, email, password);
-
+	public void deactivateMember(final Member member, final Boolean leavingPolicyAgreed) {
 		MemberLeavingRequest leavingRequest = MemberLeavingRequest.of(member, LocalDateTime.now(), leavingPolicyAgreed);
 		memberLeavingRequestRepository.save(leavingRequest);
 
 		member.deactivate();
 		memberRepository.save(member);
-	}
-
-	private void validateMember(Member member, String email, String password) {
-		if (!member.getEmail().equals(email)) {
-			throw new AppException(ErrorCode.INVALID_EMAIL);
-		}
-		if (!bCryptPasswordEncoder.matches(password, member.getPassword())) {
-			throw new AppException(ErrorCode.INVALID_PASSWORD);
-		}
 	}
 
 	public Page<ApplicantMemberResponse> searchApplicants(MemberStatus status, String name, Pageable pageable) {

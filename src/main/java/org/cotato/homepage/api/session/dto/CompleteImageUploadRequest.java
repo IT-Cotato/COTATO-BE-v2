@@ -14,10 +14,6 @@ public record CompleteImageUploadRequest(
 	@NotBlank(message = "S3 키는 필수입니다.")
 	String s3Key,
 
-	@Schema(description = "업로드된 이미지 URL")
-	@NotBlank(message = "이미지 URL은 필수입니다.")
-	String publicUrl,
-
 	@Schema(description = "이미지 순서 (0부터 시작)")
 	@NotNull(message = "이미지 순서는 필수입니다.")
 	Integer order

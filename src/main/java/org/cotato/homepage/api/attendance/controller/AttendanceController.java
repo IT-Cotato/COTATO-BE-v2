@@ -3,6 +3,7 @@ package org.cotato.homepage.api.attendance.controller;
 import org.cotato.homepage.api.attendance.dto.AttendanceRequest;
 import org.cotato.homepage.api.attendance.dto.AttendanceSubmitResponse;
 import org.cotato.homepage.api.attendance.dto.MemberAttendanceRecordsResponse;
+import org.cotato.homepage.api.attendance.dto.MyAttendanceDashboardResponse;
 import org.cotato.homepage.api.attendance.dto.SessionAttendanceListResponse;
 import org.cotato.homepage.domain.attendance.service.AttendanceRecordService;
 import org.cotato.homepage.domain.member.entity.Member;
@@ -43,9 +44,19 @@ public class AttendanceController {
 	}
 
 	@Operation(
-		summary = "내 출석 현황 조회",
-		description = "로그인한 사용자 본인의 출석 현황을 조회합니다. "
-			+ "현재 활동 기수의 출석 대시보드(출석/지각/결석/무단결석 수)와 세션별 출석 기록을 반환합니다. "
+		summary = "내 출석 대시보드 조회",
+		description = "로그인한 사용자 본인의 출석 대시보드(출석/지각/결석/무단결석 통계)를 조회합니다. "
+			+ "출석 기록이 입력되지 않은 경우 통계 값에 null이 포함될 수 있습니다."
+	)
+	@GetMapping("/my/dashboard")
+	public ResponseEntity<MyAttendanceDashboardResponse> findMyAttendanceDashboard(
+		@AuthenticationPrincipal Member member) {
+		return ResponseEntity.ok().body(attendanceRecordService.findMyAttendanceDashboard(member));
+	}
+
+	@Operation(
+		summary = "내 출석 기록 조회",
+		description = "로그인한 사용자 본인의 세션별 출석 기록을 조회합니다. "
 			+ "월(month) 파라미터로 특정 월의 출석 기록만 필터링할 수 있습니다."
 	)
 	@GetMapping("/my")

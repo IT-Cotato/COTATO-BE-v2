@@ -5,6 +5,7 @@ import javax.naming.NoPermissionException;
 import org.cotato.homepage.api.member.dto.DeactivateRequest;
 import org.cotato.homepage.api.member.dto.MemberInfoResponse;
 import org.cotato.homepage.api.member.dto.UpdatePasswordRequest;
+import org.cotato.homepage.api.member.dto.VerifyPasswordRequest;
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.member.service.MemberService;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,14 @@ public class MemberController {
 		return ResponseEntity.ok().body(MemberInfoResponse.from(member));
 	}
 
+	@Operation(summary = "현재 비밀번호 확인", description = "입력한 비밀번호가 현재 비밀번호와 일치하는지 확인합니다.")
+	@PostMapping("/verify/password")
+	public ResponseEntity<Void> verifyPassword(@AuthenticationPrincipal Member member,
+		@RequestBody @Valid VerifyPasswordRequest request) {
+		memberService.verifyPassword(member, request.password());
+		return ResponseEntity.noContent().build();
+	}
+
 	@Operation(summary = "비밀번호 변경", description = "로그인한 회원의 비밀번호를 변경합니다.")
 	@PatchMapping("/update/password")
 	public ResponseEntity<Void> updatePassword(@AuthenticationPrincipal Member member,
@@ -53,7 +62,7 @@ public class MemberController {
 		if (!member.getId().equals(memberId)) {
 			throw new NoPermissionException("본인 외의 회원을 비활성화할 수 없습니다.");
 		}
-		memberService.deactivateMember(member, request.email(), request.password(), request.leavingPolicyAgreed());
+		memberService.deactivateMember(member, request.leavingPolicyAgreed());
 		return ResponseEntity.noContent().build();
 	}
 }

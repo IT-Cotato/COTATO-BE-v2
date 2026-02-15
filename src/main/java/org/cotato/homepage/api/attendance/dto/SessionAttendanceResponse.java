@@ -28,17 +28,28 @@ public record SessionAttendanceResponse(
 	String placeName,
 	@Schema(description = "도로명 주소")
 	String roadNameAddress,
-	@Schema(description = "세션 타입 (ONLINE, OFFLINE, ALL, NO_ATTEND)", requiredMode = RequiredMode.REQUIRED)
+	@Schema(description = "세션 타입. "
+		+ "ONLINE: 비대면 세션, "
+		+ "OFFLINE: 대면 세션, "
+		+ "ALL: 대면/비대면 혼용 세션, "
+		+ "NO_ATTEND: 출석을 진행하지 않는 세션",
+		requiredMode = RequiredMode.REQUIRED)
 	SessionType sessionType,
 	@Schema(description = "세션 이미지 URL 목록")
 	List<String> imageUrls,
 	@Schema(description = "출석 ID (출석이 없는 세션은 null)")
 	Long attendanceId,
-	@Schema(description = "출석 가능 상태 (BEFORE, OPEN, LATE, CLOSED, null)",
-		examples = {"BEFORE", "OPEN", "LATE", "CLOSED"})
+	@Schema(description = "출석 가능 상태 (출석이 없는 세션은 null). "
+		+ "BEFORE: 출석 시작 전, "
+		+ "OPEN: 출석 진행 중 (지금 제출하면 정상 출석), "
+		+ "LATE: 지각 처리 구간 (지금 제출하면 지각), "
+		+ "CLOSED: 출석 마감 완료")
 	AttendanceOpenStatus attendanceStatus,
-	@Schema(description = "내 출석 결과 (출석 안했으면 null)",
-		examples = {"PRESENT", "LATE", "ABSENT", "UNAUTHORIZED_ABSENT"})
+	@Schema(description = "내 출석 결과 (출석 기록이 없으면 null). "
+		+ "PRESENT: 정상 출석, "
+		+ "LATE: 지각, "
+		+ "ABSENT: 결석 (사유 있음), "
+		+ "UNAUTHORIZED_ABSENT: 무단 결석 (사유 없음)")
 	AttendanceResult myAttendanceResult
 ) {
 	public static SessionAttendanceResponse of(

@@ -45,16 +45,18 @@ public class S3Uploader {
 			.withContentType(contentType);
 
 		URL presignedUrl = amazonS3.generatePresignedUrl(request);
-		String publicUrl = amazonS3.getUrl(bucket, s3Key).toString();
 
 		log.info("PresignedUrl 생성: s3Key={}, expiration={}", s3Key, expiration);
 
 		return new PresignedUrlResponse(
 			presignedUrl.toString(),
 			s3Key,
-			publicUrl,
 			expiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
 		);
+	}
+
+	public String getPublicUrl(String s3Key) {
+		return amazonS3.getUrl(bucket, s3Key).toString();
 	}
 
 	public boolean doesObjectExist(String s3Key) {

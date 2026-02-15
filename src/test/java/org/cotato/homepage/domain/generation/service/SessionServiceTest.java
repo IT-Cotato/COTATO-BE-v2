@@ -82,7 +82,7 @@ class SessionServiceTest {
 		// given
 		final Long generationId = 1L;
 		final List<SessionImageInfo> imageInfos = List.of(
-			new SessionImageInfo("session/uuid.jpg", "https://example.com/session/uuid.jpg", 0)
+			new SessionImageInfo("session/uuid.jpg", 0)
 		);
 		final SessionDto sessionDto = SessionDto.builder().type(SessionType.ALL).build();
 		final LocalDateTime attendanceEndTime = LocalDateTime.now().plusDays(1);

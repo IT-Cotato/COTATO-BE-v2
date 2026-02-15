@@ -27,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 public class ProjectController {
 
 	private final ProjectService projectService;
-	private final ProjectImageService projectImageService;
 
 	@Operation(summary = "프로젝트 목록 조회 API", description = "기수 및 활동 타입으로 필터링 가능")
 	@GetMapping

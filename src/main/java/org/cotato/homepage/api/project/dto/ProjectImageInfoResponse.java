@@ -8,6 +8,9 @@ public record ProjectImageInfoResponse(
 	@Schema(description = "이미지 ID")
 	Long imageId,
 
+	@Schema(description = "S3 키")
+	String s3Key,
+
 	@Schema(description = "이미지 URL")
 	String imageUrl,
 
@@ -17,6 +20,7 @@ public record ProjectImageInfoResponse(
 	public static ProjectImageInfoResponse from(ProjectImage projectImage) {
 		return new ProjectImageInfoResponse(
 			projectImage.getId(),
+			projectImage.getS3Key(),
 			projectImage.getImageUrl(),
 			projectImage.getImageOrder()
 		);

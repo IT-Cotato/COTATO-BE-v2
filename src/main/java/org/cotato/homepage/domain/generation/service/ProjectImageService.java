@@ -57,7 +57,7 @@ public class ProjectImageService {
 
 			newImages.add(ProjectImage.of(
 				imageInfo.s3Key(),
-				imageInfo.publicUrl(),
+				s3Uploader.getPublicUrl(imageInfo.s3Key()),
 				projectId,
 				imageInfo.order()
 			));
@@ -71,12 +71,12 @@ public class ProjectImageService {
 	public void updateProjectImages(Long projectId, List<ProjectImageInfo> imageInfos) {
 		List<ProjectImage> existingImages = projectImageRepository.findAllByProjectId(projectId);
 
-		Set<String> newImageUrls = imageInfos != null
-			? imageInfos.stream().map(ProjectImageInfo::publicUrl).collect(Collectors.toSet())
+		Set<String> newS3Keys = imageInfos != null
+			? imageInfos.stream().map(ProjectImageInfo::s3Key).collect(Collectors.toSet())
 			: Set.of();
 
 		for (ProjectImage existingImage : existingImages) {
-			if (!newImageUrls.contains(existingImage.getImageUrl())) {
+			if (!newS3Keys.contains(existingImage.getS3Key())) {
 				s3Uploader.deleteByKey(existingImage.getS3Key());
 			}
 		}

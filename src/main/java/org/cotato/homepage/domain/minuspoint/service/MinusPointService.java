@@ -273,9 +273,6 @@ public class MinusPointService {
 
 		List<Long> sessionIds = sessions.stream().map(Session::getId).toList();
 
-		Map<Long, Session> sessionMap = sessions.stream()
-			.collect(Collectors.toUnmodifiableMap(Session::getId, Function.identity()));
-
 		// 출석 기록 가져오기
 		List<Attendance> attendances = attendanceRepository.findAllBySessionIdsInQuery(sessionIds);
 		Map<Long, Attendance> attendanceBySessionId = attendances.stream()
@@ -305,56 +302,20 @@ public class MinusPointService {
 			.findAllBySessionIdsAndMemberId(sessionIds, member.getId()).stream()
 			.collect(Collectors.toMap(BeerNetworkingRecord::getSessionId, BeerNetworkingRecord::isParticipated));
 
-		// 전체 통계 계산 (월 필터 적용 전)
-		int totalBonusPoint = 0;
-		int totalMinusPoint = 0;
-		int totalBeerNetworkingCount = 0;
-
-		for (Long sessionId : sessionIds) {
-			// 출석 벌점
-			Attendance attendance = attendanceBySessionId.get(sessionId);
-			if (attendance != null && attendance.getLateDeadLine().isBefore(now)) {
-				AttendanceRecord record = attendanceRecordByAttendanceId.get(attendance.getId());
-				if (record != null) {
-					totalMinusPoint += getAttendanceMinusPoint(record.getAttendanceResult());
-				}
-			}
-
-			// 세션 벌점
-			totalMinusPoint += extraMinusPointBySessionId.getOrDefault(sessionId, 0);
-
-			// 비어 네트워킹
-			if (Boolean.TRUE.equals(beerNetworkingBySessionId.get(sessionId))) {
-				totalBeerNetworkingCount++;
-			}
-		}
-
-		totalBonusPoint = calculateBeerNetworkingBonusPoint(totalBeerNetworkingCount);
-
-		MyMinusPointDashboardResponse dashboard = MyMinusPointDashboardResponse.of(
-			generation.getId(),
-			totalBonusPoint,
-			totalMinusPoint,
-			totalBeerNetworkingCount
-		);
-
 		// 상/벌점 내역 생성
 		List<MyMinusPointRecordResponse> records = new ArrayList<>();
 		int cumulativePoint = 0;
 		int cumulativeBeerNetworkingCount = 0;
 
 		for (Session session : sessions) {
-			// 월 필터 적용
-			if (month != null && session.getSessionDateTime() != null
-				&& session.getSessionDateTime().getMonthValue() != month) {
-				continue;
-			}
-
 			// 아직 종료되지 않은 세션은 건너뜀
 			Attendance attendance = attendanceBySessionId.get(session.getId());
 			if (attendance != null && !attendance.getLateDeadLine().isBefore(now)) {
 				continue;
 			}
+
+			boolean matchesMonth = month == null || session.getSessionDateTime() == null
+				|| session.getSessionDateTime().getMonthValue() == month;
 
 			// 출석 벌점
 			if (attendance != null) {
@@ -363,16 +324,18 @@ public class MinusPointService {
 					int point = getAttendanceMinusPoint(record.getAttendanceResult());
 					if (point != 0) {
 						cumulativePoint += point;
-						String content = getAttendanceContent(record.getAttendanceResult());
-						records.add(MyMinusPointRecordResponse.of(
-							session.getId(),
-							session.getNumber(),
-							session.getSessionDateTime(),
-							content,
-							PointType.MINUS,
-							point,
-							cumulativePoint
-						));
+						if (matchesMonth) {
+							String content = getAttendanceContent(record.getAttendanceResult());
+							records.add(MyMinusPointRecordResponse.of(
+								session.getId(),
+								session.getNumber(),
+								session.getSessionDateTime(),
+								content,
+								PointType.MINUS,
+								point,
+								cumulativePoint
+							));
+						}
 					}
 				}
 			}
@@ -381,15 +344,17 @@ public class MinusPointService {
 			Integer extraPoint = extraMinusPointBySessionId.get(session.getId());
 			if (extraPoint != null && extraPoint != 0) {
 				cumulativePoint += extraPoint;
-				records.add(MyMinusPointRecordResponse.of(
-					session.getId(),
-					session.getNumber(),
-					session.getSessionDateTime(),
-					"세션참여 불성실",
-					PointType.MINUS,
-					extraPoint,
-					cumulativePoint
-				));
+				if (matchesMonth) {
+					records.add(MyMinusPointRecordResponse.of(
+						session.getId(),
+						session.getNumber(),
+						session.getSessionDateTime(),
+						"세션참여 불성실",
+						PointType.MINUS,
+						extraPoint,
+						cumulativePoint
+					));
+				}
 			}
 
 			// 비어 네트워킹 상점
@@ -398,20 +363,22 @@ public class MinusPointService {
 				// 3회 참여마다 보너스 상점 부여
 				if (cumulativeBeerNetworkingCount % BEER_NETWORKING_BONUS_THRESHOLD == 0) {
 					cumulativePoint += BEER_NETWORKING_BONUS_POINT;
-					records.add(MyMinusPointRecordResponse.of(
-						session.getId(),
-						session.getNumber(),
-						session.getSessionDateTime(),
-						"비어네트워킹 " + BEER_NETWORKING_BONUS_THRESHOLD + "회 참여",
-						PointType.BONUS,
-						BEER_NETWORKING_BONUS_POINT,
-						cumulativePoint
-					));
+					if (matchesMonth) {
+						records.add(MyMinusPointRecordResponse.of(
+							session.getId(),
+							session.getNumber(),
+							session.getSessionDateTime(),
+							"비어네트워킹 " + BEER_NETWORKING_BONUS_THRESHOLD + "회 참여",
+							PointType.BONUS,
+							BEER_NETWORKING_BONUS_POINT,
+							cumulativePoint
+						));
+					}
 				}
 			}
 		}
 
-		return MyMinusPointRecordsResponse.of(generation.getId(), dashboard, records);
+		return MyMinusPointRecordsResponse.of(generation.getId(), records);
 	}
 
 	private int getAttendanceMinusPoint(AttendanceResult result) {
