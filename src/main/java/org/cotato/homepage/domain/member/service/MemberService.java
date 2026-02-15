@@ -52,6 +52,12 @@ public class MemberService {
 		}
 	}
 
+	public void verifyPassword(final Member member, final String password) {
+		if (!bCryptPasswordEncoder.matches(password, member.getPassword())) {
+			throw new AppException(ErrorCode.INVALID_PASSWORD);
+		}
+	}
+
 	public List<Member> findActiveMember() {
 		Generation currentGeneration = generationReader.findByDate(LocalDate.now());
 		return memberReader.findAllGenerationMember(currentGeneration);
