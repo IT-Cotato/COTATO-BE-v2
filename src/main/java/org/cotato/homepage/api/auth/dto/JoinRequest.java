@@ -54,6 +54,10 @@ public record JoinRequest(
 
 	@Schema(description = "직군")
 	@NotNull(message = "직군을 선택해주세요.")
-	MemberPosition position
+	MemberPosition position,
+
+	@Schema(description = "기수")
+	@NotNull(message = "기수를 입력해주세요.")
+	Long generationNumber
 ) {
 }
