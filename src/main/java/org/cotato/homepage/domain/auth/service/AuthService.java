@@ -2,8 +2,6 @@ package org.cotato.homepage.domain.auth.service;
 
 import static org.cotato.homepage.common.util.EmailUtil.*;
 
-import java.time.LocalDate;
-
 import org.cotato.homepage.api.auth.dto.FindPasswordResponse;
 import org.cotato.homepage.api.auth.dto.JoinRequest;
 import org.cotato.homepage.api.auth.dto.JoinResponse;
@@ -20,8 +18,7 @@ import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.auth.constant.EmailConstants;
 import org.cotato.homepage.domain.auth.enums.EmailType;
 import org.cotato.homepage.domain.auth.service.component.EmailCodeManager;
-import org.cotato.homepage.domain.generation.entity.Generation;
-import org.cotato.homepage.domain.generation.service.component.GenerationReader;
+import org.cotato.homepage.domain.generation.repository.GenerationRepository;
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.member.enums.MemberStatus;
 import org.cotato.homepage.domain.member.repository.MemberRepository;
@@ -43,7 +40,7 @@ public class AuthService {
 
 	private final MemberReader memberReader;
 	private final MemberRepository memberRepository;
-	private final GenerationReader generationReader;
+	private final GenerationRepository generationRepository;
 	private final ValidateService validateService;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
@@ -65,7 +62,9 @@ public class AuthService {
 		validateService.checkDuplicatePhoneNumber(encryptedPhoneNumber);
 		log.info("[회원 가입 서비스]: {}, {}", request.email(), request.name());
 
-		Generation currentGeneration = generationReader.findByDate(LocalDate.now());
+		if (!generationRepository.existsById(request.generationNumber())) {
+			throw new AppException(ErrorCode.GENERATION_NOT_FOUND);
+		}
 
 		Member newMember = Member.of(
 			request.email(),
@@ -75,7 +74,7 @@ public class AuthService {
 			request.position(),
 			request.university(),
 			request.gender(),
-			currentGeneration.getId(),
+			request.generationNumber(),
 			request.termsOfServiceAgreed(),
 			request.privacyPolicyAgreed()
 		);
