@@ -25,6 +25,7 @@ import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.cotato.homepage.domain.generation.service.component.SessionReader;
+import org.cotato.homepage.domain.member.component.GenerationMemberAuthValidator;
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.member.service.component.MemberReader;
 import org.cotato.homepage.domain.minuspoint.entity.BeerNetworkingRecord;
@@ -57,6 +58,7 @@ public class MinusPointService {
 	private final MemberReader memberReader;
 	private final GenerationReader generationReader;
 	private final SessionReader sessionReader;
+	private final GenerationMemberAuthValidator generationMemberAuthValidator;
 
 	public List<MemberMinusPointStatisticsResponse> findMinusPointStatistics(
 		Long generationId,
@@ -215,6 +217,7 @@ public class MinusPointService {
 
 	public MyMinusPointDashboardResponse findMyMinusPointDashboard(Member member) {
 		Generation generation = generationReader.findByDate(LocalDate.now());
+		generationMemberAuthValidator.checkGenerationPermission(member, generation);
 		List<Session> sessions = sessionReader.findAllByGeneration(generation);
 		List<Long> sessionIds = sessions.stream().map(Session::getId).toList();
 
@@ -260,6 +263,7 @@ public class MinusPointService {
 
 	public MyMinusPointRecordsResponse findMyMinusPointRecords(Member member, Integer month) {
 		Generation generation = generationReader.findByDate(LocalDate.now());
+		generationMemberAuthValidator.checkGenerationPermission(member, generation);
 		List<Session> sessions = sessionReader.findAllByGeneration(generation);
 
 		if (sessions.isEmpty()) {
