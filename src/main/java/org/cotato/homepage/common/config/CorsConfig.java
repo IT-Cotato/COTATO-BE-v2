@@ -34,6 +34,7 @@ public class CorsConfig {
 		config.addAllowedOrigin("https://www.cotato.kr");
 		config.addAllowedOrigin("https://cotato-fe-v2-homepage-git-develop-kimminas-projects.vercel.app");
 		config.addAllowedOrigin("https://cotato-fe-v2-homepage.vercel.app");
+		config.addAllowedOrigin("https://api.qa.cotato.kr");
 		config.addAllowedHeader("*");
 		config.addAllowedMethod("*");
 		config.setExposedHeaders(List.of("accessToken", HttpHeaders.CONTENT_DISPOSITION, "Set-Cookie"));
