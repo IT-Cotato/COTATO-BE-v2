@@ -40,7 +40,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 		"/v1/api/generations/current",
 		"/v1/api/projects/**",
 		"/v1/api/recruitments/status",
+		"/v1/api/recruitments/notices",
+		"/v1/api/faq",
 		"/actuator/**"
+	};
+
+	private static final String[] POST_WHITE_LIST = {
+		"/v1/api/recruitments/subscribe",
 	};
 
 	private final JwtTokenProvider jwtTokenProvider;
@@ -75,8 +81,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
 	private boolean isWhiteList(HttpServletRequest request) {
 		AntPathMatcher pathMatcher = new AntPathMatcher();
-		return request.getMethod().equals(HttpMethod.GET.name())
-			&& Arrays.stream(WHITE_LIST).anyMatch(pattern -> pathMatcher.match(pattern, request.getRequestURI()));
+		String uri = request.getRequestURI();
+		String method = request.getMethod();
+		if (method.equals(HttpMethod.POST.name())) {
+			return Arrays.stream(POST_WHITE_LIST).anyMatch(pattern -> pathMatcher.match(pattern, uri));
+		}
+		return method.equals(HttpMethod.GET.name())
+			&& Arrays.stream(WHITE_LIST).anyMatch(pattern -> pathMatcher.match(pattern, uri));
 	}
 
 	private boolean isAuthPath(String requestUri) {

@@ -33,6 +33,9 @@ public class SecurityConfig {
 		"/v1/api/session",
 		"/v1/api/projects/**",
 		"/v1/api/recruitments/status",
+		"/v1/api/recruitments/notices",
+		"/v1/api/recruitments/subscribe",
+		"/v1/api/faq",
 		"/actuator/health",
 	};
 
