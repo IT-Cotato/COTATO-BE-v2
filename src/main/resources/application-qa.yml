@@ -18,11 +18,13 @@ spring:
       jdbc-url: ${DB_URL}
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}
+      maximum-pool-size: 5
     recruit:
       driver-class-name: com.mysql.cj.jdbc.Driver
       jdbc-url: ${RECRUIT_DB_URL}
       username: ${RECRUIT_DB_USERNAME}
       password: ${RECRUIT_DB_PASSWORD}
+      maximum-pool-size: 3
 
   config:
     import: classpath:variable/variable-qa.yml
