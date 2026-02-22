@@ -5,10 +5,16 @@ server:
 
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${LOCAL_DB_PATH}
-    username: ${LOCAL_DB_USERNAME}
-    password: ${LOCAL_DB_PWD}
+    primary:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://${LOCAL_DB_PATH}
+      username: ${LOCAL_DB_USERNAME}
+      password: ${LOCAL_DB_PWD}
+    recruit:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: ${RECRUIT_DB_URL}
+      username: ${RECRUIT_DB_USERNAME}
+      password: ${RECRUIT_DB_PASSWORD}
 
   jpa:
     hibernate:

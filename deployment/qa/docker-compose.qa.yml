@@ -33,6 +33,9 @@ services:
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       AES_SECRET_KEY: ${AES_SECRET_KEY}
       AES_SECRET_SALT: ${AES_SECRET_SALT}
+      RECRUIT_DB_URL: ${RECRUIT_DB_URL}
+      RECRUIT_DB_USERNAME: ${RECRUIT_DB_USERNAME}
+      RECRUIT_DB_PASSWORD: ${RECRUIT_DB_PASSWORD}
     depends_on:
       - qa-redis
     volumes:
@@ -69,6 +72,9 @@ services:
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       AES_SECRET_KEY: ${AES_SECRET_KEY}
       AES_SECRET_SALT: ${AES_SECRET_SALT}
+      RECRUIT_DB_URL: ${RECRUIT_DB_URL}
+      RECRUIT_DB_USERNAME: ${RECRUIT_DB_USERNAME}
+      RECRUIT_DB_PASSWORD: ${RECRUIT_DB_PASSWORD}
     depends_on:
       - qa-redis
     volumes:

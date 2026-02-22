@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.cotato.homepage.api.session.dto.SessionListResponse;
 import org.cotato.homepage.api.session.dto.SessionWithAttendanceResponse;
-import org.cotato.homepage.domain.generation.service.SessionImageService;
 import org.cotato.homepage.domain.generation.service.SessionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class SessionController {
 
 	private final SessionService sessionService;
-	private final SessionImageService sessionImageService;
 
 	@Operation(summary = "세션 단건 조회 API")
 	@GetMapping("/{id}")
