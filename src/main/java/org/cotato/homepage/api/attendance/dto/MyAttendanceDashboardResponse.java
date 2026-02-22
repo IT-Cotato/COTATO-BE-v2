@@ -1,5 +1,7 @@
 package org.cotato.homepage.api.attendance.dto;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 
@@ -11,5 +13,9 @@ public record MyAttendanceDashboardResponse(
 ) {
 	public static MyAttendanceDashboardResponse of(Long generationId, AttendanceStatistic statistic) {
 		return new MyAttendanceDashboardResponse(generationId, statistic);
+	}
+
+	public static MyAttendanceDashboardResponse empty() {
+		return new MyAttendanceDashboardResponse(null, AttendanceStatistic.of(List.of()));
 	}
 }

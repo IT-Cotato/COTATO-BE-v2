@@ -29,4 +29,8 @@ public record MyMinusPointDashboardResponse(
 			beerNetworkingCount
 		);
 	}
+
+	public static MyMinusPointDashboardResponse empty() {
+		return new MyMinusPointDashboardResponse(null, 0, 0, 0, 0);
+	}
 }

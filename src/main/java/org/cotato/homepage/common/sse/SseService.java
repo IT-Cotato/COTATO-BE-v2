@@ -39,10 +39,17 @@ public class SseService {
 
 	public SseEmitter subscribeAttendance(final Member member) {
 		LocalDateTime now = LocalDateTime.now();
-		Generation currentGeneration = generationReader.findByDate(now.toLocalDate());
-		generationMemberAuthValidator.checkGenerationPermission(member, currentGeneration);
+		Optional<Generation> generationOpt = generationReader.findByDateOptional(now.toLocalDate());
 
 		SseEmitter sseEmitter = getSseEmitter(member);
+
+		if (generationOpt.isEmpty()) {
+			sseSender.sendInitialAttendanceStatus(sseEmitter, null, AttendanceOpenStatus.CLOSED);
+			return sseEmitter;
+		}
+
+		Generation currentGeneration = generationOpt.get();
+		generationMemberAuthValidator.checkGenerationPermission(member, currentGeneration);
 
 		Optional<Session> maybeSession = sessionReader.getByDate(now.toLocalDate());
 		if (maybeSession.isEmpty()) {
