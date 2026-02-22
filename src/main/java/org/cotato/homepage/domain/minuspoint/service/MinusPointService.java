@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -216,7 +217,11 @@ public class MinusPointService {
 	}
 
 	public MyMinusPointDashboardResponse findMyMinusPointDashboard(Member member) {
-		Generation generation = generationReader.findByDate(LocalDate.now());
+		Optional<Generation> generationOpt = generationReader.findByDateOptional(LocalDate.now());
+		if (generationOpt.isEmpty()) {
+			return MyMinusPointDashboardResponse.empty();
+		}
+		Generation generation = generationOpt.get();
 		generationMemberAuthValidator.checkGenerationPermission(member, generation);
 		List<Session> sessions = sessionReader.findAllByGeneration(generation);
 		List<Long> sessionIds = sessions.stream().map(Session::getId).toList();
@@ -262,7 +267,11 @@ public class MinusPointService {
 	}
 
 	public MyMinusPointRecordsResponse findMyMinusPointRecords(Member member, Integer month) {
-		Generation generation = generationReader.findByDate(LocalDate.now());
+		Optional<Generation> generationOpt = generationReader.findByDateOptional(LocalDate.now());
+		if (generationOpt.isEmpty()) {
+			return MyMinusPointRecordsResponse.empty(null);
+		}
+		Generation generation = generationOpt.get();
 		generationMemberAuthValidator.checkGenerationPermission(member, generation);
 		List<Session> sessions = sessionReader.findAllByGeneration(generation);
 

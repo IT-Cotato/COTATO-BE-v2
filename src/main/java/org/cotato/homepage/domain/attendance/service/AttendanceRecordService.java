@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -108,7 +109,11 @@ public class AttendanceRecordService {
 	 */
 	public MyAttendanceDashboardResponse findMyAttendanceDashboard(final Member member) {
 		// 1. 현재 기수 조회 및 멤버 검증
-		Generation generation = generationReader.findByDate(LocalDate.now());
+		Optional<Generation> generationOpt = generationReader.findByDateOptional(LocalDate.now());
+		if (generationOpt.isEmpty()) {
+			return MyAttendanceDashboardResponse.empty();
+		}
+		Generation generation = generationOpt.get();
 		generationMemberAuthValidator.checkGenerationPermission(member, generation);
 
 		// 2. 현재 기수의 세션 조회
@@ -134,7 +139,11 @@ public class AttendanceRecordService {
 	 */
 	public MemberAttendanceRecordsResponse findMyAttendanceRecords(final Member member, final Integer month) {
 		// 1. 현재 기수 조회 및 멤버 검증
-		Generation generation = generationReader.findByDate(LocalDate.now());
+		Optional<Generation> generationOpt = generationReader.findByDateOptional(LocalDate.now());
+		if (generationOpt.isEmpty()) {
+			return MemberAttendanceRecordsResponse.empty(null);
+		}
+		Generation generation = generationOpt.get();
 		generationMemberAuthValidator.checkGenerationPermission(member, generation);
 
 		// 2. 현재 기수의 세션 조회
@@ -184,7 +193,11 @@ public class AttendanceRecordService {
 	 */
 	public SessionAttendanceListResponse findSessionsWithAttendance(final Member member, final Integer month) {
 		// 1. 현재 기수 조회 및 멤버 검증
-		Generation generation = generationReader.findByDate(LocalDate.now());
+		Optional<Generation> generationOpt = generationReader.findByDateOptional(LocalDate.now());
+		if (generationOpt.isEmpty()) {
+			return SessionAttendanceListResponse.empty(null, month);
+		}
+		Generation generation = generationOpt.get();
 		generationMemberAuthValidator.checkGenerationPermission(member, generation);
 
 		// 2. 현재 기수의 세션 조회 (날짜순 정렬)
