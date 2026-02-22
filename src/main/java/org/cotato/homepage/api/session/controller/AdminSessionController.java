@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -89,6 +90,14 @@ public class AdminSessionController {
 	public ResponseEntity<AddSessionImageResponse> completeImageUpload(
 		@RequestBody @Valid CompleteImageUploadRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(sessionImageService.completeImageUpload(request));
+	}
+
+	@Operation(summary = "세션 삭제 API", description = "세션 및 관련 데이터(이미지, 출석, 감점 내역)를 모두 삭제합니다.")
+	@RoleAuthority(MemberRole.OPERATION)
+	@DeleteMapping("/{sessionId}")
+	public ResponseEntity<Void> deleteSession(@PathVariable Long sessionId) {
+		sessionService.deleteSession(sessionId);
+		return ResponseEntity.noContent().build();
 	}
 
 	@Operation(summary = "세션 사진 삭제 API")

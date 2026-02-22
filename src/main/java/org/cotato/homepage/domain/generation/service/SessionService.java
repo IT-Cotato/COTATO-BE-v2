@@ -17,8 +17,11 @@ import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.event.CotatoEventPublisher;
 import org.cotato.homepage.common.event.EventType;
+import org.cotato.homepage.common.s3.S3Uploader;
 import org.cotato.homepage.domain.attendance.embedded.Location;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
+import org.cotato.homepage.domain.attendance.entity.AttendanceRecord;
+import org.cotato.homepage.domain.attendance.repository.AttendanceRecordRepository;
 import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceRecordReader;
@@ -37,6 +40,10 @@ import org.cotato.homepage.domain.generation.repository.SessionRepository;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.cotato.homepage.domain.generation.service.component.SessionReader;
 import org.cotato.homepage.domain.generation.service.dto.SessionDto;
+import org.cotato.homepage.domain.minuspoint.entity.BeerNetworkingRecord;
+import org.cotato.homepage.domain.minuspoint.entity.SessionMinusPoint;
+import org.cotato.homepage.domain.minuspoint.repository.BeerNetworkingRecordRepository;
+import org.cotato.homepage.domain.minuspoint.repository.SessionMinusPointRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,11 +59,15 @@ public class SessionService {
 	private final GenerationReader generationReader;
 	private final SessionImageRepository sessionImageRepository;
 	private final AttendanceRepository attendanceRepository;
+	private final AttendanceRecordRepository attendanceRecordRepository;
 	private final AttendanceRecordReader attendanceRecordReader;
 	private final SessionReader sessionReader;
 	private final AttendanceReader attendanceReader;
 	private final CotatoEventPublisher cotatoEventPublisher;
 	private final AttendanceNotificationRepository attendanceNotificationRepository;
+	private final SessionMinusPointRepository sessionMinusPointRepository;
+	private final BeerNetworkingRecordRepository beerNetworkingRecordRepository;
+	private final S3Uploader s3Uploader;
 
 	@Transactional
 	public AddSessionResponse addSession(final Long generationId,
@@ -153,6 +164,40 @@ public class SessionService {
 			attendance.updateLocation(request.location());
 		}
 		attendanceRepository.save(attendance);
+	}
+
+	@Transactional
+	public void deleteSession(Long sessionId) {
+		Session session = sessionReader.findById(sessionId);
+
+		// 1. 세션 이미지 S3 및 DB 삭제
+		List<SessionImage> sessionImages = sessionImageRepository.findAllBySession(session);
+		for (SessionImage sessionImage : sessionImages) {
+			s3Uploader.deleteByKey(sessionImage.getS3Key());
+		}
+		sessionImageRepository.deleteAll(sessionImages);
+
+		// 2. 출석 관련 데이터 삭제 (알림 → 출석 기록 → 출석)
+		Optional<Attendance> maybeAttendance = attendanceRepository.findBySessionId(sessionId);
+		if (maybeAttendance.isPresent()) {
+			Attendance attendance = maybeAttendance.get();
+			attendanceNotificationRepository.deleteByAttendance(attendance);
+			List<AttendanceRecord> attendanceRecords = attendanceRecordRepository.findAllByAttendanceId(
+				attendance.getId());
+			attendanceRecordRepository.deleteAll(attendanceRecords);
+			attendanceRepository.delete(attendance);
+		}
+
+		// 3. 세션 감점 내역 삭제
+		List<SessionMinusPoint> minusPoints = sessionMinusPointRepository.findAllBySessionId(sessionId);
+		sessionMinusPointRepository.deleteAll(minusPoints);
+
+		// 4. 비어 네트워킹 참여 기록 삭제
+		List<BeerNetworkingRecord> beerNetworkingRecords = beerNetworkingRecordRepository.findAllBySessionId(sessionId);
+		beerNetworkingRecordRepository.deleteAll(beerNetworkingRecords);
+
+		// 5. 세션 삭제
+		sessionRepository.delete(session);
 	}
 
 	private boolean isAttendanceDeadLineNotExist(LocalDateTime attendanceDeadLine, LocalDateTime lateDeadLine) {
