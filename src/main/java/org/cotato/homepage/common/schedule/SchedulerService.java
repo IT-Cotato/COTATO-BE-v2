@@ -13,6 +13,8 @@ import java.util.concurrent.ScheduledFuture;
 import org.cotato.homepage.common.sse.SseSender;
 import org.cotato.homepage.common.util.TimeUtil;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
+import org.cotato.homepage.domain.attendance.enums.AttendanceOpenStatus;
+import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
 import org.cotato.homepage.domain.generation.entity.AttendanceNotification;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
@@ -42,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SchedulerService {
 
 	private final AttendanceNotificationRepository attendanceNotificationRepository;
+	private final AttendanceRepository attendanceRepository;
 	private final RefusedMemberRepository refusedMemberRepository;
 	private final MemberRepository memberRepository;
 	private final GenerationRepository generationRepository;
@@ -53,12 +56,13 @@ public class SchedulerService {
 
 	@PostConstruct
 	protected void restoreScheduledTasksFromDB() {
-		List<AttendanceNotification> attendanceNotifications = attendanceNotificationRepository.findAllByDoneFalse();
+		LocalDateTime now = LocalDateTime.now();
 
+		List<AttendanceNotification> attendanceNotifications = attendanceNotificationRepository.findAllByDoneFalse();
 		attendanceNotifications.forEach(
 			attendanceNotification -> {
 				Session session = sessionReader.findById(attendanceNotification.getAttendance().getSessionId());
-				if (session.getSessionDateTime().isBefore(LocalDateTime.now())) {
+				if (session.getSessionDateTime().isBefore(now)) {
 					return;
 				}
 
@@ -75,6 +79,23 @@ public class SchedulerService {
 				log.info("restored attendance notification: attendance id <{}>",
 					attendanceNotification.getAttendance().getId());
 			});
+
+		List<Attendance> activeAttendances = attendanceRepository.findAllByLateDeadLineAfter(now);
+		activeAttendances.forEach(attendance -> {
+			if (attendance.getAttendanceDeadLine().isAfter(now)) {
+				taskScheduler.schedule(
+					() -> sseSender.sendAttendanceStatusNotification(attendance.getId(), AttendanceOpenStatus.LATE),
+					TimeUtil.getSeoulZoneTime(attendance.getAttendanceDeadLine()).toInstant()
+				);
+				log.info("restored LATE notification: attendance id <{}>", attendance.getId());
+			}
+
+			taskScheduler.schedule(
+				() -> sseSender.sendAttendanceStatusNotification(attendance.getId(), AttendanceOpenStatus.CLOSED),
+				TimeUtil.getSeoulZoneTime(attendance.getLateDeadLine()).toInstant()
+			);
+			log.info("restored CLOSED notification: attendance id <{}>", attendance.getId());
+		});
 	}
 
 	@Transactional
@@ -126,15 +147,23 @@ public class SchedulerService {
 	public void scheduleAttendanceNotification(final AttendanceNotification attendanceNotification) {
 		Attendance attendance = attendanceNotification.getAttendance();
 		Session session = sessionReader.findById(attendance.getSessionId());
-		ZonedDateTime seoulTime = TimeUtil.getSeoulZoneTime(session.getSessionDateTime());
 
 		ScheduledFuture<?> schedule = taskScheduler.schedule(() -> {
 			log.info("schedule attendance notification: session id <{}>, time <{}>", attendance.getSessionId(),
 				session.getSessionDateTime());
 			sseSender.sendAttendanceStartNotification(attendanceNotification);
-			notificationByAttendanceId.remove(session.getId());
-		},
-			seoulTime.toInstant());
-		notificationByAttendanceId.put(session.getId(), schedule);
+			notificationByAttendanceId.remove(attendance.getId());
+		}, TimeUtil.getSeoulZoneTime(session.getSessionDateTime()).toInstant());
+		notificationByAttendanceId.put(attendance.getId(), schedule);
+
+		taskScheduler.schedule(
+			() -> sseSender.sendAttendanceStatusNotification(attendance.getId(), AttendanceOpenStatus.LATE),
+			TimeUtil.getSeoulZoneTime(attendance.getAttendanceDeadLine()).toInstant()
+		);
+
+		taskScheduler.schedule(
+			() -> sseSender.sendAttendanceStatusNotification(attendance.getId(), AttendanceOpenStatus.CLOSED),
+			TimeUtil.getSeoulZoneTime(attendance.getLateDeadLine()).toInstant()
+		);
 	}
 }

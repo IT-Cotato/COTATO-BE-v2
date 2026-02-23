@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.cotato.homepage.api.event.dto.AttendanceStatusInfo;
-import org.cotato.homepage.common.error.ErrorCode;
-import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
 import org.cotato.homepage.domain.attendance.enums.AttendanceOpenStatus;
 import org.cotato.homepage.domain.generation.entity.AttendanceNotification;
@@ -69,7 +67,7 @@ public class SseSender {
 		try {
 			sseEmitter.send(data);
 		} catch (Exception e) {
-			throw new AppException(ErrorCode.SSE_SEND_FAIL);
+			log.warn("[SSE] send failed, skipping emitter: {}", e.getMessage());
 		}
 	}
 
@@ -85,5 +83,20 @@ public class SseSender {
 		for (SseEmitter sseEmitter : sseEmitters) {
 			send(sseEmitter, data);
 		}
+	}
+
+	public void sendAttendanceStatusNotification(final Long attendanceId, final AttendanceOpenStatus status) {
+		Set<DataWithMediaType> data = SseEmitter.event()
+			.name(ATTENDANCE_STATUS)
+			.data(AttendanceStatusInfo.builder()
+				.attendanceId(attendanceId)
+				.openStatus(status)
+				.build())
+			.build();
+		List<SseEmitter> sseEmitters = sseAttendanceRepository.findAll();
+		for (SseEmitter sseEmitter : sseEmitters) {
+			send(sseEmitter, data);
+		}
+		log.info("[send attendance status notification: attendanceId <{}>, status <{}>]", attendanceId, status);
 	}
 }
