@@ -28,4 +28,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 	Optional<Attendance> findBySessionIdWithPessimisticXLock(@Param("sessionId") Long sessionId);
 
 	List<Attendance> findAllByIdIn(List<Long> attendanceIds);
+
+	List<Attendance> findAllByLateDeadLineAfter(LocalDateTime now);
 }
