@@ -79,7 +79,11 @@ class SessionServiceTest {
 		final List<SessionImageInfo> imageInfos = List.of(
 			new SessionImageInfo("session/uuid.jpg", 0)
 		);
-		final SessionDto sessionDto = SessionDto.builder().type(SessionType.ALL).build();
+		final LocalDateTime sessionDateTime = LocalDateTime.now().plusDays(7);
+		final SessionDto sessionDto = SessionDto.builder()
+			.type(SessionType.ALL)
+			.sessionDateTime(sessionDateTime)
+			.build();
 		final LocalDateTime attendanceEndTime = LocalDateTime.now().plusDays(1);
 		final LocalDateTime lateEndTime = LocalDateTime.now().plusDays(2);
 		final Location location = Location.location(0.0, 0.0);
@@ -87,6 +91,7 @@ class SessionServiceTest {
 		Generation generation = mock(Generation.class);
 
 		when(generationReader.findById(generationId)).thenReturn(generation);
+		when(sessionRepository.existsBySessionDate(sessionDateTime.toLocalDate())).thenReturn(false);
 
 		// when
 		sessionService.addSession(generationId, imageInfos, sessionDto, attendanceEndTime, lateEndTime, location);
