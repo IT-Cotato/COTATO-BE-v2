@@ -37,7 +37,4 @@ public class AttendanceNotification {
 		this.done = done;
 	}
 
-	public void done() {
-		this.done = true;
-	}
 }

@@ -34,7 +34,6 @@ import org.cotato.homepage.domain.generation.event.AttendanceEvent;
 import org.cotato.homepage.domain.generation.event.AttendanceEventDto;
 import org.cotato.homepage.domain.generation.event.SessionImageEvent;
 import org.cotato.homepage.domain.generation.event.SessionImageEventDto;
-import org.cotato.homepage.domain.generation.repository.AttendanceNotificationRepository;
 import org.cotato.homepage.domain.generation.repository.SessionImageRepository;
 import org.cotato.homepage.domain.generation.repository.SessionRepository;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
@@ -64,7 +63,6 @@ public class SessionService {
 	private final SessionReader sessionReader;
 	private final AttendanceReader attendanceReader;
 	private final CotatoEventPublisher cotatoEventPublisher;
-	private final AttendanceNotificationRepository attendanceNotificationRepository;
 	private final SessionMinusPointRepository sessionMinusPointRepository;
 	private final BeerNetworkingRecordRepository beerNetworkingRecordRepository;
 	private final S3Uploader s3Uploader;
@@ -77,6 +75,10 @@ public class SessionService {
 		final LocalDateTime lateEndTime,
 		final Location location) {
 		Generation generation = generationReader.findById(generationId);
+
+		if (sessionRepository.existsBySessionDate(sessionDto.sessionDateTime().toLocalDate())) {
+			throw new AppException(ErrorCode.SESSION_DATE_DUPLICATED);
+		}
 
 		int sessionNumber = calculateLastSessionNumber(generation);
 		Session session = Session.builder()
@@ -145,9 +147,7 @@ public class SessionService {
 		sessionRepository.save(session);
 
 		if (!sessionType.isCreateAttendance() && maybeAttendance.isPresent()) {
-			Attendance attendance = maybeAttendance.get();
-			attendanceNotificationRepository.deleteByAttendance(attendance);
-			attendanceRepository.delete(attendance);
+			attendanceRepository.delete(maybeAttendance.get());
 			return;
 		}
 
@@ -177,11 +177,10 @@ public class SessionService {
 		}
 		sessionImageRepository.deleteAll(sessionImages);
 
-		// 2. 출석 관련 데이터 삭제 (알림 → 출석 기록 → 출석)
+		// 2. 출석 관련 데이터 삭제 (출석 기록 → 출석)
 		Optional<Attendance> maybeAttendance = attendanceRepository.findBySessionId(sessionId);
 		if (maybeAttendance.isPresent()) {
 			Attendance attendance = maybeAttendance.get();
-			attendanceNotificationRepository.deleteByAttendance(attendance);
 			List<AttendanceRecord> attendanceRecords = attendanceRecordRepository.findAllByAttendanceId(
 				attendance.getId());
 			attendanceRecordRepository.deleteAll(attendanceRecords);

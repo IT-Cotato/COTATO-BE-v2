@@ -27,7 +27,6 @@ import org.cotato.homepage.domain.generation.entity.SessionImage;
 import org.cotato.homepage.domain.generation.enums.SessionType;
 import org.cotato.homepage.domain.generation.event.AttendanceEvent;
 import org.cotato.homepage.domain.generation.event.SessionImageEvent;
-import org.cotato.homepage.domain.generation.repository.AttendanceNotificationRepository;
 import org.cotato.homepage.domain.generation.repository.SessionImageRepository;
 import org.cotato.homepage.domain.generation.repository.SessionRepository;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
@@ -38,7 +37,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,9 +67,6 @@ class SessionServiceTest {
 
 	@Mock
 	private AttendanceService attendanceService;
-
-	@Mock
-	private AttendanceNotificationRepository attendanceNotificationRepository;
 
 	@InjectMocks
 	private SessionService sessionService;
@@ -160,7 +155,7 @@ class SessionServiceTest {
 
 		//then
 		verify(sessionRepository).save(session);
-		verify(attendanceRepository).save(Mockito.any(Attendance.class));
+		verify(attendanceRepository).save(any(Attendance.class));
 	}
 
 	@Test
@@ -266,53 +261,6 @@ class SessionServiceTest {
 		List<SessionListImageInfoResponse> images = responses.get(0).imageInfos();
 		assertEquals(0, images.size());
 		assertTrue(responses.get(0).imageInfos().isEmpty());
-	}
-
-	@Test
-	@DisplayName("출석 삭제시 출석 알림도 함께 삭제되는지 테스트")
-	void whenDeleteAttendance_thenDeleteAttendanceNotification() {
-		// given
-		Long sessionId = 1L;
-		LocalDateTime sessionDateTime = LocalDateTime.of(2025, 2, 2, 10, 0);
-
-		UpdateSessionRequest request = mockNoAttendUpdateSessionRequest(sessionId, sessionDateTime);
-		Session session = mockSessionWithId(sessionId);
-		Attendance attendance = mockAttendance();
-
-		when(sessionReader.findByIdWithPessimisticXLock(sessionId)).thenReturn(session);
-		when(attendanceReader.findBySessionIdWithPessimisticXLock(sessionId)).thenReturn(Optional.of(attendance));
-		when(attendanceRecordReader.isAttendanceRecordExist(attendance)).thenReturn(false);
-
-		// when
-		sessionService.updateSession(request);
-
-		// then
-		verify(attendanceNotificationRepository).deleteByAttendance(attendance);
-		verify(attendanceRepository).delete(attendance);
-	}
-
-	@Test
-	@DisplayName("출석이 유지되는 경우 출석 알림은 삭제되지 않는지 테스트")
-	void whenAttendanceIsKept_thenAttendanceNotificationIsNotDeleted() {
-		// given
-		Long sessionId = 1L;
-		LocalDateTime sessionDateTime = LocalDateTime.of(2025, 2, 2, 10, 0);
-
-		UpdateSessionRequest request = mockOnlineUpdateSessionRequest(sessionId, sessionDateTime);
-		Session session = mockSessionWithId(sessionId);
-		Attendance attendance = mockAttendance();
-
-		when(sessionReader.findByIdWithPessimisticXLock(sessionId)).thenReturn(session);
-		when(attendanceReader.findBySessionIdWithPessimisticXLock(sessionId)).thenReturn(Optional.of(attendance));
-		when(attendanceRecordReader.isAttendanceRecordExist(attendance)).thenReturn(false);
-
-		// when
-		sessionService.updateSession(request);
-
-		// then
-		verify(attendanceNotificationRepository, Mockito.never()).deleteByAttendance(attendance);
-		verify(attendanceRepository, Mockito.never()).delete(attendance);
-		verify(attendanceRepository).save(any(Attendance.class));
 	}
 
 	private UpdateSessionRequest mockOnlineUpdateSessionRequest(Long sessionId, LocalDateTime attendanceStartTime) {
