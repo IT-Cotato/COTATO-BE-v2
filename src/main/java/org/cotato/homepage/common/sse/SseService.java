@@ -41,40 +41,32 @@ public class SseService {
 		LocalDateTime now = LocalDateTime.now();
 		Optional<Generation> generationOpt = generationReader.findByDateOptional(now.toLocalDate());
 
+		AttendanceOpenStatus status = AttendanceOpenStatus.CLOSED;
+		Long attendanceId = null;
+
+		if (generationOpt.isPresent()) {
+			generationMemberAuthValidator.checkGenerationPermission(member, generationOpt.get());
+
+			Optional<Session> maybeSession = sessionReader.getByDate(now.toLocalDate());
+			if (maybeSession.isPresent()) {
+				Session session = maybeSession.get();
+				if (session.getSessionType() != SessionType.NO_ATTEND) {
+					Attendance attendance = attendanceReader.findBySession(session);
+					attendanceId = attendance.getId();
+					status = AttendanceUtil.getAttendanceOpenStatus(session.getSessionDateTime(), attendance, now);
+				}
+			}
+		}
+
 		SseEmitter sseEmitter = getSseEmitter(member);
-
-		if (generationOpt.isEmpty()) {
-			sseSender.sendInitialAttendanceStatus(sseEmitter, null, AttendanceOpenStatus.CLOSED);
-			return sseEmitter;
-		}
-
-		Generation currentGeneration = generationOpt.get();
-		generationMemberAuthValidator.checkGenerationPermission(member, currentGeneration);
-
-		Optional<Session> maybeSession = sessionReader.getByDate(now.toLocalDate());
-		if (maybeSession.isEmpty()) {
-			sseSender.sendInitialAttendanceStatus(sseEmitter, null, AttendanceOpenStatus.CLOSED);
-			return sseEmitter;
-		}
-
-		Session session = maybeSession.get();
-		if (session.getSessionType() == SessionType.NO_ATTEND) {
-			sseSender.sendInitialAttendanceStatus(sseEmitter, null, AttendanceOpenStatus.CLOSED);
-			return sseEmitter;
-		}
-
-		Attendance attendance = attendanceReader.findBySession(session);
-		sseSender.sendInitialAttendanceStatus(sseEmitter, attendance.getId(),
-			AttendanceUtil.getAttendanceOpenStatus(session.getSessionDateTime(), attendance, now));
-
+		sseSender.sendInitialAttendanceStatus(sseEmitter, attendanceId, status);
 		return sseEmitter;
 	}
 
 	private SseEmitter getSseEmitter(Member member) {
 		if (sseAttendanceRepository.existsById(member.getId())) {
-			log.info("---- [memberId]: {} is already subscribed ----", member.getId());
-			return sseAttendanceRepository.findById(member.getId())
-				.orElseThrow(() -> new EntityNotFoundException("해당 구독을 찾을 수 없습니다."));
+			log.info("---- [memberId]: {} is reconnecting, replacing emitter ----", member.getId());
+			sseAttendanceRepository.deleteById(member.getId());
 		}
 
 		SseEmitter sseEmitter = new SseEmitter(DEFAULT_TIMEOUT);
@@ -91,13 +83,11 @@ public class SseService {
 
 		sseEmitter.onTimeout(() -> {
 			log.info("---- [memberId]: {} on timeout callback ----", memberId);
-			sseAttendanceRepository.deleteById(memberId);
 			sseEmitter.complete();
 		});
 
 		sseEmitter.onError((ex) -> {
 			log.error("---- [memberId]: {} on error callback ----", memberId, ex);
-			sseAttendanceRepository.deleteById(memberId);
 			sseEmitter.completeWithError(ex);
 		});
 	}
