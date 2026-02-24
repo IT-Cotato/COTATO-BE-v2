@@ -1,17 +1,24 @@
 package org.cotato.homepage.domain.attendance.service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
+import org.cotato.homepage.api.event.dto.AttendanceStatusInfo;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.common.schedule.SchedulerService;
 import org.cotato.homepage.domain.attendance.embedded.Location;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
+import org.cotato.homepage.domain.attendance.enums.AttendanceOpenStatus;
 import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
+import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.util.AttendanceUtil;
-import org.cotato.homepage.domain.generation.entity.AttendanceNotification;
+import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Session;
-import org.cotato.homepage.domain.generation.repository.AttendanceNotificationRepository;
+import org.cotato.homepage.domain.generation.enums.SessionType;
+import org.cotato.homepage.domain.generation.service.component.GenerationReader;
+import org.cotato.homepage.domain.generation.service.component.SessionReader;
+import org.cotato.homepage.domain.member.component.GenerationMemberAuthValidator;
+import org.cotato.homepage.domain.member.entity.Member;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,9 +31,37 @@ import lombok.extern.slf4j.Slf4j;
 public class AttendanceService {
 
 	private final AttendanceRepository attendanceRepository;
-	private final SchedulerService schedulerService;
-	private final AttendanceNotificationRepository attendanceNotificationRepository;
+	private final GenerationReader generationReader;
+	private final GenerationMemberAuthValidator generationMemberAuthValidator;
+	private final SessionReader sessionReader;
+	private final AttendanceReader attendanceReader;
 
+	public AttendanceStatusInfo getAttendanceStatus(final Member member) {
+		LocalDateTime now = LocalDateTime.now();
+		Optional<Generation> generationOpt = generationReader.findByDateOptional(now.toLocalDate());
+
+		if (generationOpt.isEmpty()) {
+			return AttendanceStatusInfo.builder().openStatus(AttendanceOpenStatus.CLOSED).build();
+		}
+
+		generationMemberAuthValidator.checkGenerationPermission(member, generationOpt.get());
+
+		Optional<Session> maybeSession = sessionReader.getByDate(now.toLocalDate());
+		if (maybeSession.isEmpty()) {
+			return AttendanceStatusInfo.builder().openStatus(AttendanceOpenStatus.CLOSED).build();
+		}
+
+		Session session = maybeSession.get();
+		if (session.getSessionType() == SessionType.NO_ATTEND) {
+			return AttendanceStatusInfo.builder().openStatus(AttendanceOpenStatus.CLOSED).build();
+		}
+
+		Attendance attendance = attendanceReader.findBySession(session);
+		return AttendanceStatusInfo.builder()
+			.attendanceId(attendance.getId())
+			.openStatus(AttendanceUtil.getAttendanceOpenStatus(session.getSessionDateTime(), attendance, now))
+			.build();
+	}
 
 	@Transactional
 	public void createAttendance(Session session, Location location, LocalDateTime attendanceDeadline,
@@ -51,12 +86,6 @@ public class AttendanceService {
 			.build();
 
 		attendanceRepository.save(attendance);
-
-		AttendanceNotification attendanceNotification = AttendanceNotification.builder().attendance(attendance)
-			.done(false).build();
-		attendanceNotificationRepository.save(attendanceNotification);
-
-		schedulerService.scheduleAttendanceNotification(attendanceNotification);
 	}
 
 	private void checkLocation(Location location) {

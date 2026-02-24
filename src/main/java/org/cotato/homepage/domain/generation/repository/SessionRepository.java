@@ -28,4 +28,7 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
 	@Query("SELECT s FROM Session s WHERE DATE(s.sessionDateTime) = :targetDate")
 	Optional<Session> findBySessionDate(@Param("targetDate") LocalDate targetDate);
+
+	@Query("SELECT COUNT(s) > 0 FROM Session s WHERE DATE(s.sessionDateTime) = :targetDate")
+	boolean existsBySessionDate(@Param("targetDate") LocalDate targetDate);
 }

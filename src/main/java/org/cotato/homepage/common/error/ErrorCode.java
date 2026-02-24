@@ -51,6 +51,7 @@ public enum ErrorCode {
 	OVERLAPPING_DATE(HttpStatus.BAD_REQUEST, "G-102", "기간이 겹치는 기수가 존재합니다"),
 	GENERATION_NUMBER_DUPLICATED(HttpStatus.CONFLICT, "G-201", "같은 숫자의 기수가 있습니다"),
 	SESSION_DATE_NOT_FOUND(HttpStatus.NOT_FOUND, "G-202", "세션 날짜가 존재하지 않습니다"),
+	SESSION_DATE_DUPLICATED(HttpStatus.CONFLICT, "G-206", "해당 날짜에 이미 세션이 존재합니다"),
 	NO_CURRENT_GENERATION(HttpStatus.BAD_REQUEST, "G-203", "현재 활동 기수가 없습니다. 기수를 먼저 생성해주세요."),
 	GENERATION_NOT_FOUND(HttpStatus.NOT_FOUND, "G-205", "해당 기수 정보가 생성되지 않았습니다."),
 	GENERATION_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "G-204", "현재 활동 기수가 아니므로 수정할 수 없습니다."),
