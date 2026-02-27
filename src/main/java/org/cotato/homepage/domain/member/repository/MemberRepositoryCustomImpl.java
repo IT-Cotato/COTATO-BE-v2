@@ -146,7 +146,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 				searchBuilder.or(qMember.name.containsIgnoreCase(search));
 				searchBuilder.or(qMember.university.containsIgnoreCase(search));
 
-				// 파트 매칭 (BE, FE, DESIGN, PM 등)
+				// 파트 매칭 (BE, FE, DE, PM 등)
 				MemberPosition matchedPosition = findMatchingPosition(search);
 				if (matchedPosition != null) {
 					searchBuilder.or(qMember.position.eq(matchedPosition));
