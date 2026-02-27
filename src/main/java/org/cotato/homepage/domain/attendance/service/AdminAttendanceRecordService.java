@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.cotato.homepage.api.attendance.dto.AdminAttendanceSessionResponse;
 import org.cotato.homepage.api.attendance.dto.AttendanceRecordResponse;
 import org.cotato.homepage.api.attendance.dto.AttendanceStatistic;
 import org.cotato.homepage.api.attendance.dto.GenerationMemberAttendanceRecordResponse;
@@ -46,6 +47,23 @@ public class AdminAttendanceRecordService {
 	private final SessionReader sessionReader;
 	private final AttendanceReader attendanceReader;
 	private final AttendanceRecordReader attendanceRecordReader;
+
+	/**
+	 * 기수별 세션 목록과 각 세션의 출석 ID를 조회합니다.
+	 */
+	public List<AdminAttendanceSessionResponse> findAttendanceSessions(Long generationId) {
+		Generation generation = generationReader.findById(generationId);
+		List<Session> sessions = sessionReader.findAllByGeneration(generation);
+
+		Map<Long, Attendance> attendanceBySessionId = attendanceReader.getAllBySessions(sessions)
+			.stream()
+			.collect(Collectors.toMap(Attendance::getSessionId, Function.identity()));
+
+		return sessions.stream()
+			.sorted(Comparator.comparing(Session::getNumber))
+			.map(s -> AdminAttendanceSessionResponse.of(s, attendanceBySessionId.get(s.getId())))
+			.toList();
+	}
 
 	/**
 	 * 기수별 전체 회원의 출석 통계를 조회합니다.

@@ -2,6 +2,7 @@ package org.cotato.homepage.api.attendance.controller;
 
 import java.util.List;
 
+import org.cotato.homepage.api.attendance.dto.AdminAttendanceSessionResponse;
 import org.cotato.homepage.api.attendance.dto.AttendanceRecordResponse;
 import org.cotato.homepage.api.attendance.dto.GenerationMemberAttendanceRecordResponse;
 import org.cotato.homepage.api.attendance.dto.UpdateAttendanceRecordRequest;
@@ -36,6 +37,18 @@ public class AdminAttendanceController {
 	private final AdminAttendanceRecordService adminAttendanceRecordService;
 
 	@Operation(
+		summary = "기수별 세션 출석 ID 목록 조회",
+		description = "특정 기수의 세션 목록과 각 세션의 출석 ID를 조회합니다."
+	)
+	@RoleAuthority(MemberRole.OPERATION)
+	@GetMapping("/sessions")
+	public ResponseEntity<List<AdminAttendanceSessionResponse>> findAttendanceSessions(
+		@Parameter(description = "기수 ID") @RequestParam(name = "generationId") Long generationId
+	) {
+		return ResponseEntity.ok().body(adminAttendanceRecordService.findAttendanceSessions(generationId));
+	}
+
+	@Operation(
 		summary = "전체 출석 통계 조회",
 		description = "기수 내 모든 회원의 전체 세션 출석 통계를 조회합니다. 파트별 필터링(position)과 이름 검색(search)이 가능합니다."
 	)
@@ -43,7 +56,7 @@ public class AdminAttendanceController {
 	@GetMapping("/records")
 	public ResponseEntity<List<GenerationMemberAttendanceRecordResponse>> findAttendanceRecords(
 		@Parameter(description = "기수 ID") @RequestParam(name = "generationId") Long generationId,
-		@Parameter(description = "파트 필터 (PM, BE, FE, DESIGN)")
+		@Parameter(description = "파트 필터 (PM, BE, FE, DE), 미입력 시 전체 조회")
 		@RequestParam(name = "position", required = false) MemberPosition position,
 		@Parameter(description = "회원 이름 검색어")
 		@RequestParam(name = "search", required = false) String search
@@ -60,8 +73,8 @@ public class AdminAttendanceController {
 	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/{attendanceId}/records")
 	public ResponseEntity<List<AttendanceRecordResponse>> findAttendanceRecordsByAttendance(
-		@Parameter(description = "출석(세션) ID") @PathVariable("attendanceId") Long attendanceId,
-		@Parameter(description = "파트 필터 (PM, BE, FE, DESIGN)")
+		@Parameter(description = "출석 ID (세션별 출석 목록 조회 API에서 반환)") @PathVariable("attendanceId") Long attendanceId,
+		@Parameter(description = "파트 필터 (PM, BE, FE, DE), 미입력 시 전체 조회")
 		@RequestParam(name = "position", required = false) MemberPosition position,
 		@Parameter(description = "출석 상태 필터 (PRESENT, LATE, ABSENT, UNAUTHORIZED_ABSENT)")
 		@RequestParam(name = "attendanceResults", required = false) List<AttendanceResult> attendanceResults,
@@ -78,7 +91,7 @@ public class AdminAttendanceController {
 	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/{attendanceId}/records")
 	public ResponseEntity<Void> updateAttendanceRecords(
-		@Parameter(description = "출석(세션) ID") @PathVariable("attendanceId") Long attendanceId,
+		@Parameter(description = "출석 ID (세션별 출석 목록 조회 API에서 반환)") @PathVariable("attendanceId") Long attendanceId,
 		@RequestBody @Valid UpdateAttendanceRecordRequest request) {
 		adminAttendanceRecordService.updateAttendanceRecord(attendanceId, request.memberId(), request.result());
 		return ResponseEntity.noContent().build();
