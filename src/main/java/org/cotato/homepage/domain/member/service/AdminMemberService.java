@@ -13,6 +13,7 @@ import org.cotato.homepage.common.event.CotatoEventPublisher;
 import org.cotato.homepage.common.event.EventType;
 import org.cotato.homepage.domain.auth.event.EmailSendEvent;
 import org.cotato.homepage.domain.auth.event.EmailSendEventDto;
+import org.cotato.homepage.domain.auth.service.EncryptService;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.repository.GenerationMemberRepository;
@@ -45,6 +46,7 @@ public class AdminMemberService {
 	private final GenerationMemberRepository generationMemberRepository;
 	private final MemberReader memberReader;
 	private final GenerationReader generationReader;
+	private final EncryptService encryptService;
 
 	@Transactional
 	public void approveApplicants(final List<Long> memberIds) {
@@ -140,7 +142,8 @@ public class AdminMemberService {
 
 		return members.map(member -> AllMemberResponse.from(
 			member,
-			memberIdToLatestGm.get(member.getId())
+			memberIdToLatestGm.get(member.getId()),
+			encryptService.decryptPhoneNumber(member.getPhoneNumber())
 		));
 	}
 

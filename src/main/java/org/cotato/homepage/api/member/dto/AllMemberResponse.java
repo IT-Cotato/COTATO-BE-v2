@@ -34,8 +34,7 @@ public record AllMemberResponse(
 	@Schema(description = "회원 상태")
 	MemberStatus status
 ) {
-	public static AllMemberResponse from(Member member, GenerationMember latestGenerationMember) {
-		String phone = member.getPhoneNumber();
+	public static AllMemberResponse from(Member member, GenerationMember latestGenerationMember, String phoneNumber) {
 		Long latestGenNumber = latestGenerationMember != null
 			? latestGenerationMember.getGeneration().getId()
 			: null;
@@ -50,7 +49,7 @@ public record AllMemberResponse(
 			.memberId(member.getId())
 			.name(member.getName())
 			.gender(member.getGender())
-			.phoneNumber(phone)
+			.phoneNumber(phoneNumber)
 			.university(member.getUniversity())
 			.passedGenerationNumber(member.getPassedGenerationNumber())
 			.latestGenerationNumber(latestGenNumber)
