@@ -36,7 +36,8 @@ public record MemberDetailResponse(
 	@Schema(description = "이메일")
 	String email
 ) {
-	public static MemberDetailResponse from(Member member, GenerationMember latestGenerationMember) {
+	public static MemberDetailResponse from(Member member, GenerationMember latestGenerationMember,
+		String phoneNumber) {
 		Long latestGenNumber = latestGenerationMember != null
 			? latestGenerationMember.getGeneration().getId()
 			: null;
@@ -51,7 +52,7 @@ public record MemberDetailResponse(
 			.memberId(member.getId())
 			.name(member.getName())
 			.gender(member.getGender())
-			.phoneNumber(member.getPhoneNumber())
+			.phoneNumber(phoneNumber)
 			.university(member.getUniversity())
 			.passedGenerationNumber(member.getPassedGenerationNumber())
 			.latestGenerationNumber(latestGenNumber)

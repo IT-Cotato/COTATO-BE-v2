@@ -143,7 +143,7 @@ public class AdminMemberService {
 		return members.map(member -> AllMemberResponse.from(
 			member,
 			memberIdToLatestGm.get(member.getId()),
-			encryptService.decryptPhoneNumber(member.getPhoneNumber())
+			member.getPhoneNumber() != null ? encryptService.decryptPhoneNumber(member.getPhoneNumber()) : null
 		));
 	}
 
@@ -151,7 +151,9 @@ public class AdminMemberService {
 		Member member = memberReader.findById(memberId);
 		List<GenerationMember> latestList = generationMemberRepository.findLatestByMembers(List.of(member));
 		GenerationMember latestGenerationMember = latestList.isEmpty() ? null : latestList.get(0);
-		return MemberDetailResponse.from(member, latestGenerationMember);
+		String phoneNumber = member.getPhoneNumber() != null
+			? encryptService.decryptPhoneNumber(member.getPhoneNumber()) : null;
+		return MemberDetailResponse.from(member, latestGenerationMember, phoneNumber);
 	}
 
 	@Transactional
