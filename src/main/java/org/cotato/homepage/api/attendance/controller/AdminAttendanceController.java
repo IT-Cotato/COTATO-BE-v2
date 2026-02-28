@@ -76,7 +76,8 @@ public class AdminAttendanceController {
 		@Parameter(description = "출석 ID (세션별 출석 목록 조회 API에서 반환)") @PathVariable("attendanceId") Long attendanceId,
 		@Parameter(description = "파트 필터 (PM, BE, FE, DE), 미입력 시 전체 조회")
 		@RequestParam(name = "position", required = false) MemberPosition position,
-		@Parameter(description = "출석 상태 필터 (PRESENT, LATE, ABSENT, UNAUTHORIZED_ABSENT)")
+		@Parameter(description = "출석 상태 필터 (PRESENT: 출석, LATE: 지각, ABSENT: 결석,"
+			+ " UNAUTHORIZED_ABSENT: 무단결석, NOT_YET: 출석 전), 미입력 시 전체 조회")
 		@RequestParam(name = "attendanceResults", required = false) List<AttendanceResult> attendanceResults,
 		@Parameter(description = "회원 이름 검색어")
 		@RequestParam(name = "search", required = false) String search) {

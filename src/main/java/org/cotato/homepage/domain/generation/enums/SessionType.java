@@ -57,6 +57,7 @@ public enum SessionType {
 
 		return switch (attendanceResult) {
 			case PRESENT, ABSENT, LATE, UNAUTHORIZED_ABSENT -> this != NO_ATTEND;
+			case NOT_YET -> false;
 		};
 	}
 }

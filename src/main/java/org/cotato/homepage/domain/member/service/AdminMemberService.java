@@ -208,7 +208,11 @@ public class AdminMemberService {
 	public Slice<ActiveMemberResponse> getActiveMembersByGeneration(Long generationId, Pageable pageable) {
 		Slice<GenerationMember> generationMembers = generationMemberRepository
 			.findAllByGenerationIdWithMemberSlice(generationId, pageable);
-		return generationMembers.map(ActiveMemberResponse::from);
+		return generationMembers.map(gm -> {
+			String phoneNumber = gm.getMember().getPhoneNumber() != null
+				? encryptService.decryptPhoneNumber(gm.getMember().getPhoneNumber()) : null;
+			return ActiveMemberResponse.from(gm, phoneNumber);
+		});
 	}
 
 	@Transactional
@@ -257,7 +261,7 @@ public class AdminMemberService {
 			member.updateUniversity(university);
 		}
 		if (phoneNumber != null) {
-			member.updatePhoneNumber(phoneNumber);
+			member.updatePhoneNumber(encryptService.encryptPhoneNumber(phoneNumber));
 		}
 		if (position != null) {
 			generationMember.updatePosition(position);

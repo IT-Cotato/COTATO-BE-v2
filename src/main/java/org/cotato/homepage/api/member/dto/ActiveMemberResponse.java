@@ -28,14 +28,14 @@ public record ActiveMemberResponse(
 	@Schema(description = "합격 기수 (처음 가입한 기수)")
 	Long passedGenerationNumber
 ) {
-	public static ActiveMemberResponse from(GenerationMember generationMember) {
+	public static ActiveMemberResponse from(GenerationMember generationMember, String phoneNumber) {
 		Member member = generationMember.getMember();
 
 		return ActiveMemberResponse.builder()
 			.generationMemberId(generationMember.getId())
 			.memberId(member.getId())
 			.name(member.getName())
-			.phoneNumber(member.getPhoneNumber())
+			.phoneNumber(phoneNumber)
 			.university(member.getUniversity())
 			.position(generationMember.getPosition())
 			.role(generationMember.getRole())

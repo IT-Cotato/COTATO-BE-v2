@@ -151,7 +151,7 @@ public class AdminAttendanceRecordService {
 			return true;
 		}
 		if (result == null) {
-			return filter.stream().anyMatch(r -> r == null);
+			return filter.contains(AttendanceResult.NOT_YET);
 		}
 		return filter.contains(result);
 	}
