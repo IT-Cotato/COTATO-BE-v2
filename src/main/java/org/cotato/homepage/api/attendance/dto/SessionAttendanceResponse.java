@@ -45,11 +45,12 @@ public record SessionAttendanceResponse(
 		+ "LATE: 지각 처리 구간 (지금 제출하면 지각), "
 		+ "CLOSED: 출석 마감 완료")
 	AttendanceOpenStatus attendanceStatus,
-	@Schema(description = "내 출석 결과 (출석 기록이 없으면 null). "
+	@Schema(description = "내 출석 결과 (출석 기록이 없으면 NOT_YET, 출석 없는 세션은 null). "
 		+ "PRESENT: 정상 출석, "
 		+ "LATE: 지각, "
 		+ "ABSENT: 결석 (사유 있음), "
-		+ "UNAUTHORIZED_ABSENT: 무단 결석 (사유 없음)")
+		+ "UNAUTHORIZED_ABSENT: 무단 결석 (사유 없음), "
+		+ "NOT_YET: 출석 전")
 	AttendanceResult myAttendanceResult
 ) {
 	public static SessionAttendanceResponse of(

@@ -116,7 +116,10 @@ public class AdminAttendanceRecordService {
 			.filter(m -> !StringUtils.hasText(search) || m.getName().contains(search))
 			.filter(m -> matchesAttendanceResultFilter(resultByMemberId.get(m.getId()), attendanceResults))
 			.sorted(Comparator.comparing(Member::getName))
-			.map(m -> AttendanceRecordResponse.of(m, resultByMemberId.get(m.getId())))
+			.map(m -> {
+				AttendanceResult result = resultByMemberId.getOrDefault(m.getId(), AttendanceResult.NOT_YET);
+				return AttendanceRecordResponse.of(m, result);
+			})
 			.toList();
 	}
 
@@ -129,19 +132,24 @@ public class AdminAttendanceRecordService {
 		AttendanceResult attendanceResult) {
 		// 1. 출석 및 세션 정보 조회
 		Attendance attendance = attendanceReader.findById(attendanceId);
-		Session session = sessionReader.getByAttendance(attendance);
+		Member member = memberReader.findById(memberId);
 
-		// 2. 세션 타입에 따른 변경 가능 여부 검증
+		// 2. NOT_YET: 출석 전으로 되돌리기 = 출석 기록 삭제
+		if (attendanceResult == AttendanceResult.NOT_YET) {
+			attendanceRecordReader.getByAttendanceAndMember(attendance, member)
+				.ifPresent(attendanceRecordRepository::delete);
+			return;
+		}
+
+		// 3. 세션 타입에 따른 변경 가능 여부 검증
+		Session session = sessionReader.getByAttendance(attendance);
 		if (!session.getSessionType().canChangeResult(attendanceResult)) {
 			throw new AppException(ErrorCode.INVALID_RECORD_UPDATE);
 		}
 
-		// 3. 출석 기록 조회 또는 결석 기록 생성
-		Member member = memberReader.findById(memberId);
+		// 4. 출석 기록 조회 또는 결석 기록 생성 후 저장
 		AttendanceRecord attendanceRecord = attendanceRecordReader.getByAttendanceAndMember(attendance, member)
 			.orElseGet(() -> AttendanceRecord.absentRecord(attendance, memberId));
-
-		// 4. 출석 결과 수정 및 저장
 		attendanceRecord.updateAttendanceResult(attendanceResult);
 		attendanceRecordRepository.save(attendanceRecord);
 	}
