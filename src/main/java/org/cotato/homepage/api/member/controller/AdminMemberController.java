@@ -51,11 +51,12 @@ public class AdminMemberController {
 		@RequestParam(value = "search", required = false)
 		@Parameter(description = "검색어 (숫자: 기수/전화번호, 텍스트: 이름/학교/파트)") String search,
 		@RequestParam(value = "statuses", required = false)
-		@Parameter(description = "회원 상태 목록 (APPROVED, RETIRED, NOT_RETIRED)") List<MemberStatus> statuses,
+		@Parameter(description = "회원 상태 필터 (APPROVED: 활동중, RETIRED: 수료, NOT_RETIRED: 미수료), 미입력 시 전체 조회")
+		List<MemberStatus> statuses,
 		@RequestParam(value = "sortBy", required = false, defaultValue = "passedGenerationNumber")
-		@Parameter(description = "정렬 기준 (passedGenerationNumber, name)") String sortBy,
+		@Parameter(description = "정렬 기준 (passedGenerationNumber: 합격 기수순, name: 이름순)") String sortBy,
 		@RequestParam(value = "sortDirection", required = false, defaultValue = "DESC")
-		@Parameter(description = "정렬 방향 (ASC, DESC)") String sortDirection,
+		@Parameter(description = "정렬 방향 (ASC: 오름차순, DESC: 내림차순)") String sortDirection,
 		Pageable pageable
 	) {
 		return ResponseEntity.ok()
@@ -68,7 +69,7 @@ public class AdminMemberController {
 	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/{memberId}")
 	public ResponseEntity<MemberDetailResponse> getMemberDetail(
-		@PathVariable("memberId") Long memberId
+		@Parameter(description = "조회할 회원 ID") @PathVariable("memberId") Long memberId
 	) {
 		return ResponseEntity.ok().body(adminMemberService.getMemberDetail(memberId));
 	}
@@ -101,7 +102,7 @@ public class AdminMemberController {
 	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/active")
 	public ResponseEntity<SliceResponse<ActiveMemberResponse>> getActiveMembers(
-		@RequestParam("generationId") @Parameter(description = "기수 ID") Long generationId,
+		@RequestParam("generationId") @Parameter(description = "조회할 기수 ID") Long generationId,
 		@PageableDefault(size = 20, sort = "member.name", direction = Sort.Direction.ASC) Pageable pageable
 	) {
 		return ResponseEntity.ok()
@@ -114,7 +115,7 @@ public class AdminMemberController {
 	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/active/{generationMemberId}/role")
 	public ResponseEntity<Void> updateGenerationMemberRole(
-		@PathVariable("generationMemberId") Long generationMemberId,
+		@Parameter(description = "기수 멤버 ID") @PathVariable("generationMemberId") Long generationMemberId,
 		@RequestBody @Valid UpdateGenerationMemberRoleRequest request
 	) {
 		adminMemberService.updateGenerationMemberRole(generationMemberId, request.role());
@@ -127,7 +128,7 @@ public class AdminMemberController {
 	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/active/{generationMemberId}")
 	public ResponseEntity<Void> updateActiveMemberInfo(
-		@PathVariable("generationMemberId") Long generationMemberId,
+		@Parameter(description = "기수 멤버 ID") @PathVariable("generationMemberId") Long generationMemberId,
 		@RequestBody @Valid UpdateActiveMemberInfoRequest request
 	) {
 		adminMemberService.updateActiveMemberInfo(
@@ -149,7 +150,7 @@ public class AdminMemberController {
 	@RoleAuthority(MemberRole.OPERATION)
 	@DeleteMapping("/active/{generationMemberId}")
 	public ResponseEntity<Void> removeActiveMember(
-		@PathVariable("generationMemberId") Long generationMemberId
+		@Parameter(description = "기수 멤버 ID") @PathVariable("generationMemberId") Long generationMemberId
 	) {
 		adminMemberService.removeActiveMember(generationMemberId);
 		return ResponseEntity.noContent().build();
