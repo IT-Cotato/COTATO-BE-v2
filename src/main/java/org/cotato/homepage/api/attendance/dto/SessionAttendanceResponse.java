@@ -20,6 +20,8 @@ public record SessionAttendanceResponse(
 	Integer sessionNumber,
 	@Schema(description = "세션 제목", requiredMode = RequiredMode.REQUIRED)
 	String title,
+	@Schema(description = "세션 설명")
+	String description,
 	@Schema(description = "세션 날짜", requiredMode = RequiredMode.REQUIRED)
 	LocalDateTime sessionDateTime,
 	@Schema(description = "세션 내용")
@@ -64,6 +66,7 @@ public record SessionAttendanceResponse(
 			session.getId(),
 			session.getNumber(),
 			session.getTitle(),
+			session.getDescription(),
 			session.getSessionDateTime(),
 			session.getContent(),
 			session.getPlaceName(),
@@ -81,6 +84,7 @@ public record SessionAttendanceResponse(
 			session.getId(),
 			session.getNumber(),
 			session.getTitle(),
+			session.getDescription(),
 			session.getSessionDateTime(),
 			session.getContent(),
 			session.getPlaceName(),

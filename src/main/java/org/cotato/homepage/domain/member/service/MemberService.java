@@ -76,7 +76,8 @@ public class MemberService {
 		Page<Member> members = memberRepository.findApplicantsByStatusAndName(status, name, pageable);
 
 		return members.map(member -> {
-			String phoneNumber = encryptService.decryptPhoneNumber(member.getPhoneNumber());
+			String phoneNumber = member.getPhoneNumber() != null
+				? encryptService.decryptPhoneNumber(member.getPhoneNumber()) : null;
 			return ApplicantMemberResponse.of(member, phoneNumber);
 		});
 	}
