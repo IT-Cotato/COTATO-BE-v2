@@ -176,9 +176,9 @@ public class AttendanceRecordService {
 			.map(at -> {
 				Session session = sessionMap.get(at.getSessionId());
 				AttendanceRecord record = attendanceRecordMap.get(at.getId());
-				return (record != null)
-					? MemberAttendResponse.recordedAttendance(session, record)
-					: MemberAttendResponse.unrecordedAttendance(session);
+				AttendanceResult result = (record != null)
+					? record.getAttendanceResult() : AttendanceResult.NOT_YET;
+				return MemberAttendResponse.of(session, result);
 			})
 			.sorted(Comparator.comparing(MemberAttendResponse::sessionNumber).reversed())
 			.toList();
@@ -303,7 +303,7 @@ public class AttendanceRecordService {
 
 		AttendanceOpenStatus status = getAttendanceOpenStatus(session.getSessionDateTime(), attendance, now);
 		AttendanceRecord myRecord = myRecordByAttendanceId.get(attendance.getId());
-		AttendanceResult myResult = (myRecord != null) ? myRecord.getAttendanceResult() : null;
+		AttendanceResult myResult = (myRecord != null) ? myRecord.getAttendanceResult() : AttendanceResult.NOT_YET;
 
 		return SessionAttendanceResponse.of(session, images, attendance, status, myResult);
 	}

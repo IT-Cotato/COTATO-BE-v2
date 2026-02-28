@@ -87,7 +87,9 @@ public class AdminAttendanceController {
 
 	@Operation(
 		summary = "출석 상태 수정",
-		description = "운영진이 특정 회원의 출석 상태를 수정합니다. (PRESENT, LATE, ABSENT, UNAUTHORIZED_ABSENT)"
+		description = "운영진이 특정 회원의 출석 상태를 수정합니다. "
+			+ "NOT_YET 전달 시 출석 기록을 삭제하여 출석 전 상태로 되돌립니다. "
+			+ "(PRESENT: 출석, LATE: 지각, ABSENT: 결석, UNAUTHORIZED_ABSENT: 무단결석, NOT_YET: 출석 전)"
 	)
 	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/{attendanceId}/records")
