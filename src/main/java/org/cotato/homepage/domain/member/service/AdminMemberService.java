@@ -28,6 +28,7 @@ import org.cotato.homepage.domain.member.repository.MemberRepository;
 import org.cotato.homepage.domain.member.repository.RefusedMemberRepository;
 import org.cotato.homepage.domain.member.service.component.MemberReader;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -53,8 +54,14 @@ public class AdminMemberService {
 		List<Member> members = memberReader.findAllByIdsInWithValidation(memberIds);
 		validateAllMembersStatus(members, MemberStatus.REQUESTED);
 
+		Generation latestGeneration = generationReader.findLatestGeneration();
+
 		members.forEach(member -> {
-			member.approveMember();
+			if (member.getPassedGenerationNumber().equals(latestGeneration.getId())) {
+				member.approveMember();
+			} else {
+				member.approveAsRetired();
+			}
 
 			// 합격 기수에 활동 회원으로 추가
 			Generation passedGeneration = generationReader.findById(member.getPassedGenerationNumber());
@@ -125,10 +132,11 @@ public class AdminMemberService {
 		List<MemberStatus> statuses,
 		String sortBy,
 		String sortDirection,
-		Pageable pageable
+		int page,
+		int size
 	) {
 		Page<Member> members = memberRepository.searchAllMembers(
-			search, statuses, sortBy, sortDirection, pageable
+			search, statuses, sortBy, sortDirection, PageRequest.of(page, size)
 		);
 
 		List<Member> memberList = members.getContent();

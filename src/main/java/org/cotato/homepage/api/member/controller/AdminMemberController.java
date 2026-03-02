@@ -57,11 +57,12 @@ public class AdminMemberController {
 		@Parameter(description = "정렬 기준 (passedGenerationNumber: 합격 기수순, name: 이름순)") String sortBy,
 		@RequestParam(value = "sortDirection", required = false, defaultValue = "DESC")
 		@Parameter(description = "정렬 방향 (ASC: 오름차순, DESC: 내림차순)") String sortDirection,
-		Pageable pageable
+		@RequestParam(value = "page", defaultValue = "0") @Parameter(description = "페이지 번호 (0부터 시작)") int page,
+		@RequestParam(value = "size", defaultValue = "20") @Parameter(description = "페이지 사이즈") int size
 	) {
 		return ResponseEntity.ok()
 			.body(PageResponse.of(adminMemberService.searchAllMembers(
-				search, statuses, sortBy, sortDirection, pageable
+				search, statuses, sortBy, sortDirection, page, size
 			)));
 	}
 
