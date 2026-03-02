@@ -111,12 +111,13 @@ public class Member extends BaseTimeEntity {
 		this.role = MemberRole.MEMBER;
 	}
 
-	public void updatePassword(String password) {
-		this.password = password;
+	public void approveAsRetired() {
+		this.status = MemberStatus.RETIRED;
+		this.role = MemberRole.MEMBER;
 	}
 
-	public void updatePassedGenerationNumber(Long passedGenerationNumber) {
-		this.passedGenerationNumber = passedGenerationNumber;
+	public void updatePassword(String password) {
+		this.password = password;
 	}
 
 	public void updatePhoneNumber(String phoneNumber) {
