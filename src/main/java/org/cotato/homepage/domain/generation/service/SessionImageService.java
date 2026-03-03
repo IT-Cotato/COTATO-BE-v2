@@ -16,6 +16,7 @@ import org.cotato.homepage.api.session.dto.PresignedUrlResponse;
 import org.cotato.homepage.api.session.dto.SessionImageInfo;
 import org.cotato.homepage.api.session.dto.UpdateSessionImageOrderInfoRequest;
 import org.cotato.homepage.api.session.dto.UpdateSessionImageOrderRequest;
+import org.cotato.homepage.common.config.CacheConfig;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.s3.S3Uploader;
@@ -23,6 +24,7 @@ import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.entity.SessionImage;
 import org.cotato.homepage.domain.generation.repository.SessionImageRepository;
 import org.cotato.homepage.domain.generation.repository.SessionRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +42,7 @@ public class SessionImageService {
 	private final S3Uploader s3Uploader;
 
 	@Transactional
+	@CacheEvict(cacheNames = CacheConfig.SESSIONS, allEntries = true)
 	public void deleteSessionImage(DeleteSessionImageRequest request) {
 		SessionImage deleteImage = sessionImageRepository.findById(request.imageId())
 			.orElseThrow(() -> new EntityNotFoundException("해당 사진을 찾을 수 없습니다."));
@@ -56,6 +59,7 @@ public class SessionImageService {
 	}
 
 	@Transactional
+	@CacheEvict(cacheNames = CacheConfig.SESSIONS, allEntries = true)
 	public void updateSessionImageOrder(UpdateSessionImageOrderRequest request) {
 		Session sessionById = findSessionById(request.sessionId());
 		List<UpdateSessionImageOrderInfoRequest> orderList = request.orderInfos();
@@ -112,6 +116,7 @@ public class SessionImageService {
 	}
 
 	@Transactional
+	@CacheEvict(cacheNames = CacheConfig.SESSIONS, allEntries = true)
 	public AddSessionImageResponse completeImageUpload(CompleteImageUploadRequest request) {
 		Session session = findSessionById(request.sessionId());
 
