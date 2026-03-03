@@ -13,6 +13,7 @@ import org.cotato.homepage.api.session.dto.SessionImageInfo;
 import org.cotato.homepage.api.session.dto.SessionListResponse;
 import org.cotato.homepage.api.session.dto.SessionWithAttendanceResponse;
 import org.cotato.homepage.api.session.dto.UpdateSessionRequest;
+import org.cotato.homepage.common.config.CacheConfig;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.event.CotatoEventPublisher;
@@ -43,6 +44,8 @@ import org.cotato.homepage.domain.minuspoint.entity.BeerNetworkingRecord;
 import org.cotato.homepage.domain.minuspoint.entity.SessionMinusPoint;
 import org.cotato.homepage.domain.minuspoint.repository.BeerNetworkingRecordRepository;
 import org.cotato.homepage.domain.minuspoint.repository.SessionMinusPointRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +71,7 @@ public class SessionService {
 	private final S3Uploader s3Uploader;
 
 	@Transactional
+	@CacheEvict(cacheNames = CacheConfig.SESSIONS, key = "#generationId")
 	public AddSessionResponse addSession(final Long generationId,
 		final List<SessionImageInfo> imageInfos,
 		final SessionDto sessionDto,
@@ -120,6 +124,7 @@ public class SessionService {
 	}
 
 	@Transactional
+	@CacheEvict(cacheNames = CacheConfig.SESSIONS, allEntries = true)
 	public void updateSession(UpdateSessionRequest request) {
 		Session session = sessionReader.findByIdWithPessimisticXLock(request.sessionId());
 		SessionType sessionType = SessionType.getSessionType(request.isOffline(), request.isOnline());
@@ -167,6 +172,7 @@ public class SessionService {
 	}
 
 	@Transactional
+	@CacheEvict(cacheNames = CacheConfig.SESSIONS, allEntries = true)
 	public void deleteSession(Long sessionId) {
 		Session session = sessionReader.findById(sessionId);
 
@@ -209,6 +215,7 @@ public class SessionService {
 		}
 	}
 
+	@Cacheable(cacheNames = CacheConfig.SESSIONS, key = "#generationId")
 	public List<SessionListResponse> findSessionsByGenerationId(Long generationId) {
 		Generation generation = generationReader.findById(generationId);
 		return findSessionsByGeneration(generation);

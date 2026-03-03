@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'cotato'
-version = '2026.03.02.1'
+version = '2026.03.03.1'
 
 java {
     sourceCompatibility = '17'
@@ -46,6 +46,8 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
     implementation 'javax.xml.bind:jaxb-api:2.3.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
 
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'com.amazonaws:aws-java-sdk-ses:1.12.3'
