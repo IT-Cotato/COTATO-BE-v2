@@ -181,7 +181,7 @@ public class MinusPointService {
 			.sorted(Comparator.comparing(Member::getName))
 			.map(member -> MemberSessionMinusPointResponse.of(
 				member,
-				attendanceResultByMemberId.get(member.getId()),
+				attendanceResultByMemberId.getOrDefault(member.getId(), AttendanceResult.NOT_YET),
 				beerNetworkingByMemberId.getOrDefault(member.getId(), false),
 				extraMinusPointByMemberId.getOrDefault(member.getId(), 0)
 			))
