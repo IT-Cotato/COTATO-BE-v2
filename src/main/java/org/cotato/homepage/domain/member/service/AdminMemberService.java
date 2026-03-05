@@ -63,10 +63,12 @@ public class AdminMemberService {
 				member.approveAsRetired();
 			}
 
-			// 합격 기수에 활동 회원으로 추가
+			// 합격 기수에 활동 회원으로 추가 (중복 방지)
 			Generation passedGeneration = generationReader.findById(member.getPassedGenerationNumber());
-			GenerationMember generationMember = GenerationMember.of(passedGeneration, member);
-			generationMemberRepository.save(generationMember);
+			if (!generationMemberRepository.existsByGenerationAndMember(passedGeneration, member)) {
+				GenerationMember generationMember = GenerationMember.of(passedGeneration, member);
+				generationMemberRepository.save(generationMember);
+			}
 
 			EmailSendEventDto dto = EmailSendEventDto.builder().member(member).build();
 			eventPublisher.publishEvent(EmailSendEvent.builder()
