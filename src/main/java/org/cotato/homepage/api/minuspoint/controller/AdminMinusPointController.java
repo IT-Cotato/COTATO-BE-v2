@@ -86,7 +86,8 @@ public class AdminMinusPointController {
 
 	@Operation(
 		summary = "기타 벌점 수정",
-		description = "특정 세션의 회원 기타 벌점을 수정합니다. 운영진 재량하에 부여되는 세션 벌점입니다."
+		description = "특정 세션의 회원 기타 벌점을 수정합니다. 운영진 재량하에 부여되는 세션 벌점입니다. "
+			+ "벌점 부여 시 음수 값(예: -5)을 입력해야 합니다. 양수 값 입력 시 총 벌점이 낮아집니다."
 	)
 	@RoleAuthority(MemberRole.OPERATION)
 	@PatchMapping("/sessions/{sessionId}/extra-minus-points")
