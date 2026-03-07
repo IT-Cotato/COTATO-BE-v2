@@ -1,5 +1,6 @@
 package org.cotato.homepage.domain.generation.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -80,7 +81,8 @@ public class SessionService {
 		final Location location) {
 		Generation generation = generationReader.findById(generationId);
 
-		if (sessionRepository.existsBySessionDate(sessionDto.sessionDateTime().toLocalDate())) {
+		LocalDate sessionDate = sessionDto.sessionDateTime().toLocalDate();
+		if (sessionRepository.existsBySessionDate(sessionDate.atStartOfDay(), sessionDate.plusDays(1).atStartOfDay())) {
 			throw new AppException(ErrorCode.SESSION_DATE_DUPLICATED);
 		}
 

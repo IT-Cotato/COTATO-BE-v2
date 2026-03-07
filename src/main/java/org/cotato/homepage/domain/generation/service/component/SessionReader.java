@@ -38,7 +38,7 @@ public class SessionReader {
 
 	@Transactional(readOnly = true)
 	public Optional<Session> getByDate(LocalDate date) {
-		return sessionRepository.findBySessionDate(date);
+		return sessionRepository.findBySessionDate(date.atStartOfDay(), date.plusDays(1).atStartOfDay());
 	}
 
 	public Session getByAttendance(Attendance attendance) {

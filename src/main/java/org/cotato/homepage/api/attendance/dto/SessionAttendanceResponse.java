@@ -45,7 +45,8 @@ public record SessionAttendanceResponse(
 		+ "BEFORE: 출석 시작 전, "
 		+ "OPEN: 출석 진행 중 (지금 제출하면 정상 출석), "
 		+ "LATE: 지각 처리 구간 (지금 제출하면 지각), "
-		+ "CLOSED: 출석 마감 완료")
+		+ "ABSENT: 지각 마감 이후 당일 (출석 불가), "
+		+ "CLOSED: 출석 기간 완전 종료 (다음날 이후)")
 	AttendanceOpenStatus attendanceStatus,
 	@Schema(description = "내 출석 결과 (출석 기록이 없으면 NOT_YET, 출석 없는 세션은 null). "
 		+ "PRESENT: 정상 출석, "
