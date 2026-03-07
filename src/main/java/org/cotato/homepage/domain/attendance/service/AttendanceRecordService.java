@@ -77,9 +77,10 @@ public class AttendanceRecordService {
 		Session session = sessionReader.findById(attendance.getSessionId());
 
 		// 2. 출석 가능 시간 검증 (OPEN 또는 LATE 상태여야 함)
+		LocalDateTime requestTime = LocalDateTime.now();
 		AttendanceOpenStatus openStatus = getAttendanceOpenStatus(
-			session.getSessionDateTime(), attendance, request.requestTime());
-		if (openStatus == AttendanceOpenStatus.CLOSED || openStatus == AttendanceOpenStatus.BEFORE) {
+			session.getSessionDateTime(), attendance, requestTime);
+		if (openStatus != AttendanceOpenStatus.OPEN && openStatus != AttendanceOpenStatus.LATE) {
 			throw new AppException(ErrorCode.ATTENDANCE_NOT_OPEN);
 		}
 
@@ -97,7 +98,7 @@ public class AttendanceRecordService {
 			: AttendanceResult.LATE;
 
 		AttendanceRecord record = AttendanceRecord.createRecord(
-			attendance, member.getId(), result, accuracy, request.requestTime());
+			attendance, member.getId(), result, accuracy, requestTime);
 		attendanceRecordRepository.save(record);
 
 		return AttendanceSubmitResponse.of(result);
