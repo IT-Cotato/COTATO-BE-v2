@@ -82,7 +82,8 @@ public class SessionService {
 		Generation generation = generationReader.findById(generationId);
 
 		LocalDate sessionDate = sessionDto.sessionDateTime().toLocalDate();
-		if (sessionRepository.existsBySessionDate(sessionDate.atStartOfDay(), sessionDate.plusDays(1).atStartOfDay())) {
+		if (sessionRepository.existsBySessionDate(
+			sessionDate.atStartOfDay(), sessionDate.plusDays(1).atStartOfDay(), generationId)) {
 			throw new AppException(ErrorCode.SESSION_DATE_DUPLICATED);
 		}
 
