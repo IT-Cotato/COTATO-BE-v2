@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -91,7 +92,8 @@ class SessionServiceTest {
 		Generation generation = mock(Generation.class);
 
 		when(generationReader.findById(generationId)).thenReturn(generation);
-		when(sessionRepository.existsBySessionDate(sessionDateTime.toLocalDate())).thenReturn(false);
+		LocalDate sessionDate = sessionDateTime.toLocalDate();
+		when(sessionRepository.existsBySessionDate(sessionDate.atStartOfDay(), sessionDate.plusDays(1).atStartOfDay())).thenReturn(false);
 
 		// when
 		sessionService.addSession(generationId, imageInfos, sessionDto, attendanceEndTime, lateEndTime, location);

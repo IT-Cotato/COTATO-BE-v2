@@ -1,6 +1,6 @@
 package org.cotato.homepage.domain.generation.repository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,9 +26,9 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
 	List<Session> findAllByIdIn(List<Long> sessionIds);
 
-	@Query("SELECT s FROM Session s WHERE DATE(s.sessionDateTime) = :targetDate")
-	Optional<Session> findBySessionDate(@Param("targetDate") LocalDate targetDate);
+	@Query("SELECT s FROM Session s WHERE s.sessionDateTime >= :start AND s.sessionDateTime < :end")
+	Optional<Session> findBySessionDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-	@Query("SELECT COUNT(s) > 0 FROM Session s WHERE DATE(s.sessionDateTime) = :targetDate")
-	boolean existsBySessionDate(@Param("targetDate") LocalDate targetDate);
+	@Query("SELECT COUNT(s) > 0 FROM Session s WHERE s.sessionDateTime >= :start AND s.sessionDateTime < :end")
+	boolean existsBySessionDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

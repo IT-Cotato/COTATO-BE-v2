@@ -17,9 +17,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 	@Query("select a from Attendance a where a.sessionId in :sessionIds")
 	List<Attendance> findAllBySessionIdsInQuery(@Param("sessionIds") List<Long> sessionIds);
 
-	@Query("SELECT a FROM Attendance a WHERE DATE(a.attendanceDeadLine) = DATE(:time)")
-	Optional<Attendance> findByAttendanceDeadLineDate(@Param("time") LocalDateTime time);
-
 	Optional<Attendance> findBySessionId(Long sessionId);
 
 	@Transactional(readOnly = true)
