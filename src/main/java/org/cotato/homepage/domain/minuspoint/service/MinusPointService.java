@@ -49,8 +49,8 @@ public class MinusPointService {
 	private static final int LATE_MINUS_POINT = -4;
 	private static final int ABSENT_MINUS_POINT = -7;
 	private static final int UNAUTHORIZED_ABSENT_MINUS_POINT = -14;
-	private static final int BEER_NETWORKING_BONUS_THRESHOLD = 3;
-	private static final int BEER_NETWORKING_BONUS_POINT = 5;
+	private static final int BEER_NETWORKING_BONUS_THRESHOLD = 1;
+	private static final int BEER_NETWORKING_BONUS_POINT = 2;
 
 	private final SessionMinusPointRepository sessionMinusPointRepository;
 	private final BeerNetworkingRecordRepository beerNetworkingRecordRepository;

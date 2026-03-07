@@ -21,11 +21,11 @@ public class AttendanceUtil {
 		}
 
 		LocalDateTime attendanceDeadLine = attendance.getAttendanceDeadLine();
-		if (!currentDateTime.isBefore(sessionStartTime) && currentDateTime.isBefore(attendanceDeadLine)) {
+		if (currentDateTime.isBefore(attendanceDeadLine)) {
 			return AttendanceOpenStatus.OPEN;
 		}
 
-		if (currentDateTime.isAfter(attendance.getAttendanceDeadLine()) && currentDateTime.isBefore(
+		if (!currentDateTime.isBefore(attendance.getAttendanceDeadLine()) && currentDateTime.isBefore(
 			attendance.getLateDeadLine())) {
 			return AttendanceOpenStatus.LATE;
 		}
