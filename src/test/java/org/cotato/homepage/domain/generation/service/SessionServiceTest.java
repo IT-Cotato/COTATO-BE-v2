@@ -93,7 +93,9 @@ class SessionServiceTest {
 
 		when(generationReader.findById(generationId)).thenReturn(generation);
 		LocalDate sessionDate = sessionDateTime.toLocalDate();
-		when(sessionRepository.existsBySessionDate(sessionDate.atStartOfDay(), sessionDate.plusDays(1).atStartOfDay())).thenReturn(false);
+		when(sessionRepository
+			.existsBySessionDate(sessionDate.atStartOfDay(), sessionDate.plusDays(1).atStartOfDay()))
+			.thenReturn(false);
 
 		// when
 		sessionService.addSession(generationId, imageInfos, sessionDto, attendanceEndTime, lateEndTime, location);
