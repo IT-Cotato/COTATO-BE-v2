@@ -11,6 +11,7 @@ import org.cotato.homepage.common.error.exception.ImageException;
 import org.cotato.homepage.common.error.response.ErrorResponse;
 import org.cotato.homepage.common.error.response.MethodArgumentErrorResponse;
 import org.cotato.homepage.common.error.response.MethodArgumentErrorResponse.FieldErrorResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -81,6 +82,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.ENTITY_NOT_FOUND, request);
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+		DataIntegrityViolationException exception, HttpServletRequest request) {
+		log.error("DataIntegrityViolation 발생: {}", exception.getMessage());
+		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
+		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.DATA_INTEGRITY_VIOLATION, request);
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
 	}
 
 	@ExceptionHandler(SQLException.class)

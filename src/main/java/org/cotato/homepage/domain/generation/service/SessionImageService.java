@@ -145,6 +145,13 @@ public class SessionImageService {
 			return;
 		}
 
+		Set<Integer> orderSet = new HashSet<>();
+		for (SessionImageInfo imageInfo : imageInfos) {
+			if (!orderSet.add(imageInfo.order())) {
+				throw new AppException(ErrorCode.SESSION_ORDER_INVALID);
+			}
+		}
+
 		List<SessionImage> sessionImages = new ArrayList<>();
 
 		for (SessionImageInfo imageInfo : imageInfos) {

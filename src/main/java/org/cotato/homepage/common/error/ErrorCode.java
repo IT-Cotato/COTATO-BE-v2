@@ -85,6 +85,8 @@ public enum ErrorCode {
 	LOGO_IMAGE_EXIST(HttpStatus.CONFLICT, "PJ-301", "이미 로고 이미지가 존재합니다."),
 	THUMBNAIL_IMAGE_EXIST(HttpStatus.CONFLICT, "PJ-302", "이미 썸네일 이미지가 존재합니다."),
 
+	DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT, "S-016", "중복된 데이터로 인해 요청을 처리할 수 없습니다"),
+
 	// 500 오류 -> 서버측에서 처리가 실패한 부분들
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-000", "예상치 못한 서버 내부 에러 발생"),
 	IMAGE_PROCESSING_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "S-002", "이미지 처리에 실패했습니다."),

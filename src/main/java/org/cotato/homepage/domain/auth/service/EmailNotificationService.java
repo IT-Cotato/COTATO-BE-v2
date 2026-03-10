@@ -1,10 +1,16 @@
 package org.cotato.homepage.domain.auth.service;
 
-import static org.cotato.homepage.common.util.EmailUtil.*;
 import static org.cotato.homepage.domain.auth.constant.EmailConstants.*;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import org.cotato.homepage.common.email.EmailSender;
+import org.cotato.homepage.common.error.ErrorCode;
+import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.member.entity.Member;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -17,17 +23,30 @@ public class EmailNotificationService {
 
 	private final EmailSender emailSender;
 
+	@Async("emailSendThreadPoolExecutor")
 	public void sendSignUpApprovedToEmail(Member recipientMember) {
-		String successMessage = createSignupApprovedMessageBody(recipientMember);
+		String body = loadTemplate("email/approve-email.html")
+			.replace("{{name}}", recipientMember.getName());
 
-		emailSender.sendEmail(recipientMember.getEmail(), successMessage, SIGNUP_SUCCESS_SUBJECT);
+		emailSender.sendEmailWithInlineImages(recipientMember.getEmail(), body, SIGNUP_SUCCESS_SUBJECT);
 		log.info("가입 승인 완료 이메일 전송 완료");
 	}
 
+	@Async("emailSendThreadPoolExecutor")
 	public void sendSignupRejectionToEmail(Member recipientMember) {
-		String rejectMessage = createSignupRejectionMessageBody(recipientMember);
+		String body = loadTemplate("email/reject-email.html")
+			.replace("{{name}}", recipientMember.getName());
 
-		emailSender.sendEmail(recipientMember.getEmail(), rejectMessage, SIGNUP_REJECT_SUBJECT);
+		emailSender.sendEmailWithInlineImages(recipientMember.getEmail(), body, SIGNUP_REJECT_SUBJECT);
 		log.info("가입 승인 거절 이메일 전송 완료");
+	}
+
+	private String loadTemplate(String path) {
+		try {
+			ClassPathResource resource = new ClassPathResource(path);
+			return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			throw new AppException(ErrorCode.EMAIL_SEND_ERROR);
+		}
 	}
 }

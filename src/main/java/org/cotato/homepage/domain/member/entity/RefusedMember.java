@@ -27,7 +27,7 @@ public class RefusedMember extends BaseTimeEntity {
 	private Long id;
 
 	@OneToOne(fetch = LAZY)
-	@JoinColumn(name = "member_id")
+	@JoinColumn(name = "member_id", unique = true)
 	private Member member;
 
 	@Builder
