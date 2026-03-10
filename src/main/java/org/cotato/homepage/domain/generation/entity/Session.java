@@ -18,13 +18,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "\"session\"")
+@Table(name = "\"session\"", uniqueConstraints = {
+	@UniqueConstraint(name = "uk_session_datetime_generation", columnNames = {"generation_id", "session_start_time"}),
+	@UniqueConstraint(name = "uk_session_number_generation", columnNames = {"generation_id", "session_number"})
+})
 @Getter
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

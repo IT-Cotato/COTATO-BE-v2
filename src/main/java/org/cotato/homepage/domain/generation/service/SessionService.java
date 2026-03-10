@@ -140,6 +140,15 @@ public class SessionService {
 			}
 		}
 
+		LocalDate newSessionDate = request.attendanceStartTime().toLocalDate();
+		if (!newSessionDate.equals(session.getSessionDateTime().toLocalDate())) {
+			if (sessionRepository.existsBySessionDateExcluding(
+				newSessionDate.atStartOfDay(), newSessionDate.plusDays(1).atStartOfDay(),
+				session.getGeneration().getId(), session.getId())) {
+				throw new AppException(ErrorCode.SESSION_DATE_DUPLICATED);
+			}
+		}
+
 		Optional<Attendance> maybeAttendance = attendanceReader.findBySessionIdWithPessimisticXLock(session.getId());
 		if (maybeAttendance.isPresent() && attendanceRecordReader.isAttendanceRecordExist(maybeAttendance.get())) {
 			validateAttendanceUpdatable(session, sessionType, request.attendanceStartTime());

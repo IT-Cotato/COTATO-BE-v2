@@ -25,7 +25,7 @@ public class AttendanceNotification {
 	private Long id;
 
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "attendance_id")
+	@JoinColumn(name = "attendance_id", unique = true)
 	private Attendance attendance;
 
 	@Column(name = "is_done", nullable = false)

@@ -36,4 +36,14 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 		@Param("start") LocalDateTime start,
 		@Param("end") LocalDateTime end,
 		@Param("generationId") Long generationId);
+
+	@Query("SELECT COUNT(s) > 0 FROM Session s"
+		+ " WHERE s.sessionDateTime >= :start AND s.sessionDateTime < :end"
+		+ " AND s.generation.id = :generationId"
+		+ " AND s.id <> :excludeSessionId")
+	boolean existsBySessionDateExcluding(
+		@Param("start") LocalDateTime start,
+		@Param("end") LocalDateTime end,
+		@Param("generationId") Long generationId,
+		@Param("excludeSessionId") Long excludeSessionId);
 }

@@ -28,7 +28,7 @@ public class CotatoEventListener {
 
 	private final AttendanceService attendanceService;
 
-	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handleEmailSentEvent(EmailSendEvent event) {
 		log.info("Handling email send event: {}", event.getType());
 		switch (event.getType()) {
