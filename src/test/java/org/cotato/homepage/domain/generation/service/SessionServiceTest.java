@@ -117,6 +117,11 @@ class SessionServiceTest {
 		Session session = mockSession(sessionId, oldSessionDateTime);
 		Attendance attendance = mockAttendance();
 
+		Generation generation = mock(Generation.class);
+		when(generation.getId()).thenReturn(1L);
+		when(session.getGeneration()).thenReturn(generation);
+		when(sessionRepository.existsBySessionDateExcluding(any(), any(), any(), any())).thenReturn(false);
+
 		when(sessionReader.findByIdWithPessimisticXLock(sessionId)).thenReturn(session);
 		when(attendanceReader.findBySessionIdWithPessimisticXLock(sessionId)).thenReturn(Optional.of(attendance));
 		when(attendanceRecordReader.isAttendanceRecordExist(attendance)).thenReturn(true);
@@ -152,6 +157,7 @@ class SessionServiceTest {
 		UpdateSessionRequest request = mockOnlineUpdateSessionRequest(sessionId, newSessionDateTime);
 		Session session = mock(Session.class);
 		when(session.getId()).thenReturn(sessionId);
+		when(session.getSessionDateTime()).thenReturn(newSessionDateTime);
 		Attendance attendance = mockAttendance();
 
 		when(sessionReader.findByIdWithPessimisticXLock(sessionId)).thenReturn(session);
