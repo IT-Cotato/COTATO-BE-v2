@@ -41,6 +41,14 @@ public class EmailNotificationService {
 		log.info("가입 승인 거절 이메일 전송 완료");
 	}
 
+	public void sendVerificationCodeToEmail(String email, String code, String subject) {
+		String body = loadTemplate("email/verification-email.html")
+			.replace("{{code}}", code);
+
+		emailSender.sendVerificationEmail(email, body, subject);
+		log.info("인증 코드 이메일 전송 완료");
+	}
+
 	private String loadTemplate(String path) {
 		try {
 			ClassPathResource resource = new ClassPathResource(path);
