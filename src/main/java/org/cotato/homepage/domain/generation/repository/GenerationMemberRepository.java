@@ -39,7 +39,8 @@ public interface GenerationMemberRepository extends JpaRepository<GenerationMemb
 	void deleteAllByMemberIn(@Param("members") List<Member> members);
 
 	@Transactional(readOnly = true)
-	@Query("select gm from GenerationMember gm join fetch gm.member m where gm.generation.id = :generationId")
+	@Query("select gm from GenerationMember gm join fetch gm.member m"
+		+ " where gm.generation.id = :generationId order by gm.id asc")
 	Slice<GenerationMember> findAllByGenerationIdWithMemberSlice(
 		@Param("generationId") Long generationId, Pageable pageable);
 
