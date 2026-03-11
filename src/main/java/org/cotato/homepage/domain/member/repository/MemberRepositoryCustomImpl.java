@@ -67,7 +67,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
 		List<Member> results = queryFactory.selectFrom(qMember)
 			.where(builder)
-			.orderBy(qMember.name.asc())
+			.orderBy(qMember.name.asc(), qMember.id.asc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize())
 			.fetch();
@@ -99,7 +99,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
 		List<Member> results = queryFactory.selectFrom(qMember)
 			.where(builder)
-			.orderBy(qMember.createdAt.desc())
+			.orderBy(qMember.createdAt.desc(), qMember.id.asc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize())
 			.fetch();
@@ -175,7 +175,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 
 		List<Member> results = queryFactory.selectFrom(qMember)
 			.where(builder)
-			.orderBy(orderSpecifier)
+			.orderBy(orderSpecifier, qMember.id.asc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize())
 			.fetch();
