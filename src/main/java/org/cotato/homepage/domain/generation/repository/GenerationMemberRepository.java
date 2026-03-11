@@ -6,8 +6,8 @@ import java.util.Optional;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.member.entity.Member;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -39,9 +39,10 @@ public interface GenerationMemberRepository extends JpaRepository<GenerationMemb
 	void deleteAllByMemberIn(@Param("members") List<Member> members);
 
 	@Transactional(readOnly = true)
-	@Query("select gm from GenerationMember gm join fetch gm.member m"
-		+ " where gm.generation.id = :generationId order by gm.id asc")
-	Slice<GenerationMember> findAllByGenerationIdWithMemberSlice(
+	@Query(value = "select gm from GenerationMember gm join fetch gm.member m"
+		+ " where gm.generation.id = :generationId order by m.name asc, gm.id asc",
+		countQuery = "select count(gm) from GenerationMember gm where gm.generation.id = :generationId")
+	Page<GenerationMember> findAllByGenerationIdWithMemberPage(
 		@Param("generationId") Long generationId, Pageable pageable);
 
 	Optional<GenerationMember> findByGenerationAndMember(Generation generation, Member member);

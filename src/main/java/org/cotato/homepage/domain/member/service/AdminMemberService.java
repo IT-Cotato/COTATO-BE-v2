@@ -30,7 +30,6 @@ import org.cotato.homepage.domain.member.service.component.MemberReader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -215,9 +214,9 @@ public class AdminMemberService {
 		memberRepository.deleteAll(members);
 	}
 
-	public Slice<ActiveMemberResponse> getActiveMembersByGeneration(Long generationId, Pageable pageable) {
-		Slice<GenerationMember> generationMembers = generationMemberRepository
-			.findAllByGenerationIdWithMemberSlice(generationId, pageable);
+	public Page<ActiveMemberResponse> getActiveMembersByGeneration(Long generationId, Pageable pageable) {
+		Page<GenerationMember> generationMembers = generationMemberRepository
+			.findAllByGenerationIdWithMemberPage(generationId, pageable);
 		return generationMembers.map(gm -> {
 			String phoneNumber = gm.getMember().getPhoneNumber() != null
 				? encryptService.decryptPhoneNumber(gm.getMember().getPhoneNumber()) : null;
