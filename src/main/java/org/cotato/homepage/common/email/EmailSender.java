@@ -59,6 +59,25 @@ public class EmailSender {
 		}
 	}
 
+	public void sendVerificationEmail(String recipient, String htmlBody, String subject) {
+		try {
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+			helper.setTo(recipient);
+			helper.setSubject(subject);
+			helper.setFrom(getInternetAddress());
+			helper.setText(htmlBody, true);
+			helper.addInline("verification-header", new ClassPathResource("email/verification-header.png"));
+			helper.addInline("verification-bottom", new ClassPathResource("email/verification-bottom.png"));
+
+			mailSender.send(message);
+			log.info("이메일 전송 완료");
+		} catch (MessagingException e) {
+			throw new AppException(ErrorCode.EMAIL_SEND_ERROR);
+		}
+	}
+
 	private InternetAddress getInternetAddress() {
 		try {
 			return new InternetAddress(SENDER_EMAIL, SENDER_PERSONAL);

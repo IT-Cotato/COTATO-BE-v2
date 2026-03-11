@@ -1,7 +1,5 @@
 package org.cotato.homepage.domain.auth.service;
 
-import static org.cotato.homepage.common.util.EmailUtil.*;
-
 import org.cotato.homepage.api.auth.dto.FindPasswordResponse;
 import org.cotato.homepage.api.auth.dto.JoinRequest;
 import org.cotato.homepage.api.auth.dto.JoinResponse;
@@ -12,7 +10,6 @@ import org.cotato.homepage.common.config.jwt.JwtTokenProvider;
 import org.cotato.homepage.common.config.jwt.RefreshToken;
 import org.cotato.homepage.common.config.jwt.RefreshTokenRepository;
 import org.cotato.homepage.common.config.jwt.Token;
-import org.cotato.homepage.common.email.EmailSender;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.auth.constant.EmailConstants;
@@ -48,7 +45,7 @@ public class AuthService {
 	private final BlackListRepository blackListRepository;
 	private final EmailCodeManager emailCodeManager;
 	private final EncryptService encryptService;
-	private final EmailSender emailSender;
+	private final EmailNotificationService emailNotificationService;
 
 	@Transactional
 	public JoinResponse createMember(final JoinRequest request) {
@@ -127,9 +124,9 @@ public class AuthService {
 		validateService.emailNotExist(request.email());
 
 		String verificationCode = emailCodeManager.getRandomCode(EmailType.SIGNUP, request.email());
-		String verificationMessage = getVerificationMessageBody(verificationCode);
 
-		emailSender.sendEmail(request.email(), verificationMessage, EmailConstants.SIGNUP_SUBJECT);
+		emailNotificationService.sendVerificationCodeToEmail(
+			request.email(), verificationCode, EmailConstants.SIGNUP_SUBJECT);
 	}
 
 	public void verifySingUpCode(String email, String code) {
@@ -140,9 +137,9 @@ public class AuthService {
 		validateService.emailExist(request.email());
 
 		String verificationCode = emailCodeManager.getRandomCode(EmailType.UPDATE_PASSWORD, request.email());
-		String verificationMessage = getVerificationMessageBody(verificationCode);
 
-		emailSender.sendEmail(request.email(), verificationMessage, EmailConstants.SIGNUP_SUBJECT);
+		emailNotificationService.sendVerificationCodeToEmail(
+			request.email(), verificationCode, EmailConstants.PASSWORD_SUBJECT);
 	}
 
 	public FindPasswordResponse verifyPasswordCode(String email, String code) {
