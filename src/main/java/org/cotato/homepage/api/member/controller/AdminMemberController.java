@@ -10,13 +10,11 @@ import org.cotato.homepage.api.member.dto.MemberDetailResponse;
 import org.cotato.homepage.api.member.dto.UpdateActiveMemberInfoRequest;
 import org.cotato.homepage.api.member.dto.UpdateGenerationMemberRoleRequest;
 import org.cotato.homepage.common.response.PageResponse;
-import org.cotato.homepage.common.response.SliceResponse;
 import org.cotato.homepage.common.role.RoleAuthority;
 import org.cotato.homepage.domain.member.enums.MemberRole;
 import org.cotato.homepage.domain.member.enums.MemberStatus;
 import org.cotato.homepage.domain.member.service.AdminMemberService;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -99,15 +97,15 @@ public class AdminMemberController {
 
 	@Operation(
 		summary = "활동 회원 조회",
-		description = "특정 기수의 활동 회원 목록을 무한 스크롤 방식으로 조회합니다. 이름순 정렬을 지원합니다.")
+		description = "특정 기수의 활동 회원 목록을 조회합니다. 이름순 정렬을 지원합니다.")
 	@RoleAuthority(MemberRole.OPERATION)
 	@GetMapping("/active")
-	public ResponseEntity<SliceResponse<ActiveMemberResponse>> getActiveMembers(
+	public ResponseEntity<PageResponse<ActiveMemberResponse>> getActiveMembers(
 		@RequestParam("generationId") @Parameter(description = "조회할 기수 ID") Long generationId,
-		@PageableDefault(size = 20, sort = "member.name", direction = Sort.Direction.ASC) Pageable pageable
+		@PageableDefault(size = 20) Pageable pageable
 	) {
 		return ResponseEntity.ok()
-			.body(SliceResponse.of(adminMemberService.getActiveMembersByGeneration(generationId, pageable)));
+			.body(PageResponse.of(adminMemberService.getActiveMembersByGeneration(generationId, pageable)));
 	}
 
 	@Operation(
