@@ -60,7 +60,7 @@ public class MemberService {
 
 	public List<Member> findActiveMember() {
 		Generation currentGeneration = generationReader.findByDate(LocalDate.now());
-		return memberReader.findAllGenerationMember(currentGeneration);
+		return memberReader.findAllMember(currentGeneration);
 	}
 
 	@Transactional

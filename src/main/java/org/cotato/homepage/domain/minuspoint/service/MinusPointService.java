@@ -23,6 +23,7 @@ import org.cotato.homepage.domain.attendance.enums.AttendanceResult;
 import org.cotato.homepage.domain.attendance.repository.AttendanceRecordRepository;
 import org.cotato.homepage.domain.attendance.repository.AttendanceRepository;
 import org.cotato.homepage.domain.generation.entity.Generation;
+import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.cotato.homepage.domain.generation.service.component.SessionReader;
@@ -92,7 +93,7 @@ public class MinusPointService {
 					Collectors.counting()
 				));
 
-		List<MemberMinusPointStatisticsResponse> responses = memberReader.findAllGenerationMember(generation).stream()
+		List<MemberMinusPointStatisticsResponse> responses = memberReader.findAllMember(generation).stream()
 			.filter(member -> !StringUtils.hasText(search) || member.getName().contains(search))
 			.map(member -> {
 				List<AttendanceRecord> records = attendanceRecordsByMemberId.getOrDefault(member.getId(), List.of());
@@ -176,7 +177,7 @@ public class MinusPointService {
 					SessionMinusPoint::getExtraMinusPoint
 				));
 
-		List<MemberSessionMinusPointResponse> members = memberReader.findAllGenerationMember(generation).stream()
+		List<MemberSessionMinusPointResponse> members = memberReader.findAllMember(generation).stream()
 			.filter(member -> !StringUtils.hasText(search) || member.getName().contains(search))
 			.sorted(Comparator.comparing(Member::getName))
 			.map(member -> MemberSessionMinusPointResponse.of(
