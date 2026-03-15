@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.cotato.homepage.domain.generation.entity.ProjectImage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -19,5 +20,7 @@ public interface ProjectImageRepository extends JpaRepository<ProjectImage, Long
 
 	Optional<ProjectImage> findFirstByProjectIdOrderByImageOrderAsc(Long projectId);
 
-	void deleteAllByProjectId(Long projectId);
+	@Modifying
+	@Query("DELETE FROM ProjectImage pi WHERE pi.projectId = :projectId")
+	void deleteAllByProjectId(@Param("projectId") Long projectId);
 }
