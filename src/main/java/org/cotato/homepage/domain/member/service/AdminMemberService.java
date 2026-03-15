@@ -193,6 +193,11 @@ public class AdminMemberService {
 					generationMemberRepository.save(generationMember);
 				});
 		}
+
+		// 미수료(NOT_RETIRED)로 변경 시 모든 활동 기수에서 제외
+		if (status == MemberStatus.NOT_RETIRED) {
+			generationMemberRepository.deleteAllByMemberIn(members);
+		}
 	}
 
 	@Transactional
@@ -281,6 +286,10 @@ public class AdminMemberService {
 		}
 		if (status != null) {
 			member.updateStatus(status);
+			// 미수료(NOT_RETIRED)로 변경 시 모든 활동 기수에서 제외
+			if (status == MemberStatus.NOT_RETIRED) {
+				generationMemberRepository.deleteAllByMemberIn(List.of(member));
+			}
 		}
 
 		memberRepository.save(member);
@@ -309,11 +318,13 @@ public class AdminMemberService {
 		// GenerationMember 삭제
 		generationMemberRepository.delete(generationMember);
 
-		// 다른 기수에 활동 기록이 없으면 RETIRED로 변경
-		boolean hasOtherGenerations = generationMemberRepository.existsByMemberAndIdNot(member, generationMemberId);
-		if (!hasOtherGenerations) {
-			member.updateStatus(MemberStatus.RETIRED);
-			memberRepository.save(member);
+		// 다른 기수에 활동 기록이 없으면 RETIRED로 변경 (미수료 상태는 유지)
+		if (member.getStatus() != MemberStatus.NOT_RETIRED) {
+			boolean hasOtherGenerations = generationMemberRepository.existsByMemberAndIdNot(member, generationMemberId);
+			if (!hasOtherGenerations) {
+				member.updateStatus(MemberStatus.RETIRED);
+				memberRepository.save(member);
+			}
 		}
 	}
 }

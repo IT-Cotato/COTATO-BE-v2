@@ -19,6 +19,7 @@ import org.cotato.homepage.domain.attendance.repository.AttendanceRecordReposito
 import org.cotato.homepage.domain.attendance.service.component.AttendanceReader;
 import org.cotato.homepage.domain.attendance.service.component.AttendanceRecordReader;
 import org.cotato.homepage.domain.generation.entity.Generation;
+import org.cotato.homepage.domain.generation.entity.GenerationMember;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.service.component.GenerationReader;
 import org.cotato.homepage.domain.generation.service.component.SessionReader;
@@ -82,12 +83,12 @@ public class AdminAttendanceRecordService {
 			.collect(Collectors.groupingBy(AttendanceRecord::getMemberId));
 
 		// 3. 필터링 및 응답 생성 (이름순 정렬)
-		return memberReader.findAllGenerationMember(generation).stream()
-			.filter(m -> position == null || m.getPosition() == position)
-			.filter(m -> !StringUtils.hasText(search) || m.getName().contains(search))
-			.sorted(Comparator.comparing(Member::getName))
-			.map(m -> GenerationMemberAttendanceRecordResponse.of(
-				m, AttendanceStatistic.of(recordsByMemberId.getOrDefault(m.getId(), List.of()))))
+		return memberReader.findAllGenerationMembers(generation).stream()
+			.filter(gm -> position == null || gm.getPosition() == position)
+			.filter(gm -> !StringUtils.hasText(search) || gm.getMember().getName().contains(search))
+			.sorted(Comparator.comparing(gm -> gm.getMember().getName()))
+			.map(gm -> GenerationMemberAttendanceRecordResponse.of(
+				gm, AttendanceStatistic.of(recordsByMemberId.getOrDefault(gm.getMember().getId(), List.of()))))
 			.toList();
 	}
 
@@ -102,23 +103,25 @@ public class AdminAttendanceRecordService {
 		Session session = sessionReader.findById(attendance.getSessionId());
 
 		// 2. 해당 기수 멤버 및 출석 기록 조회
-		List<Member> members = memberReader.findAllGenerationMember(session.getGeneration());
-		Map<Long, Member> memberById = members.stream()
-			.collect(Collectors.toMap(Member::getId, Function.identity()));
+		List<GenerationMember> generationMembers =
+			memberReader.findAllGenerationMembers(session.getGeneration());
+		List<Member> members = generationMembers.stream().map(GenerationMember::getMember).toList();
 
 		Map<Long, AttendanceResult> resultByMemberId = attendanceRecordReader
 			.getAllByAttendanceAndMembers(attendance, members).stream()
 			.collect(Collectors.toMap(AttendanceRecord::getMemberId, AttendanceRecord::getAttendanceResult));
 
 		// 3. 필터링 및 응답 생성 (이름순 정렬)
-		return members.stream()
-			.filter(m -> position == null || m.getPosition() == position)
-			.filter(m -> !StringUtils.hasText(search) || m.getName().contains(search))
-			.filter(m -> matchesAttendanceResultFilter(resultByMemberId.get(m.getId()), attendanceResults))
-			.sorted(Comparator.comparing(Member::getName))
-			.map(m -> {
-				AttendanceResult result = resultByMemberId.getOrDefault(m.getId(), AttendanceResult.NOT_YET);
-				return AttendanceRecordResponse.of(m, result);
+		return generationMembers.stream()
+			.filter(gm -> position == null || gm.getPosition() == position)
+			.filter(gm -> !StringUtils.hasText(search) || gm.getMember().getName().contains(search))
+			.filter(gm -> matchesAttendanceResultFilter(
+				resultByMemberId.get(gm.getMember().getId()), attendanceResults))
+			.sorted(Comparator.comparing(gm -> gm.getMember().getName()))
+			.map(gm -> {
+				AttendanceResult result = resultByMemberId.getOrDefault(
+					gm.getMember().getId(), AttendanceResult.NOT_YET);
+				return AttendanceRecordResponse.of(gm, result);
 			})
 			.toList();
 	}

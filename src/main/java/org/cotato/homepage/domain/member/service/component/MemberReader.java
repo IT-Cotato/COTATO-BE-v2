@@ -28,10 +28,14 @@ public class MemberReader {
 			.orElseThrow(() -> new EntityNotFoundException("해당 부원을 찾을 수 없습니다."));
 	}
 
-	public List<Member> findAllGenerationMember(Generation generation) {
+	public List<Member> findAllMember(Generation generation) {
 		return generationMemberRepository.findAllByGenerationWithMember(generation).stream()
 			.map(GenerationMember::getMember)
 			.toList();
+	}
+
+	public List<GenerationMember> findAllGenerationMembers(Generation generation) {
+		return generationMemberRepository.findAllByGenerationWithMember(generation);
 	}
 
 	public List<Member> findAllByIdsInWithValidation(List<Long> memberIds) {

@@ -26,7 +26,7 @@ class MemberReaderTest {
 	private GenerationMemberRepository generationMemberRepository;
 
 	@Test
-	void whenFindAllGenerationMember_thenReturnMembers() {
+	void whenFindAllMember_thenReturnMembers() {
 		//
 		Generation generation = Generation.builder()
 			.id(9L)
@@ -48,7 +48,7 @@ class MemberReaderTest {
 			.thenReturn(generationMembers);
 
 		// then
-		List<Member> foundMembers = memberReader.findAllGenerationMember(generation);
+		List<Member> foundMembers = memberReader.findAllMember(generation);
 
 		assertThat(foundMembers)
 			.hasSize(2)
