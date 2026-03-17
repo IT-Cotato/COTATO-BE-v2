@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface RecruitGenerationRepository extends JpaRepository<Generation, Long> {
 
 	Optional<Generation> findTopByOrderByIdDesc();
+
+	Optional<Generation> findTopByIsRecruitingActiveTrueOrderByIdDesc();
 }

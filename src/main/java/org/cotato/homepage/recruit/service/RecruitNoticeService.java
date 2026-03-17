@@ -31,8 +31,8 @@ public class RecruitNoticeService {
 	private final RecruitmentInformationRepository informationRepository;
 
 	public RecruitNoticeResponse getRecruitmentData() {
-		Generation latestGeneration = generationRepository.findTopByOrderByIdDesc()
-			.orElseThrow(() -> new EntityNotFoundException("기수 정보를 찾을 수 없습니다."));
+		Generation latestGeneration = generationRepository.findTopByIsRecruitingActiveTrueOrderByIdDesc()
+			.orElseThrow(() -> new EntityNotFoundException("활성화된 기수 정보를 찾을 수 없습니다."));
 
 		List<RecruitmentInformation> informations = informationRepository.findByGeneration(latestGeneration);
 		Map<InformationType, LocalDateTime> scheduleMap = informations.stream()
