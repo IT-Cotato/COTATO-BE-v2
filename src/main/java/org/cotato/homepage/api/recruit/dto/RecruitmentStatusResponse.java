@@ -11,4 +11,8 @@ public record RecruitmentStatusResponse(
 	public static RecruitmentStatusResponse from(RecruitmentStatus status) {
 		return new RecruitmentStatusResponse(status.isActive());
 	}
+	
+	public static RecruitmentStatusResponse from(boolean isActive) {
+		return new RecruitmentStatusResponse(isActive);
+	}
 }

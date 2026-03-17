@@ -19,12 +19,4 @@ import lombok.RequiredArgsConstructor;
 public class AdminRecruitmentController {
 
 	private final RecruitmentService recruitmentService;
-
-	@Operation(summary = "모집 상태 토글 API")
-	@RoleAuthority(MemberRole.OPERATION)
-	@PatchMapping("/toggle")
-	public ResponseEntity<Void> toggleRecruitmentStatus() {
-		recruitmentService.toggleRecruitmentStatus();
-		return ResponseEntity.noContent().build();
-	}
 }
