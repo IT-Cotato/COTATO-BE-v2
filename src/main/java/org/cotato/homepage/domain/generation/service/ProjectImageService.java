@@ -81,7 +81,7 @@ public class ProjectImageService {
 			}
 		}
 
-		projectImageRepository.deleteAll(existingImages);
+		projectImageRepository.deleteAllByProjectId(projectId);
 
 		if (imageInfos != null && !imageInfos.isEmpty()) {
 			createProjectImages(projectId, imageInfos);

@@ -20,7 +20,7 @@ public interface ProjectImageRepository extends JpaRepository<ProjectImage, Long
 
 	Optional<ProjectImage> findFirstByProjectIdOrderByImageOrderAsc(Long projectId);
 
-	@Modifying
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
 	@Query("DELETE FROM ProjectImage pi WHERE pi.projectId = :projectId")
 	void deleteAllByProjectId(@Param("projectId") Long projectId);
 }
