@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'cotato'
-version = '2026.03.15.4'
+version = '2026.03.21.2'
 
 java {
     sourceCompatibility = '17'
