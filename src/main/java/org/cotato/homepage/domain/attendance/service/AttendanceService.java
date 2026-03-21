@@ -46,7 +46,7 @@ public class AttendanceService {
 
 		generationMemberAuthValidator.checkGenerationPermission(member, generationOpt.get());
 
-		Optional<Session> maybeSession = sessionReader.getByDate(now.toLocalDate());
+		Optional<Session> maybeSession = sessionReader.getByDate(now.toLocalDate(), generationOpt.get());
 		if (maybeSession.isEmpty()) {
 			return AttendanceStatusInfo.builder().openStatus(AttendanceOpenStatus.CLOSED).build();
 		}
