@@ -26,8 +26,10 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
 	List<Session> findAllByIdIn(List<Long> sessionIds);
 
-	@Query("SELECT s FROM Session s WHERE s.sessionDateTime >= :start AND s.sessionDateTime < :end")
-	Optional<Session> findBySessionDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+	@Query("SELECT s FROM Session s"
+		+ " WHERE s.sessionDateTime >= :start AND s.sessionDateTime < :end AND s.generation = :generation")
+	Optional<Session> findBySessionDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+		@Param("generation") Generation generation);
 
 	@Query("SELECT COUNT(s) > 0 FROM Session s"
 		+ " WHERE s.sessionDateTime >= :start AND s.sessionDateTime < :end"
