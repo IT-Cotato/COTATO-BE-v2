@@ -81,12 +81,23 @@ public class SessionImageService {
 		Map<Long, UpdateSessionImageOrderInfoRequest> orderMap = orderList.stream()
 			.collect(Collectors.toMap(UpdateSessionImageOrderInfoRequest::imageId, Function.identity()));
 
+		int temporaryOrderBase = savedImages.stream()
+			.mapToInt(SessionImage::getOrder)
+			.max()
+			.orElse(-1) + savedImages.size() + 1;
+
+		for (int i = 0; i < savedImages.size(); i++) {
+			savedImages.get(i).updateOrder(temporaryOrderBase + i);
+		}
+		sessionImageRepository.flush();
+
 		for (SessionImage savedImage : savedImages) {
 			if (orderMap.get(savedImage.getId()) == null) {
 				throw new EntityNotFoundException("해당 사진을 찾을 수 없습니다.");
 			}
 			savedImage.updateOrder(orderMap.get(savedImage.getId()).order());
 		}
+		sessionImageRepository.flush();
 	}
 
 	private boolean isValidOrderRange(List<UpdateSessionImageOrderInfoRequest> orderList) {
