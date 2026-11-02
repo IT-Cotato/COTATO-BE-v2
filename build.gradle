@@ -38,8 +38,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
-    //S3 관련 의존성 부여
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation 'com.google.cloud:google-cloud-storage:2.71.0'
 
     implementation group: 'org.redisson', name: 'redisson-spring-boot-starter', version: '3.32.0'
 
@@ -50,7 +49,6 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine'
 
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation 'com.amazonaws:aws-java-sdk-ses:1.12.3'
 
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.3'

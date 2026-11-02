@@ -65,7 +65,7 @@ public enum ErrorCode {
 	//세션 사진
 	SESSION_IMAGE_COUNT_MISMATCH(HttpStatus.BAD_REQUEST, "IM-101", "저장된 사진 수와 요청 사진 수가 다릅니다."),
 	SESSION_ORDER_INVALID(HttpStatus.BAD_REQUEST, "IM-102", "입력한 순서는 유효하지 않습니다."),
-	S3_OBJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "IM-201", "S3에 해당 이미지가 존재하지 않습니다."),
+	IMAGE_OBJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "IM-201", "저장소에 해당 이미지가 존재하지 않습니다."),
 	INVALID_CONTENT_TYPE(HttpStatus.BAD_REQUEST, "IM-103", "지원하지 않는 이미지 형식입니다."),
 
 	//출석 관련 AT
