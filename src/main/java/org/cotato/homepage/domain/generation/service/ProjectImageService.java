@@ -9,7 +9,7 @@ import org.cotato.homepage.api.project.dto.ProjectImageInfo;
 import org.cotato.homepage.api.session.dto.PresignedUrlResponse;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.common.s3.S3Uploader;
+import org.cotato.homepage.common.gcs.GcsImageStorage;
 import org.cotato.homepage.domain.generation.entity.ProjectImage;
 import org.cotato.homepage.domain.generation.repository.ProjectImageRepository;
 import org.springframework.stereotype.Service;
@@ -28,12 +28,12 @@ public class ProjectImageService {
 		"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
 	);
 
-	private final S3Uploader s3Uploader;
+	private final GcsImageStorage imageStorage;
 	private final ProjectImageRepository projectImageRepository;
 
 	public PresignedUrlResponse generatePresignedUrl(String fileName, String contentType) {
 		validateContentType(contentType);
-		return s3Uploader.generatePresignedUrl(fileName, contentType, PROJECT_FOLDER);
+		return imageStorage.generatePresignedUrl(fileName, contentType, PROJECT_FOLDER);
 	}
 
 	private void validateContentType(String contentType) {
@@ -51,13 +51,13 @@ public class ProjectImageService {
 		List<ProjectImage> newImages = new ArrayList<>();
 
 		for (ProjectImageInfo imageInfo : imageInfos) {
-			if (!s3Uploader.doesObjectExist(imageInfo.s3Key())) {
-				throw new AppException(ErrorCode.S3_OBJECT_NOT_FOUND);
+			if (!imageStorage.doesObjectExist(imageInfo.s3Key())) {
+				throw new AppException(ErrorCode.IMAGE_OBJECT_NOT_FOUND);
 			}
 
 			newImages.add(ProjectImage.of(
 				imageInfo.s3Key(),
-				s3Uploader.getPublicUrl(imageInfo.s3Key()),
+				imageStorage.getPublicUrl(imageInfo.s3Key()),
 				projectId,
 				imageInfo.order()
 			));
@@ -77,7 +77,7 @@ public class ProjectImageService {
 
 		for (ProjectImage existingImage : existingImages) {
 			if (!newS3Keys.contains(existingImage.getS3Key())) {
-				s3Uploader.deleteByKey(existingImage.getS3Key());
+				imageStorage.deleteByKey(existingImage.getS3Key());
 			}
 		}
 
@@ -93,7 +93,7 @@ public class ProjectImageService {
 		List<ProjectImage> images = projectImageRepository.findAllByProjectId(projectId);
 
 		for (ProjectImage image : images) {
-			s3Uploader.deleteByKey(image.getS3Key());
+			imageStorage.deleteByKey(image.getS3Key());
 		}
 
 		projectImageRepository.deleteAllByProjectId(projectId);

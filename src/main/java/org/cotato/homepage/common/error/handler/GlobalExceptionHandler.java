@@ -23,7 +23,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.google.cloud.storage.StorageException;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -101,10 +101,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
 	}
 
-	@ExceptionHandler(AmazonS3Exception.class)
-	public ResponseEntity<ErrorResponse> handleAmazonS3Exception(AmazonS3Exception exception,
+	@ExceptionHandler(StorageException.class)
+	public ResponseEntity<ErrorResponse> handleStorageException(StorageException exception,
 		HttpServletRequest request) {
-		log.error("발생한 에러: {}", exception.getErrorCode());
+		log.error("발생한 GCS 에러: {}", exception.getCode());
 		log.error("에러가 발생한 지점 {}, {}", request.getMethod(), request.getRequestURI());
 		ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.IMAGE_PROCESSING_FAIL, request);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

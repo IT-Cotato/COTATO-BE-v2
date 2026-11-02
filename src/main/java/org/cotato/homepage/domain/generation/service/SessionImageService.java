@@ -19,7 +19,7 @@ import org.cotato.homepage.api.session.dto.UpdateSessionImageOrderRequest;
 import org.cotato.homepage.common.config.CacheConfig;
 import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
-import org.cotato.homepage.common.s3.S3Uploader;
+import org.cotato.homepage.common.gcs.GcsImageStorage;
 import org.cotato.homepage.domain.generation.entity.Session;
 import org.cotato.homepage.domain.generation.entity.SessionImage;
 import org.cotato.homepage.domain.generation.repository.SessionImageRepository;
@@ -39,14 +39,14 @@ import lombok.extern.slf4j.Slf4j;
 public class SessionImageService {
 	private final SessionImageRepository sessionImageRepository;
 	private final SessionRepository sessionRepository;
-	private final S3Uploader s3Uploader;
+	private final GcsImageStorage imageStorage;
 
 	@Transactional
 	@CacheEvict(cacheNames = CacheConfig.SESSIONS, allEntries = true)
 	public void deleteSessionImage(DeleteSessionImageRequest request) {
 		SessionImage deleteImage = sessionImageRepository.findById(request.imageId())
 			.orElseThrow(() -> new EntityNotFoundException("해당 사진을 찾을 수 없습니다."));
-		s3Uploader.deleteByKey(deleteImage.getS3Key());
+		imageStorage.deleteByKey(deleteImage.getS3Key());
 		sessionImageRepository.delete(deleteImage);
 
 		List<SessionImage> reorderImages = sessionImageRepository.findAllBySession(deleteImage.getSession()).stream()
@@ -123,7 +123,7 @@ public class SessionImageService {
 
 	public PresignedUrlResponse generatePresignedUrl(PresignedUrlRequest request) {
 		validateContentType(request.contentType());
-		return s3Uploader.generatePresignedUrl(request.fileName(), request.contentType());
+		return imageStorage.generatePresignedUrl(request.fileName(), request.contentType());
 	}
 
 	@Transactional
@@ -131,8 +131,8 @@ public class SessionImageService {
 	public AddSessionImageResponse completeImageUpload(CompleteImageUploadRequest request) {
 		Session session = findSessionById(request.sessionId());
 
-		if (!s3Uploader.doesObjectExist(request.s3Key())) {
-			throw new AppException(ErrorCode.S3_OBJECT_NOT_FOUND);
+		if (!imageStorage.doesObjectExist(request.s3Key())) {
+			throw new AppException(ErrorCode.IMAGE_OBJECT_NOT_FOUND);
 		}
 
 		if (sessionImageRepository.existsBySessionAndOrder(session, request.order())) {
@@ -142,7 +142,7 @@ public class SessionImageService {
 		SessionImage sessionImage = SessionImage.builder()
 			.session(session)
 			.s3Key(request.s3Key())
-			.imageUrl(s3Uploader.getPublicUrl(request.s3Key()))
+			.imageUrl(imageStorage.getPublicUrl(request.s3Key()))
 			.order(request.order())
 			.build();
 
@@ -166,14 +166,14 @@ public class SessionImageService {
 		List<SessionImage> sessionImages = new ArrayList<>();
 
 		for (SessionImageInfo imageInfo : imageInfos) {
-			if (!s3Uploader.doesObjectExist(imageInfo.s3Key())) {
-				throw new AppException(ErrorCode.S3_OBJECT_NOT_FOUND);
+			if (!imageStorage.doesObjectExist(imageInfo.s3Key())) {
+				throw new AppException(ErrorCode.IMAGE_OBJECT_NOT_FOUND);
 			}
 
 			SessionImage sessionImage = SessionImage.builder()
 				.session(session)
 				.s3Key(imageInfo.s3Key())
-				.imageUrl(s3Uploader.getPublicUrl(imageInfo.s3Key()))
+				.imageUrl(imageStorage.getPublicUrl(imageInfo.s3Key()))
 				.order(imageInfo.order())
 				.build();
 
