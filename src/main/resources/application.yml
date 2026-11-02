@@ -40,15 +40,9 @@ jwt:
   refresh:
     expiration: 259200000
 
-cloud:
-  aws:
-    s3:
-      bucket: ${AWS_S3_BUCKET}
-    stack.auto: false
-    region: ${AWS_REGION:ap-northeast-2}
-    credentials:
-      accessKey: ${AWS_ACCESS_KEY}
-      secretKey: ${AWS_SECRET_KEY}
+gcs:
+  public:
+    bucket: ${GCS_PUBLIC_BUCKET}
 
 springdoc:
   show-login-endpoint: true

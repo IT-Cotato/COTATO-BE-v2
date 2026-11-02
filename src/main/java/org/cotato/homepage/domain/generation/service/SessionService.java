@@ -19,7 +19,7 @@ import org.cotato.homepage.common.error.ErrorCode;
 import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.common.event.CotatoEventPublisher;
 import org.cotato.homepage.common.event.EventType;
-import org.cotato.homepage.common.s3.S3Uploader;
+import org.cotato.homepage.common.gcs.GcsImageStorage;
 import org.cotato.homepage.domain.attendance.embedded.Location;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
 import org.cotato.homepage.domain.attendance.entity.AttendanceRecord;
@@ -69,7 +69,7 @@ public class SessionService {
 	private final CotatoEventPublisher cotatoEventPublisher;
 	private final SessionMinusPointRepository sessionMinusPointRepository;
 	private final BeerNetworkingRecordRepository beerNetworkingRecordRepository;
-	private final S3Uploader s3Uploader;
+	private final GcsImageStorage imageStorage;
 
 	@Transactional
 	@CacheEvict(cacheNames = CacheConfig.SESSIONS, key = "#generationId")
@@ -188,10 +188,10 @@ public class SessionService {
 	public void deleteSession(Long sessionId) {
 		Session session = sessionReader.findById(sessionId);
 
-		// 1. 세션 이미지 S3 및 DB 삭제
+		// 1. 세션 이미지 DB 삭제 후 커밋되면 GCS 객체 삭제
 		List<SessionImage> sessionImages = sessionImageRepository.findAllBySession(session);
 		for (SessionImage sessionImage : sessionImages) {
-			s3Uploader.deleteByKey(sessionImage.getS3Key());
+			imageStorage.deleteByKey(sessionImage.getS3Key());
 		}
 		sessionImageRepository.deleteAll(sessionImages);
 
