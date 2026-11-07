@@ -59,6 +59,9 @@ public enum ErrorCode {
 	//기수별 활동 부원 도메인
 	GENERATION_MEMBER_EXIST(HttpStatus.CONFLICT, "GM-301", "일부 부원이 해당 기수에 활동부원입니다"),
 
+	// 수동 상점: 같은 요청 ID로 다른 내용을 덮어쓰는 것을 막는다.
+	BONUS_REQUEST_CONFLICT(HttpStatus.CONFLICT, "BP-301", "이미 처리된 상점 요청과 내용이 다릅니다."),
+
 	FILE_EXTENSION_FAULT(HttpStatus.BAD_REQUEST, "F-001", "해당 파일 확장자 명이 존재하지 않습니다."),
 	FILE_IS_EMPTY(HttpStatus.BAD_REQUEST, "F-002", "파일이 비어있습니다"),
 
