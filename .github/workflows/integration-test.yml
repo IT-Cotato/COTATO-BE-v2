@@ -17,6 +17,22 @@ jobs:
         ports:
           - 6379:6379
 
+      # 상점 DDL·동시 요청 시험에만 사용하는 일회성 DB이며 운영 DB와 연결하지 않는다.
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: manual_bonus_test
+          MYSQL_USER: bonus_test
+          MYSQL_PASSWORD: manual-bonus-ci-only
+          MYSQL_ROOT_PASSWORD: manual-bonus-ci-root-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - name: 체크아웃 (코드 가져오기)
         uses: actions/checkout@v4
@@ -35,6 +51,9 @@ jobs:
         env:
           # application.yml에서 읽을 변수를 여기서 주입
           TEST_DISCORD_WEBHOOK_URL: ${{ secrets.TEST_DISCORD_WEBHOOK_URL }}
+          MANUAL_BONUS_JDBC_URL: jdbc:mysql://127.0.0.1:3306/manual_bonus_test
+          # 위 일회성 서비스의 공개 시험용 값이며 운영 인증 정보가 아니다.
+          MANUAL_BONUS_TEST_PASSWORD: manual-bonus-ci-only
         run: ./gradlew test
 
       # 4. 엑셀 파일 존재 확인 (디버깅용)
