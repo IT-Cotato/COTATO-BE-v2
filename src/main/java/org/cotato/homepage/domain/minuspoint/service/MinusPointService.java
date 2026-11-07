@@ -16,7 +16,11 @@ import org.cotato.homepage.api.minuspoint.dto.MyMinusPointDashboardResponse;
 import org.cotato.homepage.api.minuspoint.dto.MyMinusPointRecordResponse;
 import org.cotato.homepage.api.minuspoint.dto.MyMinusPointRecordResponse.PointType;
 import org.cotato.homepage.api.minuspoint.dto.MyMinusPointRecordsResponse;
+import org.cotato.homepage.api.minuspoint.dto.MyPointTimelineRecordResponse;
+import org.cotato.homepage.api.minuspoint.dto.MyPointTimelineResponse;
 import org.cotato.homepage.api.minuspoint.dto.SessionMinusPointManagementResponse;
+import org.cotato.homepage.common.error.ErrorCode;
+import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.attendance.entity.Attendance;
 import org.cotato.homepage.domain.attendance.entity.AttendanceRecord;
 import org.cotato.homepage.domain.attendance.enums.AttendanceResult;
@@ -33,6 +37,7 @@ import org.cotato.homepage.domain.member.service.component.MemberReader;
 import org.cotato.homepage.domain.minuspoint.entity.BeerNetworkingRecord;
 import org.cotato.homepage.domain.minuspoint.entity.SessionMinusPoint;
 import org.cotato.homepage.domain.minuspoint.repository.BeerNetworkingRecordRepository;
+import org.cotato.homepage.domain.minuspoint.repository.ManualBonusPointRepository;
 import org.cotato.homepage.domain.minuspoint.repository.SessionMinusPointRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +46,7 @@ import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/** 기존 출석·뒷풀이 계산은 유지하고 수동 상점은 조회 시에만 합산한다. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -55,6 +61,7 @@ public class MinusPointService {
 
 	private final SessionMinusPointRepository sessionMinusPointRepository;
 	private final BeerNetworkingRecordRepository beerNetworkingRecordRepository;
+	private final ManualBonusPointRepository manualBonusPointRepository;
 	private final AttendanceRecordRepository attendanceRecordRepository;
 	private final AttendanceRepository attendanceRepository;
 	private final MemberReader memberReader;
@@ -93,6 +100,12 @@ public class MinusPointService {
 					Collectors.counting()
 				));
 
+		// 수동 상점은 기수별로 한 번 조회하여 회원 수만큼 쿼리가 늘어나지 않게 한다.
+		Map<Long, Integer> manualBonusByMemberId = manualBonusPointRepository
+			.findAllByGenerationIdAndCancelledAtIsNull(generationId).stream()
+			.collect(Collectors.groupingBy(point -> point.getMemberId(),
+				Collectors.summingInt(point -> point.getPoints())));
+
 		List<MemberMinusPointStatisticsResponse> responses = memberReader.findAllMember(generation).stream()
 			.filter(member -> !StringUtils.hasText(search) || member.getName().contains(search))
 			.map(member -> {
@@ -109,7 +122,9 @@ public class MinusPointService {
 				int attendanceMinusPoint = calculateAttendanceMinusPoint(
 					lateCount, absentCount, unauthorizedAbsentCount);
 				int beerNetworkingBonusPoint = calculateBeerNetworkingBonusPoint(beerNetworkingCount);
-				int totalMinusPoint = attendanceMinusPoint + sessionMinusPoint + beerNetworkingBonusPoint;
+				int manualBonusPoint = manualBonusByMemberId.getOrDefault(member.getId(), 0);
+				int totalMinusPoint = attendanceMinusPoint + sessionMinusPoint + beerNetworkingBonusPoint
+					+ manualBonusPoint;
 
 				return MemberMinusPointStatisticsResponse.of(
 					member.getId(),
@@ -118,6 +133,7 @@ public class MinusPointService {
 					sessionMinusPoint,
 					(int) beerNetworkingCount,
 					beerNetworkingBonusPoint,
+					manualBonusPoint,
 					totalMinusPoint
 				);
 			})
@@ -256,12 +272,15 @@ public class MinusPointService {
 			.count();
 
 		int beerNetworkingBonusPoint = calculateBeerNetworkingBonusPoint(beerNetworkingCount);
+		int manualBonusPoint = manualBonusPointRepository
+			.findAllByGenerationIdAndMemberIdAndCancelledAtIsNull(generation.getId(), member.getId()).stream()
+			.mapToInt(point -> point.getPoints()).sum();
 
 		int totalMinusPoint = attendanceMinusPoint + sessionMinusPoint;
 
 		return MyMinusPointDashboardResponse.of(
 			generation.getId(),
-			beerNetworkingBonusPoint,
+			beerNetworkingBonusPoint + manualBonusPoint,
 			totalMinusPoint,
 			(int) beerNetworkingCount
 		);
@@ -393,6 +412,42 @@ public class MinusPointService {
 		}
 
 		return MyMinusPointRecordsResponse.of(generation.getId(), records);
+	}
+
+	/** 기존 주차별 API는 유지하고 새 API에서만 세션 외 상점을 합친다. */
+	public MyPointTimelineResponse findMyPointTimeline(Member member, Integer month) {
+		if (month != null && (month < 1 || month > 12)) {
+			throw new AppException(ErrorCode.INVALID_INPUT);
+		}
+		// 1. 현재 기수·본인 소속 검증과 기존 세션 계산을 그대로 재사용한다.
+		MyMinusPointRecordsResponse legacy = findMyMinusPointRecords(member, null);
+		if (legacy.generationId() == null) {
+			return new MyPointTimelineResponse(null, List.of());
+		}
+		List<MyPointTimelineRecordResponse> timeline = new ArrayList<>();
+		for (int index = 0; index < legacy.records().size(); index++) {
+			MyMinusPointRecordResponse record = legacy.records().get(index);
+			timeline.add(new MyPointTimelineRecordResponse("session-" + record.sessionId() + "-" + index, "SESSION",
+				record.week(), record.sessionDateTime(), record.content(), record.pointType(), record.point(), 0));
+		}
+		// 2. 세션이 0개여도 수동 부여 이력은 독립적으로 존재할 수 있다.
+		manualBonusPointRepository.findAllByGenerationIdAndMemberIdAndCancelledAtIsNull(legacy.generationId(),
+			member.getId()).forEach(point -> timeline.add(new MyPointTimelineRecordResponse("manual-" + point.getId(),
+				"MANUAL", null, point.getCreatedAt(), point.getReason(), PointType.BONUS, point.getPoints(), 0)));
+		// 안정 정렬로 같은 시각의 기존 세션 계산 순서와 숫자 ID순 수동 부여 순서를 유지한다.
+		timeline.sort(Comparator.comparing(MyPointTimelineRecordResponse::occurredAt,
+			Comparator.nullsFirst(Comparator.naturalOrder())));
+
+		// 3. 이전 달의 점수까지 누계에 반영한 뒤 요청한 달만 반환한다.
+		int cumulative = 0;
+		List<MyPointTimelineRecordResponse> filtered = new ArrayList<>();
+		for (MyPointTimelineRecordResponse record : timeline) {
+			cumulative += record.point();
+			if (month == null || record.occurredAt() == null || record.occurredAt().getMonthValue() == month) {
+				filtered.add(record.withCumulativePoint(cumulative));
+			}
+		}
+		return new MyPointTimelineResponse(legacy.generationId(), filtered);
 	}
 
 	private int getAttendanceMinusPoint(AttendanceResult result) {

@@ -8,7 +8,7 @@ public record MyMinusPointDashboardResponse(
 	Long generationId,
 	@Schema(description = "상/벌점 총합 (상점 + 벌점)", requiredMode = RequiredMode.REQUIRED)
 	Integer totalPoint,
-	@Schema(description = "상점 누적 (비어네트워킹 보너스)", requiredMode = RequiredMode.REQUIRED)
+	@Schema(description = "상점 누적 (비어네트워킹 보너스 + 취소되지 않은 수동 상점)", requiredMode = RequiredMode.REQUIRED)
 	Integer bonusPoint,
 	@Schema(description = "벌점 누적 (출석 벌점 + 세션 벌점)", requiredMode = RequiredMode.REQUIRED)
 	Integer minusPoint,
