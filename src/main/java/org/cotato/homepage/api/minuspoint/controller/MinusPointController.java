@@ -2,6 +2,7 @@ package org.cotato.homepage.api.minuspoint.controller;
 
 import org.cotato.homepage.api.minuspoint.dto.MyMinusPointDashboardResponse;
 import org.cotato.homepage.api.minuspoint.dto.MyMinusPointRecordsResponse;
+import org.cotato.homepage.api.minuspoint.dto.MyPointTimelineResponse;
 import org.cotato.homepage.domain.member.entity.Member;
 import org.cotato.homepage.domain.minuspoint.service.MinusPointService;
 import org.springframework.http.ResponseEntity;
@@ -53,5 +54,13 @@ public class MinusPointController {
 		@AuthenticationPrincipal Member member
 	) {
 		return ResponseEntity.ok().body(minusPointService.findMyMinusPointRecords(member, month));
+	}
+
+	@Operation(summary = "내 통합 상벌점 내역 조회",
+		description = "기존 세션 기록과 세션 외 수동 상점을 날짜순으로 반환합니다. 주차가 없는 기록의 week는 null입니다.")
+	@GetMapping("/my/timeline")
+	public ResponseEntity<MyPointTimelineResponse> findMyPointTimeline(
+		@RequestParam(name = "month", required = false) Integer month, @AuthenticationPrincipal Member member) {
+		return ResponseEntity.ok(minusPointService.findMyPointTimeline(member, month));
 	}
 }
