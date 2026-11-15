@@ -89,6 +89,24 @@ class TimezonePolicyTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     deployment.validate_timezone(config)
 
+    def test_hidden_java_options_conflict_is_rejected_from_runtime_and_image(self):
+        # Keep this input literal so a missing option-source constant cannot hide the regression.
+        for source in ['runtime', 'image']:
+            with self.subTest(source=source):
+                self.current = fixture()
+                self.image['Config']['Env'] = []
+                target = self.current['Config'] if source == 'runtime' else self.image['Config']
+                target['Env'].append('_JAVA_OPTIONS=-Duser.timezone=UTC')
+                with self.assertRaises(ValueError):
+                    self.build()
+
+    def test_compatible_hidden_java_options_are_preserved(self):
+        for options in ['-Xms16m -Dfixture=yes', '-Duser.timezone=Asia/Seoul']:
+            with self.subTest(options=options):
+                self.current = fixture()
+                self.current['Config']['Env'].append('_JAVA_OPTIONS=' + options)
+                self.assertEqual(deployment.environment(self.build()['Env'])['_JAVA_OPTIONS'], options)
+
     def test_unrelated_property_and_quoted_flags_are_preserved(self):
         self.current['Config']['Env'].append('JDK_JAVA_OPTIONS=-Duser.timezone.fixture=yes -Dfixture="two words"')
         self.build()
@@ -156,7 +174,8 @@ class DeploymentBoundaryTests(unittest.TestCase):
         if method == 'GET' and path.startswith('/images/'):
             return copy.deepcopy(self.image)
         if method == 'GET' and path == '/containers/json?all=true':
-            return [{'Id': identifier} for identifier in self.values]
+            return [{'Id': identifier, 'Names': [value['Name']]}
+                    for identifier, value in self.values.items()]
         if method == 'POST' and path.startswith('/containers/create'):
             self.values['candidate'] = {'Id': 'candidate', 'Image': body['Image'],
                 'Name': '/' + path.split('name=')[1], 'Config': copy.deepcopy(body),
@@ -198,11 +217,102 @@ class DeploymentBoundaryTests(unittest.TestCase):
         self.assertEqual(self.values['old'], self.old)
 
     def test_timezone_conflict_blocks_before_any_mutation(self):
-        self.values['old']['Config']['Env'].append('JDK_JAVA_OPTIONS=-Duser.timezone=UTC')
-        self.args.mode = 'apply'
-        with self.assertRaises(ValueError):
+        for key in ['JDK_JAVA_OPTIONS', '_JAVA_OPTIONS']:
+            with self.subTest(environment=key):
+                self.values = {'old': copy.deepcopy(self.old)}
+                self.calls = []
+                self.values['old']['Config']['Env'].append(key + '=-Duser.timezone=UTC')
+                self.args.mode = 'apply'
+                with self.assertRaises(ValueError):
+                    deployment.run(self.args)
+                self.assertTrue(all(method == 'GET' for method, path in self.calls))
+
+    def test_lost_create_reply_removes_own_stopped_candidate_without_stopping_api(self):
+        for mode in ['verify-candidate', 'apply']:
+            with self.subTest(mode=mode):
+                self.values = {'old': copy.deepcopy(self.old)}
+                other = copy.deepcopy(self.old)
+                other.update({'Id': 'unrelated', 'Name': '/other'})
+                other['HostConfig']['PortBindings'] = {}
+                self.values['unrelated'] = other
+                self.calls = []
+                self.args.mode = mode
+
+                def lose_reply(method, path, body=None):
+                    result = self.docker(method, path, body)
+                    if method == 'POST' and path.startswith('/containers/create'):
+                        raise OSError('Synthetic lost create reply.')
+                    return result
+
+                with patch.object(deployment, 'docker', lose_reply), self.assertRaises(OSError):
+                    deployment.run(self.args)
+                self.assertEqual(self.values['old'], self.old)
+                self.assertNotIn('candidate', self.values)
+                self.assertEqual(self.values['unrelated'], other)
+                self.assertEqual([path for method, path in self.calls if method == 'DELETE'],
+                                 ['/containers/candidate'])
+                self.assertFalse(any('/start' in path or '/stop' in path for method, path in self.calls))
+
+    def test_failure_before_create_does_not_delete_any_container(self):
+        def refuse_create(method, path, body=None):
+            if method == 'POST' and path.startswith('/containers/create'):
+                raise OSError('Synthetic failure before create.')
+            return self.docker(method, path, body)
+
+        self.args.mode = 'verify-candidate'
+        with patch.object(deployment, 'docker', refuse_create), self.assertRaises(OSError):
             deployment.run(self.args)
-        self.assertTrue(all(method == 'GET' for method, path in self.calls))
+        self.assertEqual(self.values, {'old': self.old})
+        self.assertFalse(any(method == 'DELETE' for method, path in self.calls))
+
+    def test_ambiguous_create_preserves_foreign_running_or_changed_image_candidate(self):
+        for kind in ['foreign-label', 'running', 'different-image']:
+            with self.subTest(kind=kind):
+                self.values = {'old': copy.deepcopy(self.old)}
+                self.calls = []
+                self.events = []
+
+                def lose_reply(method, path, body=None):
+                    result = self.docker(method, path, body)
+                    if method == 'POST' and path.startswith('/containers/create'):
+                        value = self.values['candidate']
+                        if kind == 'foreign-label':
+                            value['Config']['Labels']['cotato.homepage.deployment-attempt'] = 'another-attempt'
+                        elif kind == 'running':
+                            value['State']['Running'] = True
+                        else:
+                            value['Image'] = self.old['Image']
+                        raise OSError('Synthetic lost create reply with unsafe candidate state.')
+                    return result
+
+                self.args.mode = 'verify-candidate'
+                with patch.object(deployment, 'docker', lose_reply), self.assertRaises(Exception):
+                    deployment.run(self.args)
+                self.assertIn('candidate', self.values)
+                self.assertEqual(self.values['old'], self.old)
+                self.assertFalse(any(method == 'DELETE' for method, path in self.calls))
+                self.assertIn('candidate-cleanup-needs-attention', self.events)
+
+    def test_unavailable_candidate_lookup_reports_attention_without_stopping_api(self):
+        created = False
+
+        def unavailable_lookup(method, path, body=None):
+            nonlocal created
+            if created and method == 'GET' and path == '/containers/json?all=true':
+                raise OSError('Synthetic Docker unavailable during recovery.')
+            result = self.docker(method, path, body)
+            if method == 'POST' and path.startswith('/containers/create'):
+                created = True
+                raise OSError('Synthetic lost create reply.')
+            return result
+
+        self.args.mode = 'verify-candidate'
+        with patch.object(deployment, 'docker', unavailable_lookup), self.assertRaises(OSError):
+            deployment.run(self.args)
+        self.assertEqual(self.values['old'], self.old)
+        self.assertIn('candidate', self.values)
+        self.assertIn('candidate-cleanup-needs-attention', self.events)
+        self.assertFalse(any('/start' in path or '/stop' in path for method, path in self.calls))
 
     def test_verify_candidate_is_never_started_and_is_removed(self):
         self.args.mode = 'verify-candidate'

@@ -20,7 +20,8 @@ ZONE = 'Asia/Seoul'
 ZONE_OPTION = '-Duser.timezone=' + ZONE
 API_PORT = '13702'
 HEALTH = 'http://127.0.0.1:13702/actuator/health'
-JVM_ENVIRONMENTS = ('JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', 'JAVA_OPTS')
+JVM_ENVIRONMENTS = ('JAVA_TOOL_OPTIONS', 'JDK_JAVA_OPTIONS', 'JAVA_OPTS', '_JAVA_OPTIONS')
+ATTEMPT_LABEL = 'cotato.homepage.deployment-attempt'
 
 
 def emit(stage, **values):
@@ -174,6 +175,22 @@ def restore_previous(old, candidate, original_name, temporary_name):
     emit('previous-api-restored')
 
 
+def recover_created_candidate(temporary_name, attempt, image_id):
+    """Recover a lost create reply only for this attempt's exact, stopped candidate."""
+    for item in docker('GET', '/containers/json?all=true'):
+        if '/' + temporary_name not in item.get('Names', []):
+            continue
+        value = inspect(item['Id'])
+        # A matching name alone cannot authorize deletion after an ambiguous Docker reply.
+        if (value['Name'] != '/' + temporary_name
+                or (value['Config'].get('Labels') or {}).get(ATTEMPT_LABEL) != attempt
+                or value['Image'] != image_id or value['State']['Running']):
+            raise RuntimeError('Candidate cleanup requires administrator attention.')
+        emit('candidate-create-state-recovered', candidateStarted=False)
+        return value['Id']
+    return None
+
+
 def run(args):
     # 2. Default checks never create a container or start an application.
     image = docker('GET', '/images/' + quote(args.image, safe=':') + '/json')
@@ -195,6 +212,8 @@ def run(args):
     original = old['Name'].lstrip('/')
     temporary = original + '-candidate-' + token
     backup = original + '-backup-' + token
+    attempt = uuid.uuid4().hex
+    body['Labels'][ATTEMPT_LABEL] = attempt
     candidate = None
     replacement_attempted = False
     committed = False
@@ -220,6 +239,12 @@ def run(args):
         emit('api-deployment-passed', timezone=ZONE, previousAPIPreserved=True, otherContainersChanged=0)
     finally:
         # 4. Recover by inspected state even when a stop/rename reply was lost after Docker applied it.
+        if candidate is None:
+            try:
+                candidate = recover_created_candidate(temporary, attempt, image['Id'])
+            except Exception:
+                emit('candidate-cleanup-needs-attention', existingAPIPreserved=True)
+                raise
         if replacement_attempted and not committed:
             try:
                 restore_previous(old, candidate, original, temporary)
