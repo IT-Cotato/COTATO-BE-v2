@@ -121,14 +121,5 @@ jobs:
           echo "Hotfix Branch Created"
           echo "Branch: ${{ steps.version.outputs.branch_name }}"
           echo "Version: ${{ steps.version.outputs.version }}"
-          echo "Next: Triggering QA deployment"
+          echo "QA deployment is manual. Run Deploy to QA Server with ref: ${{ steps.version.outputs.branch_name }}"
           echo "=========================================="
-
-  deploy-to-qa:
-    name: Deploy to QA Server
-    needs: create-branch
-    if: needs.create-branch.result == 'success'
-    uses: ./.github/workflows/deploy-qa.yml
-    with:
-      ref: ${{ needs.create-branch.outputs.branch_name }}
-    secrets: inherit
