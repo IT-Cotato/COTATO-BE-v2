@@ -18,11 +18,12 @@ COPY ${JAR_FILE} app.jar
 # 애플리케이션 포트 노출
 EXPOSE 8080
 
-# 타임존 설정
+# 컨테이너 시간대와 JVM 기본 시간대를 같은 한국 기준으로 유지한다.
 ENV TZ=Asia/Seoul
 
 # 컨테이너 실행 시 Java 애플리케이션 시작
 ENTRYPOINT ["java", \
     "-Djava.security.egd=file:/dev/./urandom", \
+    "-Duser.timezone=Asia/Seoul", \
     "-jar", \
     "app.jar"]
