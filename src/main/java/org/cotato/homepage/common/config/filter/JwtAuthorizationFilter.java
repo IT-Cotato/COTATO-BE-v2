@@ -39,6 +39,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 		"/v1/api/generations",
 		"/v1/api/generations/current",
 		"/v1/api/projects/**",
+		"/v1/api/homepage-images",
 		"/v1/api/recruitments/status",
 		"/v1/api/recruitments/notices",
 		"/v1/api/faq",

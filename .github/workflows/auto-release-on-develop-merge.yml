@@ -99,13 +99,5 @@ jobs:
           echo "=========================================="
           echo "Release Branch: ${{ steps.version.outputs.branch_name }}"
           echo "Version: ${{ steps.version.outputs.version }}"
-          echo "Next: Triggering QA deployment"
+          echo "QA deployment is manual. Run Deploy to QA Server with ref: ${{ steps.version.outputs.branch_name }}"
           echo "=========================================="
-
-  deploy-to-qa:
-    name: Deploy to QA Server
-    needs: create-release-branch
-    uses: ./.github/workflows/deploy-qa.yml
-    with:
-      ref: ${{ needs.create-release-branch.outputs.branch_name }}
-    secrets: inherit

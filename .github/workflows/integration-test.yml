@@ -107,3 +107,42 @@ jobs:
           else
             echo "⚠️ 엑셀 파일이 발견되지 않아 전송을 건너뜁니다."
           fi
+
+
+  # 사진 JPA 시험은 기존 상점 DB와 분리한 일회성 DB에서만 실행한다.
+  homepage-image-mysql:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: homepage_image_test
+          MYSQL_USER: photo_test
+          # 이 job의 일회성 서비스 전용 공개 시험 값이며 운영 인증 정보가 아니다.
+          MYSQL_PASSWORD: homepage-image-ci-only
+          MYSQL_ROOT_PASSWORD: homepage-image-ci-root-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v4
+      - name: JDK 17 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+      - name: 사진 MySQL 정합성과 코드 규칙 검증
+        env:
+          HOMEPAGE_IMAGE_MYSQL_JDBC_URL: jdbc:mysql://127.0.0.1:3306/homepage_image_test
+          HOMEPAGE_IMAGE_MYSQL_TEST_PASSWORD: homepage-image-ci-only
+        run: >-
+          ./gradlew --no-daemon test
+          --tests org.cotato.homepage.domain.homepageimage.service.HomepageImageMysqlIntegrationTest
+          checkstyleMain checkstyleTest

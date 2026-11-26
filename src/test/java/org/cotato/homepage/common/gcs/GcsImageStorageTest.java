@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
@@ -22,9 +24,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.google.auth.ServiceAccountSigner;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 
 /** Verifies that object deletion never precedes the DB transaction commit. */
 @ExtendWith(MockitoExtension.class)
@@ -108,5 +113,36 @@ class GcsImageStorageTest {
 			.isEqualTo("https://storage.googleapis.com/public-images/projects/image.png");
 		assertThat(imageStorage.getPublicUrl("projects/older image.png"))
 			.isEqualTo("https://storage.googleapis.com/public-images/projects/older%20image.png");
+	}
+
+	@Test
+	void realV4SignedUrlRequiresContentTypeHeader() {
+		Storage realStorage = StorageOptions.newBuilder()
+			.setProjectId("synthetic-photo-test")
+			.setCredentials(new SyntheticSigningCredentials())
+			.build().getService();
+		GcsImageStorage actual = new GcsImageStorage(realStorage);
+		ReflectionTestUtils.setField(actual, "bucket", "synthetic-photo-test");
+
+		var response = actual.generatePresignedUrl("photo.png", "image/png", "homepage/schedule_ot");
+		String query = URLDecoder.decode(java.net.URI.create(response.presignedUrl()).getRawQuery(),
+			StandardCharsets.UTF_8);
+
+		// 실제 SDK의 V4 정규화 결과를 확인한다. HTTP 호출과 실제 인증 정보는 사용하지 않는다.
+		assertThat(query).contains("X-Goog-SignedHeaders=content-type;host");
+		assertThat(query).contains("X-Goog-Expires=900");
+	}
+
+	/** 서명 URL의 헤더 구성만 검증하는 합성 서명자다. 클라우드에서 인증 가능한 키를 만들지 않는다. */
+	private static final class SyntheticSigningCredentials extends GoogleCredentials implements ServiceAccountSigner {
+		@Override
+		public String getAccount() {
+			return "photo-test@example.invalid";
+		}
+
+		@Override
+		public byte[] sign(byte[] bytes) {
+			return new byte[32];
+		}
 	}
 }
