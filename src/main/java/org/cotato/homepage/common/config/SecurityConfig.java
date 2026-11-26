@@ -56,6 +56,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(request -> request
 				.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
 				.requestMatchers(new AntPathRequestMatcher(SESSION_PATH, HttpMethod.GET.name())).permitAll()
+				.requestMatchers(HttpMethod.GET, "/v1/api/homepage-images").permitAll()
 				.requestMatchers(WHITE_LIST).permitAll()
 				.anyRequest().authenticated()
 		);

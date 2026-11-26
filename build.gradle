@@ -100,3 +100,13 @@ checkstyleMain {
 checkstyleTest {
     source = 'src/test/java'
 }
+
+// 테스트 클래스패스에서 사진 전용 로컬 서버만 실행한다. 운영 bootJar에는 테스트 런처가 포함되지 않는다.
+tasks.register('runHomepageImagePreview', JavaExec) {
+    group = 'application'
+    description = 'Run homepage image preview on loopback, without cloud credentials or a real database'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.cotato.homepage.homepageimage.preview.HomepageImagePreviewApplication'
+    jvmArgs '-Xmx256m', '-Duser.timezone=Asia/Seoul'
+}
