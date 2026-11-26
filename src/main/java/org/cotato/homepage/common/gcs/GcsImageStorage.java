@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -51,10 +52,10 @@ public class GcsImageStorage {
 		LocalDateTime expiration = LocalDateTime.now(ZoneId.systemDefault())
 			.plusMinutes(PRESIGNED_URL_EXPIRATION_MINUTES);
 
-		// The signed Content-Type must match the browser's PUT request exactly.
+		// V4 canonical headers must include Content-Type to reject a different browser PUT header.
 		URL signedUrl = storage.signUrl(blobInfo, PRESIGNED_URL_EXPIRATION_MINUTES, TimeUnit.MINUTES,
 			Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
-			Storage.SignUrlOption.withContentType(),
+			Storage.SignUrlOption.withExtHeaders(Map.of("Content-Type", contentType)),
 			Storage.SignUrlOption.withV4Signature());
 
 		return new PresignedUrlResponse(signedUrl.toString(), objectKey, expiration);
