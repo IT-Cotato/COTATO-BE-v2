@@ -34,7 +34,7 @@ public class ProjectController {
 		@RequestParam(value = "generationId", required = false)
 		@Parameter(description = "기수 ID") Long generationId,
 		@RequestParam(value = "projectType", required = false)
-		@Parameter(description = "활동 타입 (HACKATHON, DEMODAY)") ProjectType projectType) {
+		@Parameter(description = "활동 타입 (HACKATHON, DEMODAY, STUDY); 미지정 시 프로젝트만 조회") ProjectType projectType) {
 		return ResponseEntity.ok(projectService.getProjectsByFilter(generationId, projectType));
 	}
 
