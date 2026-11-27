@@ -12,6 +12,8 @@ import org.cotato.homepage.api.project.dto.ProjectDetailResponse;
 import org.cotato.homepage.api.project.dto.ProjectSummaryResponse;
 import org.cotato.homepage.api.project.dto.UpdateProjectRequest;
 import org.cotato.homepage.common.config.CacheConfig;
+import org.cotato.homepage.common.error.ErrorCode;
+import org.cotato.homepage.common.error.exception.AppException;
 import org.cotato.homepage.domain.generation.entity.Generation;
 import org.cotato.homepage.domain.generation.entity.Project;
 import org.cotato.homepage.domain.generation.entity.ProjectImage;
@@ -56,7 +58,8 @@ public class ProjectService {
 	}
 
 	public List<ProjectSummaryResponse> getAllProjectSummaries() {
-		List<Project> projects = projectRepository.findAll();
+		List<Project> projects = projectRepository.findAll().stream()
+			.filter(project -> project.getProjectType() != ProjectType.STUDY).toList();
 
 		List<Long> projectIds = projects.stream()
 			.map(Project::getId)
@@ -76,7 +79,9 @@ public class ProjectService {
 
 	@Cacheable(cacheNames = CacheConfig.PROJECTS, key = "#generationId + ':' + #projectType")
 	public List<ProjectSummaryResponse> getProjectsByFilter(Long generationId, ProjectType projectType) {
-		List<Project> projects = projectRepository.findAll();
+		List<Project> projects = projectRepository.findAll().stream()
+			.filter(project -> projectType == ProjectType.STUDY || project.getProjectType() != ProjectType.STUDY)
+			.toList();
 
 		if (generationId != null) {
 			projects = projects.stream()
@@ -140,6 +145,11 @@ public class ProjectService {
 	public void updateProject(Long projectId, UpdateProjectRequest request) {
 		Project project = projectRepository.findById(projectId)
 			.orElseThrow(() -> new EntityNotFoundException("찾으려는 프로젝트가 존재하지 않습니다."));
+
+		// 스터디와 프로젝트는 별도 목록이다. 잘못 열린 편집 화면이나 직접 API 요청으로 종류를 옮기지 않는다.
+		if ((project.getProjectType() == ProjectType.STUDY) != (request.projectType() == ProjectType.STUDY)) {
+			throw new AppException(ErrorCode.INVALID_INPUT);
+		}
 
 		Generation generation = generationRepository.findById(request.generationId())
 			.orElseThrow(() -> new EntityNotFoundException("해당 기수를 찾을 수 없습니다."));

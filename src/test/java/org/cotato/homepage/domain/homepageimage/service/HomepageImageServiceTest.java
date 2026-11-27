@@ -45,6 +45,49 @@ class HomepageImageServiceTest {
 	}
 
 	@Test
+	void aboutUsRequiresExplicitOptInForLegacyClients() {
+		when(store.findAll()).thenReturn(List.of());
+		assertEquals(10, service.images().size());
+		assertEquals(14, service.images(true).size());
+	}
+
+	@Test
+	void displayScheduleUsesEditorAuthorizationAndNeverTouchesFileStorage() {
+		when(store.saveText(slot, "기존 제목", "설명", "2027.01.15", null)).thenReturn(
+			new HomepageImageSettings(slot, null, crop, crop, 0, "2027.01.15"));
+		var view = service.updateText(slot, "기존 제목", "설명", " 2027.01.15 ", null);
+		assertEquals("2027.01.15", view.displaySchedule());
+		assertNull(view.imageUrl());
+		verify(authorization).requireEditor();
+		verifyNoInteractions(storage);
+	}
+
+	@Test
+	void scheduleSaveRejectsForbiddenCallerBeforeStore() {
+		doThrow(new HomepageImageException(403, "denied")).when(authorization).requireEditor();
+		assertEquals(403, assertThrows(HomepageImageException.class,
+			() -> service.updateText(slot, "기존 제목", "설명", "2027.01.15", null)).status());
+		verifyNoInteractions(storage, store);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"", " ", "line\nline"})
+	void invalidScheduleNeverReachesStore(String text) {
+		assertEquals(400, assertThrows(HomepageImageException.class,
+			() -> service.updateText(slot, "기존 제목", "설명", text, null)).status());
+		verifyNoInteractions(storage, store);
+	}
+
+	@Test
+	void nonScheduleSlotOrOverlongTextCannotBeEditedAsSchedule() {
+		assertThrows(HomepageImageException.class,
+			() -> service.updateText(HomepageImageSlot.PART_PM, "기존 제목", "설명", "2027.01.15", null));
+		assertThrows(HomepageImageException.class,
+			() -> service.updateText(slot, "기존 제목", "설명", "a".repeat(81), null));
+		verifyNoInteractions(storage, store);
+	}
+
+	@Test
 	void uploadAndSaveBothRejectForbiddenCallerBeforeStorage() {
 		doThrow(new HomepageImageException(403, "denied")).when(authorization).requireEditor();
 		assertEquals(403, assertThrows(HomepageImageException.class,

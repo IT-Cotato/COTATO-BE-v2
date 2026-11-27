@@ -31,6 +31,29 @@ public class JpaHomepageImageStore implements HomepageImageStore {
 
 	@Override
 	@Transactional
+	public HomepageImageSettings saveText(HomepageImageSlot slot, String title, String description, String schedule,
+		Long expectedRevision) {
+		try {
+			// 1. 사진이 없는 기본 영역도 일정만 저장할 수 있다. 기존 사진·크롭은 덮어쓰지 않는다.
+			HomepageImage image = repository.findBySlot(slot).orElse(null);
+			if (image == null) {
+				if (expectedRevision != null) {
+					throw HomepageImageException.conflict();
+				}
+				image = HomepageImage.create(slot, null, HomepageImageCrop.centered(), HomepageImageCrop.centered());
+			} else if (expectedRevision == null || image.getRevision() != expectedRevision) {
+				throw HomepageImageException.conflict();
+			}
+			// 2. 사진 변경과 같은 revision을 사용해 오래된 편집창의 저장을 충돌로 처리한다.
+			image.changeText(title, description, schedule);
+			return repository.saveAndFlush(image).snapshot();
+		} catch (ObjectOptimisticLockingFailureException | DataIntegrityViolationException exception) {
+			throw HomepageImageException.conflict();
+		}
+	}
+
+	@Override
+	@Transactional
 	public HomepageImageSettings save(HomepageImageSlot slot, String key, HomepageImageCrop desktop,
 		HomepageImageCrop mobile, Long expectedRevision) {
 		try {

@@ -7,7 +7,8 @@ import lombok.Getter;
 @Getter
 public enum ProjectType {
 	HACKATHON("코커톤"),
-	DEMODAY("데모데이");
+	DEMODAY("데모데이"),
+	STUDY("스터디");
 
 	private final String description;
 }
