@@ -64,8 +64,13 @@ public class LocalHomepageImageStorage implements HomepageImageStorage {
 	}
 
 	public Path path(String key) {
-		if (key == null || !key.matches("homepage/(schedule|part)_[a-z]+/[0-9a-f-]{36}\\.(jpg|png|webp)")) {
+		if (key == null || !key.matches("homepage/[a-z_]+/[0-9a-f-]{36}\\.(jpg|png|webp)")) {
 			throw HomepageImageException.invalid("올바른 로컬 사진 경로가 아닙니다.");
+		}
+		boolean knownSlot = java.util.Arrays.stream(HomepageImageSlot.values())
+			.anyMatch(slot -> key.startsWith(slot.prefix() + "/"));
+		if (!knownSlot) {
+			throw HomepageImageException.invalid("올바른 로컬 사진 영역이 아닙니다.");
 		}
 		Path file = root.resolve(key).normalize();
 		if (!file.startsWith(root)) {

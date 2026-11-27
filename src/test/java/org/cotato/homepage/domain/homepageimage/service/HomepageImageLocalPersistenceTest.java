@@ -29,6 +29,15 @@ class HomepageImageLocalPersistenceTest {
 	private final String key = "homepage/schedule_demoday/11111111-1111-4111-8111-111111111111.webp";
 
 	@Test
+	void aboutUsUploadPathIsAcceptedButUnknownSlotIsRejected() throws Exception {
+		var storage = new LocalHomepageImageStorage(directory, "http://127.0.0.1:18113");
+		String aboutKey = "homepage/about_cs_education/11111111-1111-4111-8111-111111111111.png";
+		assertTrue(storage.path(aboutKey).startsWith(directory));
+		assertThrows(HomepageImageException.class, () -> storage.path(
+			"homepage/unknown_slot/11111111-1111-4111-8111-111111111111.png"));
+	}
+
+	@Test
 	void fileReloadPreservesBothCropsExactly() throws Exception {
 		var store = new FileHomepageImageStore(directory, new ObjectMapper());
 		var mobile = new HomepageImageCrop(71, 20, 2.15);
@@ -37,6 +46,19 @@ class HomepageImageLocalPersistenceTest {
 		assertEquals(crop, reloaded.findAll().get(0).desktop());
 		assertEquals(mobile, reloaded.findAll().get(0).mobile());
 		assertEquals(0, reloaded.findAll().get(0).revision());
+	}
+
+	@Test
+	void scheduleOnlySurvivesReloadAndPhotoReplacementPreservesIt() throws Exception {
+		var store = new FileHomepageImageStore(directory, new ObjectMapper());
+		store.saveText(slot, "기존 제목", "설명", "2027.01.15", null);
+		var reloaded = new FileHomepageImageStore(directory, new ObjectMapper());
+		assertNull(reloaded.findAll().get(0).objectKey());
+		assertEquals("2027.01.15", reloaded.findAll().get(0).displaySchedule());
+		reloaded.save(slot, key, crop, crop, 0L);
+		assertEquals("2027.01.15", reloaded.findAll().get(0).displaySchedule());
+		assertEquals(key, reloaded.findAll().get(0).objectKey());
+		assertThrows(HomepageImageException.class, () -> reloaded.saveText(slot, "기존 제목", "설명", "old", 0L));
 	}
 
 	@Test

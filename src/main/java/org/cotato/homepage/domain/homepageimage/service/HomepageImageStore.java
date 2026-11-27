@@ -12,4 +12,7 @@ public interface HomepageImageStore {
 
 	HomepageImageSettings save(HomepageImageSlot slot, String objectKey, HomepageImageCrop desktop,
 		HomepageImageCrop mobile, Long expectedRevision);
+
+	HomepageImageSettings saveText(HomepageImageSlot slot, String title, String description, String schedule,
+		Long expectedRevision);
 }

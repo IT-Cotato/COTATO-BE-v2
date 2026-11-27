@@ -46,7 +46,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 /** 별도 로컬 MySQL에서 실제 사진 DDL·JPA·낙관적 잠금만 검증한다. 운영 앱·DB·GCS는 로드하지 않는다. */
 @DataJpaTest(properties = {"spring.config.location=optional:classpath:/homepage-image-mysql-test-only.properties",
 	"spring.jpa.hibernate.ddl-auto=none", "spring.jpa.show-sql=false",
-	"spring.datasource.hikari.maximum-pool-size=12", "spring.datasource.hikari.connection-timeout=5000",
+	"spring.datasource.hikari.maximum-pool-size=16", "spring.datasource.hikari.connection-timeout=5000",
 	"logging.level.root=WARN", "logging.level.org.hibernate.SQL=OFF"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ContextConfiguration(classes = HomepageImageMysqlIntegrationTest.DatabaseConfig.class)
@@ -101,6 +101,8 @@ class HomepageImageMysqlIntegrationTest {
 		try (var connection = jdbc.getDataSource().getConnection()) {
 			ScriptUtils.executeSqlScript(connection,
 				new ClassPathResource("db/manual/20261125_add_homepage_image.sql"));
+			ScriptUtils.executeSqlScript(connection,
+				new ClassPathResource("db/manual/20261127_extend_homepage_content.sql"));
 		}
 	}
 
@@ -117,9 +119,60 @@ class HomepageImageMysqlIntegrationTest {
 	}
 
 	@Test
+	void extendingOldSchemaKeepsExistingPhotoValues() throws Exception {
+		jdbc.execute("DROP TABLE homepage_image");
+		try (var connection = jdbc.getDataSource().getConnection()) {
+			ScriptUtils.executeSqlScript(connection,
+				new ClassPathResource("db/manual/20261125_add_homepage_image.sql"));
+		}
+		jdbc.update("INSERT INTO homepage_image (slot,object_key,desktop_x,desktop_y,desktop_zoom,"
+			+ "mobile_x,mobile_y,mobile_zoom,revision) VALUES (?,?,?,?,?,?,?,?,?)",
+			SLOT.name(), key(SLOT, 1), 31.5, 72.25, 1.75, 65.5, 40.25, 2.15, 8);
+		try (var connection = jdbc.getDataSource().getConnection()) {
+			ScriptUtils.executeSqlScript(connection,
+				new ClassPathResource("db/manual/20261127_extend_homepage_content.sql"));
+		}
+		var original = find(SLOT);
+		assertEquals(key(SLOT, 1), original.objectKey());
+		assertEquals(DESKTOP, original.desktop());
+		assertEquals(MOBILE, original.mobile());
+		assertEquals(8, original.revision());
+		assertNull(original.displayTitle());
+		var next = store.saveText(SLOT, "새 제목", "설명", "2027.01.15", 8L);
+		assertEquals(original.objectKey(), next.objectKey());
+		assertEquals(9, next.revision());
+	}
+
+	@Test
+	void scheduleChangesPreservePhotoAndRejectStaleImageSave() {
+		var first = store.save(SLOT, key(SLOT, 1), DESKTOP, MOBILE, null);
+		var schedule = store.saveText(SLOT, "기존 제목", "설명", "2027.01.15", first.revision());
+		assertEquals(first.objectKey(), schedule.objectKey());
+		assertEquals("기존 제목", schedule.displayTitle());
+		assertEquals("설명", schedule.displayDescription());
+		assertEquals(DESKTOP, schedule.desktop());
+		assertEquals(MOBILE, schedule.mobile());
+		assertConflict(() -> store.save(SLOT, key(SLOT, 2), DESKTOP, MOBILE, first.revision()));
+		var next = store.save(SLOT, key(SLOT, 2), DESKTOP, MOBILE, schedule.revision());
+		assertEquals("2027.01.15", next.displaySchedule());
+		assertEquals("기존 제목", next.displayTitle());
+		assertEquals("설명", next.displayDescription());
+	}
+
+	@Test
+	void dateOnlyCanBeSavedBeforeAnyCustomImage() {
+		var first = store.saveText(SLOT, "기존 제목", "설명", "매주 금요일 19시", null);
+		assertNull(first.objectKey());
+		assertEquals(0, first.revision());
+		assertConflict(() -> store.saveText(SLOT, "기존 제목", "설명", "stale", null));
+		var next = store.save(SLOT, key(SLOT, 1), DESKTOP, MOBILE, first.revision());
+		assertEquals("매주 금요일 19시", next.displaySchedule());
+	}
+
+	@Test
 	void actualManualDdlSupportsEmptyJpaRead() {
 		assertTrue(store.findAll().isEmpty());
-		assertEquals(10, jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns "
+		assertEquals(13, jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns "
 			+ "WHERE table_schema=DATABASE() AND table_name='homepage_image'", Integer.class).intValue());
 		assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.table_constraints "
 			+ "WHERE table_schema=DATABASE() AND table_name='homepage_image' AND constraint_type='CHECK'",
@@ -237,14 +290,14 @@ class HomepageImageMysqlIntegrationTest {
 	@Test
 	void independentPhotoSlotsAllCommitConcurrently() throws Exception {
 		List<SaveResult> results = concurrently(Arrays.asList(HomepageImageSlot.values()), null);
-		assertEquals(10, results.size());
+		assertEquals(HomepageImageSlot.values().length, results.size());
 		assertTrue(results.stream().allMatch(value -> value.status() == 200));
-		assertEquals(10, repository.count());
+		assertEquals(14, repository.count());
 		for (SaveResult result : results) {
 			assertEquals(result.saved(), find(result.saved().slot()));
 			assertEquals(0, result.saved().revision());
 		}
-		System.out.println("MYSQL_RACE distinct_slots=10 success=10 conflict=0 rows=10");
+		System.out.println("MYSQL_RACE distinct_slots=14 success=14 conflict=0 rows=14");
 	}
 
 	private void assertSingleWinner(List<SaveResult> results, long revision) {

@@ -44,6 +44,18 @@ public class AdminHomepageImageController {
 			request.mobile().toCrop(), request.expectedRevision());
 	}
 
+	@PutMapping("/{slot}/text")
+	public HomepageImageService.ImageView updateText(@PathVariable String slot,
+		@RequestBody @Valid TextRequest request) {
+		return service.updateText(HomepageImageSlot.parse(slot), request.displayTitle(), request.displayDescription(),
+			request.displaySchedule(), request.expectedRevision());
+	}
+
+	/** 제목·설명·표시 일정만 교체하며 사진과 크롭 및 세션·출석 시간은 변경하지 않는다. */
+	public record TextRequest(@NotBlank String displayTitle, @NotNull String displayDescription,
+		String displaySchedule, Long expectedRevision) {
+	}
+
 	/** 업로드 전 파일 크기·형식을 알려 불필요한 서명 URL 발급을 막는다. */
 	public record UploadRequest(@NotBlank String slot, @NotBlank String contentType, long size) {
 	}

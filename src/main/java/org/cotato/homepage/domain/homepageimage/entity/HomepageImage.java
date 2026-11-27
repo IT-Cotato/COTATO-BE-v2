@@ -30,8 +30,15 @@ public class HomepageImage {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, unique = true, length = 40)
 	private HomepageImageSlot slot;
-	@Column(nullable = false, length = 512)
+	@Column(length = 512)
 	private String objectKey;
+	// 표시 일정은 홈페이지 문구이며 세션 시작·출석 인정 시간과 연결하지 않는다.
+	@Column(length = 80)
+	private String displaySchedule;
+	@Column(length = 80)
+	private String displayTitle;
+	@Column(length = 2000)
+	private String displayDescription;
 	// 좌표의 한 글자 X/Y 접미사가 desktopx 등으로 추론되지 않도록 실제 DDL 컬럼명을 고정한다.
 	@Column(name = "desktop_x", nullable = false)
 	private double desktopX;
@@ -67,8 +74,15 @@ public class HomepageImage {
 		mobileZoom = mobile.zoom();
 	}
 
+	public void changeText(String title, String description, String schedule) {
+		displayTitle = title;
+		displayDescription = description;
+		displaySchedule = schedule;
+	}
+
 	public HomepageImageSettings snapshot() {
 		return new HomepageImageSettings(slot, objectKey, new HomepageImageCrop(desktopX, desktopY, desktopZoom),
-			new HomepageImageCrop(mobileX, mobileY, mobileZoom), revision);
+			new HomepageImageCrop(mobileX, mobileY, mobileZoom), revision, displaySchedule, displayTitle,
+			displayDescription);
 	}
 }

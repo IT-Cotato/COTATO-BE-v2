@@ -49,7 +49,29 @@ public class FileHomepageImageStore implements HomepageImageStore {
 			throw HomepageImageException.conflict();
 		}
 		HomepageImageSettings next = new HomepageImageSettings(slot, key, desktop, mobile,
-			current == null ? 0 : current.revision() + 1);
+			current == null ? 0 : current.revision() + 1, current == null ? null : current.displaySchedule(),
+			current == null ? null : current.displayTitle(),
+			current == null ? null : current.displayDescription());
+		return persist(slot, next);
+	}
+
+	@Override
+	public synchronized HomepageImageSettings saveText(HomepageImageSlot slot, String title, String description,
+		String schedule,
+		Long expectedRevision) {
+		HomepageImageSettings current = images.get(slot);
+		if (current == null ? expectedRevision != null
+			: expectedRevision == null || current.revision() != expectedRevision) {
+			throw HomepageImageException.conflict();
+		}
+		HomepageImageSettings next = new HomepageImageSettings(slot, current == null ? null : current.objectKey(),
+			current == null ? HomepageImageCrop.centered() : current.desktop(),
+			current == null ? HomepageImageCrop.centered() : current.mobile(),
+			current == null ? 0 : current.revision() + 1, schedule, title, description);
+		return persist(slot, next);
+	}
+
+	private HomepageImageSettings persist(HomepageImageSlot slot, HomepageImageSettings next) {
 		Map<HomepageImageSlot, HomepageImageSettings> copy = new LinkedHashMap<>(images);
 		copy.put(slot, next);
 		Path temporary = null;
